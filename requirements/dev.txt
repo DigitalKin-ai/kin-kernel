@@ -1,0 +1,7 @@
+-r base.txt
+flake8
+black
+pytest
+mypy
+pytest-asyncio
+pytest-env

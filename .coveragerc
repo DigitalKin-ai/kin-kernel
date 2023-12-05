@@ -1,0 +1,7 @@
+[report]
+fail_under = 80
+exclude_lines = # noqa
+
+[run]
+omit = 
+    */_version.py

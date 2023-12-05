@@ -1,0 +1,44 @@
+name: Run linter and tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10.11
+
+      - uses: actions/cache@v3
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}-${{ hashFiles('requirements/dev.txt') }}
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade --upgrade-strategy eager -r requirements/dev.txt
+
+      - name: Check code formatting with black (diff only)
+        run: black --check --diff .
+
+      - name: Lint with flake8
+        run: flake8 .
+
+      - name: Lint with pylint
+        run: pylint kinkernel/
+
+      - name: Type check with mypy
+        run: mypy kinkernel/
+
+      - name: Test with pytest
+        run: pytest
