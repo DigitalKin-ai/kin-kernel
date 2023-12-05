@@ -1,7 +1,9 @@
 -r base.txt
 flake8
 black
-pytest
 mypy
+pylint
+pytest
 pytest-asyncio
 pytest-env
+pytest-cov

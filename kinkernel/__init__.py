@@ -23,8 +23,13 @@ Examples:
     # Define custom configuration models using `ConfigModel` and `EnvVar`
 
 """
+import sys
 from kinkernel.cells import Cell
 from kinkernel.config import EnvVar, ConfigModel
+
+# Checking version
+if sys.version_info < (3, 10, 11):
+    raise RuntimeError("This project requires Python 3.10.11 or higher.")
 
 
 __all__ = ["Cell", "EnvVar", "ConfigModel"]
