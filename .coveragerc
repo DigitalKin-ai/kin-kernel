@@ -6,3 +6,4 @@ exclude_lines = # noqa
 omit = 
     */_version.py
     */__init__.py
+    */docs/*

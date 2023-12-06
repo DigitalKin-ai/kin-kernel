@@ -2,12 +2,9 @@
 
 [![PyPI version](https://badge.fury.io/py/kin-kernel.svg)](https://badge.fury.io/py/kin-kernel)
 [![Python version](https://img.shields.io/pypi/pyversions/kin-kernel.svg)](https://pypi.python.org/pypi/kin-kernel/)
-
-<!-- [![Build Status](https://travis-ci.com/DigitalKin/kin-kernel.svg?branch=main)](https://travis-ci.com/DigitalKin/kin-kernel) -->
-
-[![Coverage Status](https://coveralls.io/repos/github/DigitalKin/kin-kernel/badge.svg?branch=main)](https://coveralls.io/github/DigitalKin/kin-kernel?branch=main)
-
-<!-- [![License](https://img.shields.io/github/license/DigitalKin/kin-kernel.svg)](https://github.com/DigitalKin/kin-kernel/blob/main/LICENSE) -->
+[![License](https://img.shields.io/github/license/DigitalKin/kin-kernel.svg)](https://github.com/DigitalKin/kin-kernel/blob/main/LICENSE)
+[![DigitalKin](https://img.shields.io/badge/DigitalKin-connect-001945)](https://vision.digitalkin.ai)
+[![Discord](https://img.shields.io/badge/Discord-join-blue)](https://discord.com/invite/yVstHVcx)
 
 Welcome to the DigitalKin KinKernel ! This package is designed to enable developers to create Cells, which are autonomous agents that can be integrated into the Internet of Agents (IoA) ecosystem powered by DigitalKin.
 
@@ -27,7 +24,14 @@ The KinKernel provides a framework for creating and managing Cells. Each Cell re
 
 Before installing the KinKernel, ensure you have Python installed on your system. This package requires Python 3.10 or higher.
 
-To install the KinKernel, clone the repository and install the dependencies:
+To install the KinKernel
+With pipy:
+
+```shell
+pip install kin-kernel
+```
+
+Or clone the repository and install the dependencies:
 
 ```shell
 git clone https://github.com/DigitalKin/kin-kernel.git
@@ -113,4 +117,4 @@ Thank you for using the DigitalKin Cell Development Kit. We look forward to seei
 
 ---
 
-© 2023 DigitalKin.ai. All Rights Reserved.
+Kin-kernel © 2023 by DigitalKin is licensed under CC BY-NC-SA 4.0
