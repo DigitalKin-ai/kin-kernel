@@ -25,10 +25,11 @@ jobs:
           pip install -r requirements/dev.txt
 
       - name: Generate and Build KinKernel Documentation
-        run: sphinx-build -b html docs/ .
+        run: sphinx-build -b html docs/ docs/_build/html
+
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        # if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         with:
           publish_branch: gh-pages
           github_token: ${{ secrets.GITHUB_TOKEN }}
