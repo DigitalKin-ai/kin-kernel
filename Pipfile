@@ -4,18 +4,23 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-loguru = "*"
-pydantic = "*"
+loguru = "==0.7.2"
+pydantic = "==2.5.2"
+pydantic-settings = "==2.1.0"
 
 [dev-packages]
-flake8 = "*"
-black = "*"
-mypy = "*"
-pytest = "*"
-pytest-cov = "*"
-pylint = "*"
-setuptools = "*"
-types-setuptools = "*"
+twine = "==4.0.2"
+wheel = "==0.42.0"
+flake8 = "==6.1.0"
+black = "==23.11.0"
+mypy = "==1.7.1"
+pytest = "==7.4.3"
+pytest-cov = "==4.1.0"
+pylint = "==3.0.2"
+setuptools = "==69.0.2"
+types-setuptools = "==69.0.0.0"
+sphinx = "==7.2.6"
+sphinx-rtd-theme = "==2.0.0"
 
 [requires]
 python_version = "3.10"
