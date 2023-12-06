@@ -10,9 +10,9 @@ jobs:
   deploy-to-testpypi:
     if: >
       github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'develop' &&
       github.event.workflow_run.event == 'pull_request' &&
-      contains(github.event.workflow_run.pull_requests[0].title, 'deploy to testpypi') &&
-      contains(github.event.workflow_run.head_branch, 'develop')
+      contains(github.event.workflow_run.pull_requests.*.title, 'deploy to testpypi')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
