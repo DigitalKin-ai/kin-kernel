@@ -7,15 +7,12 @@ on:
       - completed
 
 jobs:
-  build:
-    # ... (keep the existing steps of the 'build' job as in your current GitHub Action workflow)
-
   deploy-to-testpypi:
     if: >
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'pull_request' &&
       contains(github.event.workflow_run.pull_requests[0].title, 'deploy to testpypi') &&
-      github.event.workflow_run.head_branch == 'develop'
+      contains(github.event.workflow_run.head_branch, 'develop')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

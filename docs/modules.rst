@@ -1,5 +1,6 @@
 Modules
 =======
+.. include:: _sidebar.rst
 
 .. automodule:: kinkernel
    :no-index:
