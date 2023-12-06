@@ -1,6 +1,9 @@
 name: Docs
 
 on: [push]
+# on:
+#   push:
+#     branches: [main]
 
 permissions:
   contents: write
@@ -22,8 +25,7 @@ jobs:
           pip install -r requirements/dev.txt
 
       - name: Generate and Build KinKernel Documentation
-        run: sphinx-build -b html docs/ docs/_build/html
-
+        run: sphinx-build -b html docs/ .
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
