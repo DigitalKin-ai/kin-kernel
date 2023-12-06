@@ -24,7 +24,14 @@ The KinKernel provides a framework for creating and managing Cells. Each Cell re
 
 Before installing the KinKernel, ensure you have Python installed on your system. This package requires Python 3.10 or higher.
 
-To install the KinKernel, clone the repository and install the dependencies:
+To install the KinKernel
+With pipy:
+
+```shell
+pip install kin-kernel
+```
+
+Or clone the repository and install the dependencies:
 
 ```shell
 git clone https://github.com/DigitalKin/kin-kernel.git
