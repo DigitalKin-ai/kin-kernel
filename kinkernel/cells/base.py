@@ -37,6 +37,8 @@ Usage:
 """
 import json
 import inspect
+import threading
+from opentelemetry import trace
 from abc import ABC, abstractmethod
 from typing import Type, Any, TypeVar, Generic, Optional
 
@@ -82,6 +84,11 @@ class BaseCell(Generic[InputModelT, OutputModelT], ABC):
     output_format: Type[OutputModelT]
     config: Optional[ConfigModel] = None
 
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+        self.tracer = trace.get_tracer(self.__class__.__name__)
+        self.mutex = threading.Lock()
     def __init_subclass__(cls, **kwargs):
         """
         Initialize subclass checks for the presence and types of required class variables.
@@ -162,7 +169,6 @@ class BaseCell(Generic[InputModelT, OutputModelT], ABC):
             f"'{cls.__name__}' class does not define an 'output_format'."
         )
 
-    @abstractmethod
     def execute(self, input_data: InputModelT) -> OutputModelT:
         """
         Execute the cell's logic on the given input data and produce output.
@@ -173,8 +179,30 @@ class BaseCell(Generic[InputModelT, OutputModelT], ABC):
         :return: The output data as an instance of OutputModelT.
         :raises NotImplementedError: If the method is not implemented in the subclass.
         """
-        raise NotImplementedError("Subclasses must implement 'execute' abstract method")
+        with self.tracer.start_span("execute"):
+            result = None
+            self.mutex.acquire()
+            try:
+                result = self._execute(input_data)
+            except Exception as e:
+                #TODO: specifying a error handler that can raise or not exception
+                raise
+            finally:
+                self.mutex.release()
+            return result
 
+    @abstractmethod
+    def _execute(self, input_data: InputModelT) -> OutputModelT:
+        """
+        Execute the cell's logic on the given input data and produce output.
+
+        This method must be implemented by subclasses.
+
+        :param input_data: The validated input data as an instance of TInputModel.
+        :return: The output data as an instance of OutputModelT.
+        :raises NotImplementedError: If the method is not implemented in the subclass.
+        """
+        raise NotImplementedError("Subclasses must implement 'execute' abstract method")
     def _run(self, input_json: str) -> str:
         """
         Run the cell with the given JSON input and return a JSON response.

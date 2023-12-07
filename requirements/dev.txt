@@ -9,7 +9,7 @@ mypy==1.7.1
 pytest==7.4.3
 pytest-cov==4.1.0
 pylint==3.0.2
-setuptools==69.0.2
+setuptools~=68.2.0
 types-setuptools==69.0.0.0
 sphinx==7.2.6
 sphinx-rtd-theme==2.0.0

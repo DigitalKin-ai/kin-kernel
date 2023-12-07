@@ -24,7 +24,7 @@ class ConcreteCell(BaseCell[TestInputModel, TestOutputModel]):
     input_format = TestInputModel
     output_format = TestOutputModel
 
-    def execute(self, input_data: TestInputModel) -> TestOutputModel:
+    def _execute(self, input_data: TestInputModel) -> TestOutputModel:
         return TestOutputModel(result=input_data.x + input_data.y)
 
 
@@ -43,7 +43,7 @@ class UnimplementedExecuteCell(BaseCell[BaseModel, BaseModel]):
     input_format = BaseModel
     output_format = BaseModel
 
-    def execute(self, input_data: BaseModel) -> BaseModel:
+    def _execute(self, input_data: BaseModel) -> BaseModel:
         raise NotImplementedError
 
 
