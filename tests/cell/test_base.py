@@ -24,7 +24,7 @@ class ConcreteCell(BaseCell[TestInputModel, TestOutputModel]):
     input_format = TestInputModel
     output_format = TestOutputModel
 
-    def _execute(self, input_data: TestInputModel) -> TestOutputModel:
+    def execute(self, input_data: TestInputModel) -> TestOutputModel:
         return TestOutputModel(result=input_data.x + input_data.y)
 
 
@@ -43,7 +43,7 @@ class UnimplementedExecuteCell(BaseCell[BaseModel, BaseModel]):
     input_format = BaseModel
     output_format = BaseModel
 
-    def _execute(self, input_data: BaseModel) -> BaseModel:
+    def execute(self, input_data: BaseModel) -> BaseModel:
         raise NotImplementedError
 
 
@@ -51,7 +51,7 @@ class UnimplementedExecuteCell(BaseCell[BaseModel, BaseModel]):
 def test_concrete_cell_success():
     cell = ConcreteCell()
     input_json = '{"x": 1, "y": 2}'
-    result = cell._run(input_json)
+    result = cell.run(input_json)
     result_data = json.loads(result)
 
     # Define the expected result as a dictionary
@@ -65,7 +65,7 @@ def test_concrete_cell_success():
 def test_concrete_cell_input_validation_error():
     cell = ConcreteCell()
     input_json = '{"x": "not_a_number", "y": 2}'
-    result = cell._run(input_json)
+    result = cell.run(input_json)
     result_data = json.loads(result)
 
     assert result_data["type"] == "error"

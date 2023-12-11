@@ -169,6 +169,7 @@ class BaseCell(Generic[InputModelT, OutputModelT], ABC):
             f"'{cls.__name__}' class does not define an 'output_format'."
         )
 
+    @abstractmethod
     def execute(self, input_data: InputModelT) -> OutputModelT:
         """
         Execute the cell's logic on the given input data and produce output.
@@ -179,58 +180,39 @@ class BaseCell(Generic[InputModelT, OutputModelT], ABC):
         :return: The output data as an instance of OutputModelT.
         :raises NotImplementedError: If the method is not implemented in the subclass.
         """
-        with self.tracer.start_span("execute"):
-            result = None
-            self.mutex.acquire()
-            try:
-                result = self._execute(input_data)
-            except Exception as e:
-                #TODO: specifying a error handler that can raise or not exception
-                raise
-            finally:
-                self.mutex.release()
-            return result
-
-    @abstractmethod
-    def _execute(self, input_data: InputModelT) -> OutputModelT:
-        """
-        Execute the cell's logic on the given input data and produce output.
-
-        This method must be implemented by subclasses.
-
-        :param input_data: The validated input data as an instance of TInputModel.
-        :return: The output data as an instance of OutputModelT.
-        :raises NotImplementedError: If the method is not implemented in the subclass.
-        """
         raise NotImplementedError("Subclasses must implement 'execute' abstract method")
-    def _run(self, input_json: str) -> str:
+
+    def run(self, input_json: str) -> str:
         """
         Run the cell with the given JSON input and return a JSON response.
 
         :param input_json: The input data as a JSON string.
         :return: The response as a JSON string.
         """
-        try:
-            if self.input_format is None or self.output_format is None:
-                raise NotImplementedError("Input and output formats must be defined.")
+        self.mutex.acquire()
+        with self.tracer.start_span("run"):
+            try:
+                if self.input_format is None or self.output_format is None:
+                    raise NotImplementedError("Input and output formats must be defined.")
 
-            # Parse and validate the input JSON using the input_format Pydantic model
-            input_data = self.input_format.model_validate_json(input_json)
+                # Parse and validate the input JSON using the input_format Pydantic model
+                input_data = self.input_format.model_validate_json(input_json)
 
-            # Call the user-defined run method and get the output data
-            output_data = self.execute(input_data)
+                # Call the user-defined run method and get the output data
+                output_data = self.execute(input_data)
 
-            # Validate and serialize the output using the output_format Pydantic model
-            output_data = self.output_format(**output_data.model_dump())
+                # Validate and serialize the output using the output_format Pydantic model
+                output_data = self.output_format(**output_data.model_dump())
 
-            # Prepare the success response
-            response = ResponseModel(type="success", content=output_data.model_dump())
-        except ValidationError as e:
-            # Prepare the error response in case of validation errors
-            response = ResponseModel(type="error", content=str(e))
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            # Prepare the error response in case of other exceptions
-            response = ResponseModel(type="error", content=str(e))
-
-        # Serialize the response to JSON
+                # Prepare the success response
+                response = ResponseModel(type="success", content=output_data.model_dump())
+            except ValidationError as e:
+                # Prepare the error response in case of validation errors
+                response = ResponseModel(type="error", content=str(e))
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                # Prepare the error response in case of other exceptions
+                response = ResponseModel(type="error", content=str(e))
+            finally:
+                self.mutex.release()
+            # Serialize the response to JSON
         return response.model_dump_json()
