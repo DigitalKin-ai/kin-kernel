@@ -1,5 +1,7 @@
+# pylint: disable-all
 import json
 import pytest
+
 from pydantic import BaseModel
 
 from kinkernel.cells import BaseCell
@@ -24,7 +26,7 @@ class ConcreteCell(BaseCell[TestInputModel, TestOutputModel]):
     input_format = TestInputModel
     output_format = TestOutputModel
 
-    def execute(self, input_data: TestInputModel) -> TestOutputModel:
+    async def _execute(self, input_data: TestInputModel) -> TestOutputModel:
         return TestOutputModel(result=input_data.x + input_data.y)
 
 
@@ -43,42 +45,77 @@ class UnimplementedExecuteCell(BaseCell[BaseModel, BaseModel]):
     input_format = BaseModel
     output_format = BaseModel
 
-    def execute(self, input_data: BaseModel) -> BaseModel:
+    async def _execute(self, input_data: BaseModel) -> BaseModel:
         raise NotImplementedError
 
 
 # Define a test for successful execution of the cell
-def test_concrete_cell_success():
+@pytest.mark.asyncio
+async def test_concrete_cell_success():
     cell = ConcreteCell()
     input_json = '{"x": 1, "y": 2}'
-    result = cell._run(input_json)
-    result_data = json.loads(result)
+    result = await cell.run(input_json)
 
     # Define the expected result as a dictionary
-    expected_result = {"type": "success", "content": {"result": 3}}
+    expected_result = {"type": "success", "content": '{"result":3}'}
 
     # Compare the actual result with the expected result
-    assert result_data == expected_result
+    assert result == expected_result
+
+
+# Define a test for the __init__ method of BaseCell
+def test_base_cell_init():
+    cell = ConcreteCell(custom_arg="value")
+    assert cell.args == ()
+    assert cell.kwargs == {"custom_arg": "value"}
+
+
+# Define a test for the run method where a general exception is raised
+@pytest.mark.asyncio
+async def test_concrete_cell_general_exception():
+    cell = ConcreteCell()
+
+    # Mock _execute to raise a general exception
+    async def mock_execute(input_data):
+        raise Exception("General error")
+
+    cell._execute = mock_execute
+
+    input_json = '{"x": 1, "y": 2}'
+    result = await cell.run(input_json)
+
+    assert result["type"] == "error"
+    assert result["content"] == "General error"
+
+
+# Define a test to cover the NotImplementedError in _execute method of BaseCell
+@pytest.mark.asyncio
+async def test_base_cell_execute_not_implemented_direct_call():
+    cell = ConcreteCell()
+
+    with pytest.raises(NotImplementedError):
+        await BaseCell._execute(cell, TestInputModel(x=1, y=2))
 
 
 # Define a test for input validation error
-def test_concrete_cell_input_validation_error():
+@pytest.mark.asyncio
+async def test_concrete_cell_input_validation_error():
     cell = ConcreteCell()
     input_json = '{"x": "not_a_number", "y": 2}'
-    result = cell._run(input_json)
-    result_data = json.loads(result)
+    result = await cell.run(input_json)
 
-    assert result_data["type"] == "error"
-    assert "validation error for TestInputModel" in result_data["content"]
-    assert "Input should be a valid integer" in result_data["content"]
-    assert "unable to parse string as an integer" in result_data["content"]
+    assert result["type"] == "error"
+    assert "validation error for TestInputModel" in result["content"]
+    assert "Input should be a valid integer" in result["content"]
+    assert "unable to parse string as an integer" in result["content"]
 
 
 # Define a test for the abstract execute method error
-def test_base_cell_execute_not_implemented():
+@pytest.mark.asyncio
+async def test_base_cell_execute_not_implemented():
     with pytest.raises(NotImplementedError):
         cell = UnimplementedExecuteCell()
-        cell.execute(None)
+        await cell._execute(None)
 
 
 # Define a test for the abstract execute method error
@@ -133,7 +170,7 @@ def test_missing_role():
             input_format = TestInputModel
             output_format = TestOutputModel
 
-            def execute(self, input_data: TestInputModel) -> TestOutputModel:
+            async def _execute(self, input_data: TestInputModel) -> TestOutputModel:
                 return TestOutputModel(result=input_data.y)
 
         CellWithoutRole()
@@ -148,7 +185,7 @@ def test_missing_description():
             input_format = TestInputModel
             output_format = TestOutputModel
 
-            def execute(self, input_data: TestInputModel) -> TestOutputModel:
+            async def _execute(self, input_data: TestInputModel) -> TestOutputModel:
                 return TestOutputModel(result=input_data.y)
 
         CellWithoutDescription()
@@ -163,7 +200,7 @@ def test_missing_input_format():
             input_format = None
             output_format = TestOutputModel
 
-            def execute(self, input_data: TestOutputModel) -> TestOutputModel:
+            async def _execute(self, input_data: TestOutputModel) -> TestOutputModel:
                 return TestOutputModel(result=2)
 
         CellWithoutInputFormat()
@@ -178,7 +215,7 @@ def test_missing_output_format():
             input_format = TestInputModel
             output_format = None
 
-            def execute(self, input_data: TestInputModel) -> TestInputModel:
+            async def _execute(self, input_data: TestInputModel) -> TestInputModel:
                 return TestInputModel(x=input_data.x, y=input_data.y)
 
         CellWithoutInputFormat()

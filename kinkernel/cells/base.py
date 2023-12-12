@@ -37,9 +37,12 @@ Usage:
 """
 import json
 import inspect
+import asyncio
+from enum import Enum
 from abc import ABC, abstractmethod
-from typing import Type, Any, TypeVar, Generic, Optional
+from typing import Type, TypeVar, Generic, Optional
 
+from opentelemetry import trace
 from pydantic import BaseModel, ValidationError
 
 from kinkernel.config import ConfigModel
@@ -50,16 +53,31 @@ InputModelT = TypeVar("InputModelT", bound=BaseModel)
 OutputModelT = TypeVar("OutputModelT", bound=BaseModel)
 
 
+class ResponseType(str, Enum):
+    """
+    An enumeration for response types.
+
+    Attributes:
+        ERROR (str): Represents an error response.
+        SUCCESS (str): Represents a successful response.
+    """
+
+    ERROR = "error"
+    SUCCESS = "success"
+
+
 class ResponseModel(BaseModel):
     """
     A Pydantic model that represents a standard response from a cell.
 
-    :param type: The type of response, e.g., 'success' or 'error'.
-    :param content: The content of the response, which can be any type.
+    Attributes:
+        type (ResponseType): The type of response, indicating success or error.
+        content (str): The content of the response, which may be a descriptive
+                       message or serialized data in JSON format.
     """
 
-    type: str
-    content: Any
+    type: ResponseType
+    content: str
 
 
 class BaseCell(Generic[InputModelT, OutputModelT], ABC):
@@ -82,6 +100,20 @@ class BaseCell(Generic[InputModelT, OutputModelT], ABC):
     output_format: Type[OutputModelT]
     config: Optional[ConfigModel] = None
 
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize a new instance of the BaseCell class.
+
+        :param args: Variable length argument list that can be used by subclasses.
+        :param kwargs: Arbitrary keyword arguments that can be used by subclasses.
+        """
+        self.args = args
+        self.kwargs = kwargs
+        # Tracer from OpenTelemetry, used for creating spans around the cell's execution.
+        self.tracer = trace.get_tracer(self.__class__.__name__)
+        # Asyncio Lock for thread-safe operations within the cell.
+        self.async_mutex = asyncio.Lock()
+
     def __init_subclass__(cls, **kwargs):
         """
         Initialize subclass checks for the presence and types of required class variables.
@@ -89,20 +121,26 @@ class BaseCell(Generic[InputModelT, OutputModelT], ABC):
         super().__init_subclass__(**kwargs)
         # Only perform checks if the subclass is not abstract
         if not inspect.isabstract(cls):
-            if cls.role is None:
+            if not hasattr(cls, "role") or cls.role is None:
                 raise TypeError(
                     f"Subclass '{cls.__name__}' must define a 'role' class variable."
                 )
-            if cls.description is None:
+            if not hasattr(cls, "description") or cls.description is None:
                 raise TypeError(
                     f"Subclass '{cls.__name__}' must define a 'description' class variable."
                 )
-            if cls.input_format is None or not issubclass(cls.input_format, BaseModel):
+            if (
+                not hasattr(cls, "input_format")
+                or cls.input_format is None
+                or not issubclass(cls.input_format, BaseModel)
+            ):
                 raise TypeError(
                     f"Subclass '{cls.__name__}' must define an 'input_format' class variable with a Pydantic model."
                 )
-            if cls.output_format is None or not issubclass(
-                cls.output_format, BaseModel
+            if (
+                not hasattr(cls, "output_format")
+                or cls.output_format is None
+                or not issubclass(cls.output_format, BaseModel)
             ):
                 raise TypeError(
                     f"Subclass '{cls.__name__}' must define an 'output_format' class variable with a Pydantic model."
@@ -163,9 +201,9 @@ class BaseCell(Generic[InputModelT, OutputModelT], ABC):
         )
 
     @abstractmethod
-    def execute(self, input_data: InputModelT) -> OutputModelT:
+    async def _execute(self, input_data: InputModelT) -> OutputModelT:
         """
-        Execute the cell's logic on the given input data and produce output.
+        Asynchronously execute the cell's logic on the given input data and produce output.
 
         This method must be implemented by subclasses.
 
@@ -175,34 +213,50 @@ class BaseCell(Generic[InputModelT, OutputModelT], ABC):
         """
         raise NotImplementedError("Subclasses must implement 'execute' abstract method")
 
-    def _run(self, input_json: str) -> str:
+    async def run(self, input_json: str) -> dict:
         """
-        Run the cell with the given JSON input and return a JSON response.
+        Asynchronously process the input JSON string and return the result as a JSON.
 
-        :param input_json: The input data as a JSON string.
-        :return: The response as a JSON string.
+        This method acquires a mutex, validates the input JSON against the
+        `input_format` Pydantic model, executes the cell's logic by calling the
+        `_execute` method, and then validates and serializes the output using
+        the `output_format` Pydantic model.
+
+        :param input_json: A JSON string representing the input data to be processed.
+        :return: A JSON representing the response: ResponseModel, which could be the output data
+                 or an error message.
+        :raises NotImplementedError: If the input_format or output_format is not defined.
+        :raises ValidationError: If the input data does not pass validation according to
+                                 the input_format Pydantic model.
+        :raises Exception: If any other exception occurs during the processing of the input.
         """
-        try:
-            if self.input_format is None or self.output_format is None:
-                raise NotImplementedError("Input and output formats must be defined.")
+        async with self.async_mutex:  # Use an async context manager to acquire the lock
+            with self.tracer.start_span("run"):
+                try:
+                    if self.input_format is None or self.output_format is None:
+                        raise NotImplementedError(
+                            "Input and output formats must be defined."
+                        )
 
-            # Parse and validate the input JSON using the input_format Pydantic model
-            input_data = self.input_format.model_validate_json(input_json)
+                    # Parse and validate the input JSON using the input_format Pydantic model
+                    input_data = self.input_format.model_validate_json(input_json)
 
-            # Call the user-defined run method and get the output data
-            output_data = self.execute(input_data)
+                    # Call the user-defined run method and get the output data
+                    output_data = await self._execute(input_data)
 
-            # Validate and serialize the output using the output_format Pydantic model
-            output_data = self.output_format(**output_data.model_dump())
+                    # Validate and serialize the output using the output_format Pydantic model
+                    output_data = self.output_format(**output_data.model_dump())
 
-            # Prepare the success response
-            response = ResponseModel(type="success", content=output_data.model_dump())
-        except ValidationError as e:
-            # Prepare the error response in case of validation errors
-            response = ResponseModel(type="error", content=str(e))
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            # Prepare the error response in case of other exceptions
-            response = ResponseModel(type="error", content=str(e))
-
+                    # Prepare the success response
+                    response = ResponseModel(
+                        type=ResponseType.SUCCESS, content=output_data.model_dump_json()
+                    )
+                except ValidationError as e:
+                    # Prepare the error response in case of validation errors
+                    response = ResponseModel(type=ResponseType.ERROR, content=str(e))
+                except Exception as e:  # pylint: disable=broad-exception-caught
+                    # Prepare the error response in case of other exceptions
+                    response = ResponseModel(type=ResponseType.ERROR, content=str(e))
         # Serialize the response to JSON
-        return response.model_dump_json()
+        output: dict = json.loads(response.model_dump_json())
+        return output
