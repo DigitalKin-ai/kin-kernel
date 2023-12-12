@@ -28,7 +28,6 @@ Here is a simple example of how to use kin-kernel:
     from kinkernel import Cell
     from kinkernel.config import ConfigModel, EnvVar
 
-
     class MyInputModel(BaseModel):
         value1: int
         value2: str
