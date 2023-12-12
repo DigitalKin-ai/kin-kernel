@@ -1,6 +1,7 @@
 # pylint: disable-all
 import json
 import pytest
+
 from pydantic import BaseModel
 
 from kinkernel.cells import BaseCell
@@ -60,6 +61,40 @@ async def test_concrete_cell_success():
 
     # Compare the actual result with the expected result
     assert result == expected_result
+
+
+# Define a test for the __init__ method of BaseCell
+def test_base_cell_init():
+    cell = ConcreteCell(custom_arg="value")
+    assert cell.args == ()
+    assert cell.kwargs == {"custom_arg": "value"}
+
+
+# Define a test for the run method where a general exception is raised
+@pytest.mark.asyncio
+async def test_concrete_cell_general_exception():
+    cell = ConcreteCell()
+
+    # Mock _execute to raise a general exception
+    async def mock_execute(input_data):
+        raise Exception("General error")
+
+    cell._execute = mock_execute
+
+    input_json = '{"x": 1, "y": 2}'
+    result = await cell.run(input_json)
+
+    assert result["type"] == "error"
+    assert result["content"] == "General error"
+
+
+# Define a test to cover the NotImplementedError in _execute method of BaseCell
+@pytest.mark.asyncio
+async def test_base_cell_execute_not_implemented_direct_call():
+    cell = ConcreteCell()
+
+    with pytest.raises(NotImplementedError):
+        await BaseCell._execute(cell, TestInputModel(x=1, y=2))
 
 
 # Define a test for input validation error

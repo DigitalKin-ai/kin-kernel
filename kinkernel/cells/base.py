@@ -121,20 +121,26 @@ class BaseCell(Generic[InputModelT, OutputModelT], ABC):
         super().__init_subclass__(**kwargs)
         # Only perform checks if the subclass is not abstract
         if not inspect.isabstract(cls):
-            if cls.role is None:
+            if not hasattr(cls, "role") or cls.role is None:
                 raise TypeError(
                     f"Subclass '{cls.__name__}' must define a 'role' class variable."
                 )
-            if cls.description is None:
+            if not hasattr(cls, "description") or cls.description is None:
                 raise TypeError(
                     f"Subclass '{cls.__name__}' must define a 'description' class variable."
                 )
-            if cls.input_format is None or not issubclass(cls.input_format, BaseModel):
+            if (
+                not hasattr(cls, "input_format")
+                or cls.input_format is None
+                or not issubclass(cls.input_format, BaseModel)
+            ):
                 raise TypeError(
                     f"Subclass '{cls.__name__}' must define an 'input_format' class variable with a Pydantic model."
                 )
-            if cls.output_format is None or not issubclass(
-                cls.output_format, BaseModel
+            if (
+                not hasattr(cls, "output_format")
+                or cls.output_format is None
+                or not issubclass(cls.output_format, BaseModel)
             ):
                 raise TypeError(
                     f"Subclass '{cls.__name__}' must define an 'output_format' class variable with a Pydantic model."
