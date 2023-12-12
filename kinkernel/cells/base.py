@@ -57,9 +57,8 @@ class ResponseType(str, Enum):
     """
     An enumeration for response types.
 
-    Attributes:
-        ERROR (str): Represents an error response.
-        SUCCESS (str): Represents a successful response.
+    :param ERROR (str): Represents an error response.
+    :param SUCCESS (str): Represents a successful response.
     """
 
     ERROR = "error"
@@ -70,10 +69,8 @@ class ResponseModel(BaseModel):
     """
     A Pydantic model that represents a standard response from a cell.
 
-    Attributes:
-        type (ResponseType): The type of response, indicating success or error.
-        content (str): The content of the response, which may be a descriptive
-                       message or serialized data in JSON format.
+    :param type: The type of response, indicating success or error.
+    :param content: The content of the response, which may be a descriptive message or serialized data in JSON format.
     """
 
     type: ResponseType
