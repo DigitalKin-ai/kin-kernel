@@ -22,17 +22,21 @@ Here is a simple example of how to use kin-kernel:
 
 .. code-block:: python
 
+    import asyncio
     from pydantic import BaseModel
 
     from kinkernel import Cell
     from kinkernel.config import ConfigModel, EnvVar
 
+
     class MyInputModel(BaseModel):
         value1: int
         value2: str
 
+
     class MyOutputModel(BaseModel):
         processed_value: int
+
 
     class MyCell(Cell[MyInputModel, MyOutputModel]):
         role = "Processor"
@@ -46,13 +50,14 @@ Here is a simple example of how to use kin-kernel:
             ]
         )
 
-        def execute(self, input_data: MyInputModel) -> MyOutputModel:
+        async def _execute(self, input_data: MyInputModel) -> MyOutputModel:
             # Process the input_data as needed
             exec_result = {"processed_value": input_data.value1 * 2}
             return MyOutputModel(**exec_result)
 
+
     if __name__ == "__main__":
         my_cell = MyCell()
         input_dt = MyInputModel(value1=10, value2="example")
-        output = my_cell.execute(input_dt)
-        print(output)
+        output = asyncio.run(my_cell.run(input_dt.model_dump_json()))
+        print(MyOutputModel.model_validate_json(output["content"]))
