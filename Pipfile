@@ -7,6 +7,8 @@ name = "pypi"
 loguru = "==0.7.2"
 pydantic = "==2.5.2"
 pydantic-settings = "==2.1.0"
+opentelemetry-api = "==1.21.0"
+opentelemetry-sdk = "==1.21.0"
 
 [dev-packages]
 twine = "==4.0.2"
