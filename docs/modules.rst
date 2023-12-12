@@ -14,7 +14,6 @@ Modules
    :show-inheritance:
 
 .. automodule:: kinkernel.config
-   :no-index:
    :members:
    :undoc-members:
    :show-inheritance:
