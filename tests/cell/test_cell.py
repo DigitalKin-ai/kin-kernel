@@ -1,4 +1,6 @@
+# pylint: disable-all
 # test_cell.py
+import pytest
 from pydantic import BaseModel
 
 from kinkernel.cells.base import BaseCell
@@ -21,7 +23,7 @@ class ConcreteCell(Cell[InputModel, OutputModel]):
     input_format = InputModel
     output_format = OutputModel
 
-    def execute(self, input_data: InputModel) -> OutputModel:
+    async def _execute(self, input_data: InputModel) -> OutputModel:
         return OutputModel(output_field=len(input_data.input_field))
 
 
@@ -36,10 +38,11 @@ class TestConcreteCell:
         assert cell.role == "test"
         assert cell.description == "A test cell"
 
-    def test_concrete_cell_execute(self):
+    @pytest.mark.asyncio
+    async def test_concrete_cell_execute(self):
         # Test the execute method of ConcreteCell
         cell = ConcreteCell()
         input_model = InputModel(input_field="test")
-        output_model = cell.execute(input_model)
+        output_model = await cell._execute(input_model)
         assert isinstance(output_model, OutputModel)
         assert output_model.output_field == 4  # length of "test"
