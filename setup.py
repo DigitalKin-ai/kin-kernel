@@ -23,8 +23,8 @@ setup(
         "pydantic>=2.5.2",
         "pydantic-settings>=2.1.0",
         "loguru>=0.7.2",
-        "opentelemetry-api==1.21.0",
-        "opentelemetry-sdk==1.21.0",
+        "opentelemetry-api>=1.21.0",
+        "opentelemetry-sdk>=1.21.0",
     ],
     python_requires=">=3.10",
     classifiers=[
