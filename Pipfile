@@ -7,6 +7,8 @@ name = "pypi"
 loguru = "==0.7.2"
 pydantic = "==2.5.2"
 pydantic-settings = "==2.1.0"
+opentelemetry-api = "==1.21.0"
+opentelemetry-sdk = "==1.21.0"
 
 [dev-packages]
 twine = "==4.0.2"
@@ -21,6 +23,8 @@ setuptools = "==69.0.2"
 types-setuptools = "==69.0.0.0"
 sphinx = "==7.2.6"
 sphinx-rtd-theme = "==2.0.0"
+pytest-asyncio = "==0.23.2"
+build = "==1.0.3"
 
 [requires]
 python_version = "3.10"

@@ -8,10 +8,10 @@ To deploy a Python package on PyPI (Python Package Index), you'll need to follow
    python -m pip install --upgrade setuptools wheel
    ```
 
-2. Install `twine`, which is a utility for publishing Python packages on PyPI:
+2. Install `twine` and `build`, which is a utility for publishing Python packages on PyPI:
 
    ```shell
-   python -m pip install --upgrade twine
+   python -m pip install --upgrade twine build
    ```
 
 **Packaging Your Project:**
@@ -21,7 +21,7 @@ To deploy a Python package on PyPI (Python Package Index), you'll need to follow
 2. Create the distribution package for your project:
 
    ```shell
-   python setup.py sdist bdist_wheel
+   python -m build
    ```
 
    This command will generate distribution archives in the `dist` directory.

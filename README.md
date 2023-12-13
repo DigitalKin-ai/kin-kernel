@@ -64,26 +64,37 @@ To create a new Cell, you'll need to subclass the `Cell` class provided in the k
 Here's a simple example of a Cell that processes input data:
 
 ```python
-from kinkernel import Cell
 from pydantic import BaseModel
+
+from kinkernel import Cell
+from kinkernel.config import ConfigModel, EnvVar
+
 
 class MyInputModel(BaseModel):
     value1: int
     value2: str
 
+
 class MyOutputModel(BaseModel):
     processed_value: int
+
 
 class MyCell(Cell[MyInputModel, MyOutputModel]):
     role = "Processor"
     description = "Processes input data"
     input_format = MyInputModel
     output_format = MyOutputModel
+    config = ConfigModel(
+        env_vars=[
+            EnvVar(key="ENV_VAR_1", value="value1"),
+            EnvVar(key="ENV_VAR_2", value="value2"),
+        ]
+    )
 
-    def execute(self, input_data: MyInputModel) -> MyOutputModel:
-        # Cell-specific logic here
-        result = input_data.value1 * 2
-        return MyOutputModel(processed_value=result)
+    async def _execute(self, input_data: MyInputModel) -> MyOutputModel:
+        # Process the input_data as needed
+        exec_result = {"processed_value": input_data.value1 * 2}
+        return MyOutputModel(**exec_result)
 ```
 
 You can then instantiate and execute your Cell as follows:

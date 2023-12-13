@@ -1,6 +1,8 @@
 """
 Example module demonstrating how to developpe a Cell.
 """
+import asyncio
+
 from pydantic import BaseModel
 
 from kinkernel import Cell
@@ -56,7 +58,7 @@ class MyCell(Cell[MyInputModel, MyOutputModel]):
         ]
     )
 
-    def execute(self, input_data: MyInputModel) -> MyOutputModel:
+    async def _execute(self, input_data: MyInputModel) -> MyOutputModel:
         """
         Executes the cell's processing logic on the given input data.
 
@@ -73,5 +75,5 @@ class MyCell(Cell[MyInputModel, MyOutputModel]):
 if __name__ == "__main__":
     my_cell = MyCell()
     input_dt = MyInputModel(value1=10, value2="example")
-    output = my_cell.execute(input_dt)
-    print(output)
+    output = asyncio.run(my_cell.run(input_dt.model_dump_json()))
+    print(MyOutputModel.model_validate_json(output["content"]))
