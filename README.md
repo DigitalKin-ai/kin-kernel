@@ -2,7 +2,7 @@
 
 [![PyPI version](https://badge.fury.io/py/kin-kernel.svg)](https://badge.fury.io/py/kin-kernel)
 [![Python version](https://img.shields.io/pypi/pyversions/kin-kernel.svg)](https://pypi.python.org/pypi/kin-kernel/)
-[![License](https://img.shields.io/github/license/DigitalKin/kin-kernel.svg)](https://github.com/DigitalKin-ai/kin-kernel/blob/main/LICENSE)
+[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](http://creativecommons.org/licenses/by-nc-sa/4.0/)
 [![DigitalKin](https://img.shields.io/badge/DigitalKin-connect-001945)](https://vision.digitalkin.ai)
 [![Discord](https://img.shields.io/badge/Discord-join-blue)](https://discord.com/invite/yVstHVcx)
 
