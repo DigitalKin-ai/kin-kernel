@@ -37,4 +37,5 @@ setup(
     ],
     keywords="kin-kernel cells autonomous-agents IoA DigitalKin",
     include_package_data=True,
+    package_data={"kinkernel": ["py.typed"]},
 )
