@@ -1,0 +1,3 @@
+include kinkernel/py.typed
+include README.md
+include LICENSE
