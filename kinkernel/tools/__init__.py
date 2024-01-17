@@ -14,6 +14,7 @@ Classes:
 Functions:
     - cell_to_openai_function(cells): Converts a list of BaseCell objects into a list of OpenAiFunctionCell instances.
 """
+
 from kinkernel.tools.openai_function_cell import (
     OpenAiFunctionCell,
     cell_to_openai_function,
