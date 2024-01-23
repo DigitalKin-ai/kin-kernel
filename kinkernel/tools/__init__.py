@@ -18,5 +18,6 @@ from kinkernel.tools.openai_function_cell import (
     OpenAiFunctionCell,
     cell_to_openai_function,
 )
+from kinkernel.tools.json_schema_cleaner import replace_refs_with_defs
 
-__all__ = ["OpenAiFunctionCell", "cell_to_openai_function"]
+__all__ = ["OpenAiFunctionCell", "cell_to_openai_function", "replace_refs_with_defs"]
