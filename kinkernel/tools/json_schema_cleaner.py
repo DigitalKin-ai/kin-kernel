@@ -1,16 +1,28 @@
 """
-TODO: sphinx docstring
+This module provides a utility to clean JSON schemas by replacing `$ref` references with their actual definitions.
 """
 
 
 def replace_refs_with_defs(schema: dict) -> dict:
     """
-    TODO: sphinx docstring
+    Replaces all `$ref` references in a JSON schema with their corresponding definitions from the `$defs` section.
+
+    :param schema: The JSON schema containing `$ref` references and a `$defs` section.
+    :type schema: dict
+    :return: The JSON schema with all `$ref` references replaced by their actual definitions.
+    :rtype: dict
     """
 
     def resolve_ref(ref: str, defs: dict) -> dict:
         """
-        TODO: sphinx docstring
+        Resolves a `$ref` reference using the definitions provided.
+
+        :param ref: The reference string to resolve.
+        :type ref: str
+        :param defs: A dictionary of definitions to resolve the reference against.
+        :type defs: dict
+        :return: The resolved schema for the given reference.
+        :rtype: dict
         """
         # Remove the #/ and split by '/'
         path = ref.replace("#/$defs/", "").split("/")
@@ -21,7 +33,14 @@ def replace_refs_with_defs(schema: dict) -> dict:
 
     def replace_refs(obj: dict, defs: dict) -> dict:
         """
-        TODO: sphinx docstring
+        Recursively replaces `$ref` references within an object (dictionary or list) with their definitions.
+
+        :param obj: The object (dictionary or list) to process.
+        :type obj: dict | list
+        :param defs: A dictionary of definitions to resolve references against.
+        :type defs: dict
+        :return: The object with all `$ref` references replaced by their actual definitions.
+        :rtype: dict | list
         """
         if isinstance(obj, dict):
             if "$ref" in obj:
@@ -53,3 +72,29 @@ def replace_refs_with_defs(schema: dict) -> dict:
     del schema["required"]
     del schema["type"]
     return schema
+
+
+# Example usage:
+# if __name__ == "__main__":
+#     example_schema = {
+#         "$defs": {
+#             "address": {
+#                 "type": "object",
+#                 "properties": {
+#                     "street": {"type": "string"},
+#                     "city": {"type": "string"}
+#                 },
+#                 "required": ["street", "city"]
+#             }
+#         },
+#         "title": "Person",
+#         "type": "object",
+#         "properties": {
+#             "name": {"type": "string"},
+#             "age": {"type": "integer"},
+#             "address": {"$ref": "#/$defs/address"}
+#         },
+#         "required": ["name", "age", "address"]
+#     }
+#     cleaned_schema = replace_refs_with_defs(example_schema)
+#     print(cleaned_schema)

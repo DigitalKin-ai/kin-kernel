@@ -8,11 +8,14 @@ functions.
 The `cell_to_openai_function` function is a utility that converts a list of BaseCell objects
 into a list of `OpenAiFunctionCell` instances for easier manipulation.
 
+The `replace_refs_with_defs` function cleans a JSON schema by replacing `$ref` references with their actual definitions.
+
 Classes:
-    OpenAiFunctionCell: Wraps a BaseCell to provide a convenient interface for execution and property access.
+    - OpenAiFunctionCell: Wraps a BaseCell to provide a convenient interface for execution and property access.
 
 Functions:
-    cell_to_openai_function(cells): Converts a list of BaseCell objects into a list of OpenAiFunctionCell instances.
+    - cell_to_openai_function(cells): Converts a list of BaseCell objects into a list of OpenAiFunctionCell instances.
+    - replace_refs_with_defs(schema): Cleans a JSON schema by replacing `$ref` references with their actual definitions.
 """
 from kinkernel.tools.openai_function_cell import (
     OpenAiFunctionCell,
