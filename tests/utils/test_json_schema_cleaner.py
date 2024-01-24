@@ -1,5 +1,4 @@
 # pylint: disable-all
-import json
 import pytest
 from kinkernel.utils.json_schema_cleaner import replace_refs_with_defs
 
