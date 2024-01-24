@@ -45,8 +45,8 @@ from typing import Type, TypeVar, Generic, Optional
 from opentelemetry import trace
 from pydantic import BaseModel, ValidationError
 
-from kinkernel.config import ConfigModel
-
+from kinkernel.config.base import ConfigModel
+from kinkernel.utils.json_schema_cleaner import replace_refs_with_defs
 
 # Create a type variable that can be used for input and output models
 InputModelT = TypeVar("InputModelT", bound=BaseModel)
@@ -193,6 +193,45 @@ class BaseCell(Generic[InputModelT, OutputModelT], ABC):
         """
         if cls.output_format is not None:
             return json.dumps(cls.output_format.model_json_schema(), indent=2)
+        raise NotImplementedError(
+            f"'{cls.__name__}' class does not define an 'output_format'."
+        )
+
+    @classmethod
+    def get_input_schema(cls) -> dict:
+        """
+        Retrieves the JSON schema for the input model of the cell.
+
+        The schema is cleaned to replace any `$ref` references with their actual definitions.
+
+        :return: The JSON schema of the input model.
+        :rtype: dict
+        :raises NotImplementedError: If the `input_format` is not defined in the subclass.
+        """
+
+        if cls.input_format is not None:
+            schema = cls.input_format.model_json_schema()
+            schema["name"] = cls.get_role()
+            return replace_refs_with_defs(schema)
+        raise NotImplementedError(
+            f"'{cls.__name__}' class does not define an 'input_format'."
+        )
+
+    @classmethod
+    def get_output_schema(cls) -> dict:
+        """
+        Retrieves the JSON schema for the output model of the cell.
+
+        The schema is cleaned to replace any `$ref` references with their actual definitions.
+
+        :return: The JSON schema of the output model.
+        :rtype: dict
+        :raises NotImplementedError: If the `output_format` is not defined in the subclass.
+        """
+        if cls.output_format is not None:
+            schema = cls.output_format.model_json_schema()
+            schema["name"] = cls.get_role()
+            return replace_refs_with_defs(schema)
         raise NotImplementedError(
             f"'{cls.__name__}' class does not define an 'output_format'."
         )

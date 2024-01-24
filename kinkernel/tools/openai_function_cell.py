@@ -7,7 +7,7 @@ import json
 
 from typing import Union, Dict, Any, List
 
-from kinkernel.cells import BaseCell
+from kinkernel.cells.base import BaseCell
 
 
 class OpenAiFunctionCell:

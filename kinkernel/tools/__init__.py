@@ -9,10 +9,10 @@ The `cell_to_openai_function` function is a utility that converts a list of Base
 into a list of `OpenAiFunctionCell` instances for easier manipulation.
 
 Classes:
-    OpenAiFunctionCell: Wraps a BaseCell to provide a convenient interface for execution and property access.
+    - OpenAiFunctionCell: Wraps a BaseCell to provide a convenient interface for execution and property access.
 
 Functions:
-    cell_to_openai_function(cells): Converts a list of BaseCell objects into a list of OpenAiFunctionCell instances.
+    - cell_to_openai_function(cells): Converts a list of BaseCell objects into a list of OpenAiFunctionCell instances.
 """
 from kinkernel.tools.openai_function_cell import (
     OpenAiFunctionCell,
