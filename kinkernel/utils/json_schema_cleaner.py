@@ -1,6 +1,7 @@
 """
 This module provides a utility to clean JSON schemas by replacing `$ref` references with their actual definitions.
 """
+import json
 
 
 def replace_refs_with_defs(schema: dict) -> dict:
@@ -47,6 +48,8 @@ def replace_refs_with_defs(schema: dict) -> dict:
                 # Replace the $ref with the actual definition
                 ref = obj.pop("$ref")
                 ref_schema = resolve_ref(ref, defs)
+                if "$ref" in json.dumps(ref_schema):
+                    replace_refs(ref_schema, defs)
                 obj.update(ref_schema)
             else:
                 # Recursively replace $ref in each dictionary
@@ -57,10 +60,12 @@ def replace_refs_with_defs(schema: dict) -> dict:
             obj = [replace_refs(item, defs) for item in obj]
         return obj
 
+    if "$defs" not in schema and "$ref" in json.dumps(schema):
+        raise KeyError("Schema does not have any defs however it contains some ref")
+
     if "$defs" in schema:
         defs = schema.pop("$defs")
         schema = replace_refs(schema, defs)
-
     schema["parameters"] = {
         "properties": schema["properties"],
         "required": schema["required"],
