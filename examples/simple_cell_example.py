@@ -1,6 +1,7 @@
 """
 Example module demonstrating how to developpe a Cell.
 """
+import json
 import asyncio
 
 from pydantic import BaseModel
@@ -77,3 +78,5 @@ if __name__ == "__main__":
     input_dt = MyInputModel(value1=10, value2="example")
     output = asyncio.run(my_cell.run(input_dt.model_dump_json()))
     print(MyOutputModel.model_validate_json(output["content"]))
+    print("----")
+    print(json.dumps(MyCell.get_input_schema(), indent=2))

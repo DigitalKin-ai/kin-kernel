@@ -2,7 +2,7 @@
 
 [![PyPI version](https://badge.fury.io/py/kin-kernel.svg)](https://badge.fury.io/py/kin-kernel)
 [![Python version](https://img.shields.io/pypi/pyversions/kin-kernel.svg)](https://pypi.python.org/pypi/kin-kernel/)
-[![CodeCov](https://codecov.io/thibaud-perrin/DigitalKin-ai/kin-kernel/badge.svg)](https://codecov.io/thibaud-perrin/DigitalKin-ai/kin-kernel/badge.svg)
+[![codecov](https://codecov.io/gh/DigitalKin-ai/kin-kernel/graph/badge.svg?token=65F0SB839V)](https://codecov.io/gh/DigitalKin-ai/kin-kernel)
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](http://creativecommons.org/licenses/by-nc-sa/4.0/)
 [![DigitalKin](https://img.shields.io/badge/DigitalKin-connect-001945)](https://vision.digitalkin.ai)
 [![Discord](https://img.shields.io/badge/Discord-join-blue)](https://discord.com/invite/yVstHVcx)
