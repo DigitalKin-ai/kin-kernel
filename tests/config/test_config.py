@@ -1,3 +1,4 @@
+# pylint: disable-all
 from kinkernel.config.base import ConfigModel, EnvVar
 import pytest
 

@@ -45,8 +45,8 @@ from typing import Type, TypeVar, Generic, Optional
 from opentelemetry import trace
 from pydantic import BaseModel, ValidationError
 
-from kinkernel.config import ConfigModel
-from kinkernel.tools.json_schema_cleaner import replace_refs_with_defs
+from kinkernel.config.base import ConfigModel
+from kinkernel.utils.json_schema_cleaner import replace_refs_with_defs
 
 # Create a type variable that can be used for input and output models
 InputModelT = TypeVar("InputModelT", bound=BaseModel)
@@ -214,7 +214,7 @@ class BaseCell(Generic[InputModelT, OutputModelT], ABC):
             schema["name"] = cls.get_role()
             return replace_refs_with_defs(schema)
         raise NotImplementedError(
-            f"'{cls.__name__}' class does not define an 'output_format'."
+            f"'{cls.__name__}' class does not define an 'input_format'."
         )
 
     @classmethod
