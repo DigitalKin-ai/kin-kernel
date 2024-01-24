@@ -1,6 +1,7 @@
 """
 This module provides a utility to clean JSON schemas by replacing `$ref` references with their actual definitions.
 """
+
 import json
 
 
