@@ -71,7 +71,8 @@ def replace_refs_with_defs(schema: dict) -> dict:
         "required": schema["required"],
         "type": schema["type"],
     }
-    schema["name"] = schema["title"]
+    if "name" not in schema:
+        schema["name"] = schema["title"]
     del schema["title"]
     del schema["properties"]
     del schema["required"]

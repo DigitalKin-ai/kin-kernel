@@ -315,7 +315,7 @@ def test_get_output_format_failure():
 
 def test_get_input_schema_success():
     result = {
-        "name": "TestInputModel",
+        "name": "test",
         "parameters": {
             "properties": {
                 "x": {"title": "X", "type": "integer"},
@@ -353,7 +353,7 @@ def test_get_input_schema_failure():
 
 def test_get_output_schema_success():
     result = {
-        "name": "TestOutputModel",
+        "name": "test",
         "parameters": {
             "properties": {
                 "result": {"title": "Result", "type": "integer"},
