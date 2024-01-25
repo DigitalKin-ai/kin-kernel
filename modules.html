@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Modules &mdash; kin-kernel v0.0.2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=1812e922"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Quickstart" href="quickstart.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            kin-kernel
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#global">Global</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#module-kinkernel.cells">Cells</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#kinkernel.cells.BaseCell"><code class="docutils literal notranslate"><span class="pre">BaseCell</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#kinkernel.cells.BaseCell.config"><code class="docutils literal notranslate"><span class="pre">BaseCell.config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kinkernel.cells.BaseCell.description"><code class="docutils literal notranslate"><span class="pre">BaseCell.description</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kinkernel.cells.BaseCell.get_description"><code class="docutils literal notranslate"><span class="pre">BaseCell.get_description()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kinkernel.cells.BaseCell.get_input_format"><code class="docutils literal notranslate"><span class="pre">BaseCell.get_input_format()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kinkernel.cells.BaseCell.get_input_schema"><code class="docutils literal notranslate"><span class="pre">BaseCell.get_input_schema()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kinkernel.cells.BaseCell.get_output_format"><code class="docutils literal notranslate"><span class="pre">BaseCell.get_output_format()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kinkernel.cells.BaseCell.get_output_schema"><code class="docutils literal notranslate"><span class="pre">BaseCell.get_output_schema()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kinkernel.cells.BaseCell.get_role"><code class="docutils literal notranslate"><span class="pre">BaseCell.get_role()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kinkernel.cells.BaseCell.input_format"><code class="docutils literal notranslate"><span class="pre">BaseCell.input_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kinkernel.cells.BaseCell.output_format"><code class="docutils literal notranslate"><span class="pre">BaseCell.output_format</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kinkernel.cells.BaseCell.role"><code class="docutils literal notranslate"><span class="pre">BaseCell.role</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kinkernel.cells.BaseCell.run"><code class="docutils literal notranslate"><span class="pre">BaseCell.run()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#kinkernel.cells.Cell"><code class="docutils literal notranslate"><span class="pre">Cell</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#kinkernel.cells.ResponseModel"><code class="docutils literal notranslate"><span class="pre">ResponseModel</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#kinkernel.cells.ResponseModel.content"><code class="docutils literal notranslate"><span class="pre">ResponseModel.content</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kinkernel.cells.ResponseModel.model_config"><code class="docutils literal notranslate"><span class="pre">ResponseModel.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kinkernel.cells.ResponseModel.model_fields"><code class="docutils literal notranslate"><span class="pre">ResponseModel.model_fields</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kinkernel.cells.ResponseModel.type"><code class="docutils literal notranslate"><span class="pre">ResponseModel.type</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#module-kinkernel.config">Config</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#kinkernel.config.ConfigModel"><code class="docutils literal notranslate"><span class="pre">ConfigModel</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#kinkernel.config.ConfigModel.env_vars"><code class="docutils literal notranslate"><span class="pre">ConfigModel.env_vars</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kinkernel.config.ConfigModel.model_config"><code class="docutils literal notranslate"><span class="pre">ConfigModel.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kinkernel.config.ConfigModel.model_fields"><code class="docutils literal notranslate"><span class="pre">ConfigModel.model_fields</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#kinkernel.config.EnvVar"><code class="docutils literal notranslate"><span class="pre">EnvVar</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#kinkernel.config.EnvVar.key"><code class="docutils literal notranslate"><span class="pre">EnvVar.key</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kinkernel.config.EnvVar.model_config"><code class="docutils literal notranslate"><span class="pre">EnvVar.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kinkernel.config.EnvVar.model_fields"><code class="docutils literal notranslate"><span class="pre">EnvVar.model_fields</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kinkernel.config.EnvVar.value"><code class="docutils literal notranslate"><span class="pre">EnvVar.value</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#module-kinkernel.tools">Tools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#kinkernel.tools.OpenAiFunctionCell"><code class="docutils literal notranslate"><span class="pre">OpenAiFunctionCell</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#kinkernel.tools.OpenAiFunctionCell.ainvoke"><code class="docutils literal notranslate"><span class="pre">OpenAiFunctionCell.ainvoke()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#kinkernel.tools.OpenAiFunctionCell.args"><code class="docutils literal notranslate"><span class="pre">OpenAiFunctionCell.args</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#kinkernel.tools.cell_to_openai_function"><code class="docutils literal notranslate"><span class="pre">cell_to_openai_function()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#module-kinkernel.utils">Utils</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#kinkernel.utils.replace_refs_with_defs"><code class="docutils literal notranslate"><span class="pre">replace_refs_with_defs()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">kin-kernel</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Modules</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/modules.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="modules">
+<h1>Modules<a class="headerlink" href="#modules" title="Link to this heading"></a></h1>
+</section>
+<section id="global">
+<h1>Global<a class="headerlink" href="#global" title="Link to this heading"></a></h1>
+<p>This package provides the core components required to define and configure cells within the system.</p>
+<p>A cell is an autonomous agent characterized by its role, input and output formats, and the
+ability to execute specific tasks based on provided input data.</p>
+<p>The package includes the following key components:
+- <cite>Cell</cite>: A concrete class representing a cell, which can be further subclassed for specific behaviors.
+- <cite>EnvVar</cite>: A model representing an environment variable as a key-value pair.
+- <cite>ConfigModel</cite>: A model for defining configuration parameters for a cell, including environment variables.</p>
+<p>By creating a centralized package for these components, the system ensures consistency
+and ease of use when defining new types of cells and their configurations.</p>
+<p>The <cite>__all__</cite> list in this module specifies the public components that are available for import
+when the package is imported using the <cite>from package import *</cite> syntax.</p>
+<dl>
+<dt>Examples:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">kinkernel</span> <span class="kn">import</span> <span class="n">Cell</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">kinkernel</span> <span class="kn">import</span> <span class="n">EnvVar</span><span class="p">,</span> <span class="n">ConfigModel</span>
+</pre></div>
+</div>
+<p># Define a custom cell by subclassing <cite>Cell</cite>
+# Define custom configuration models using <cite>ConfigModel</cite> and <cite>EnvVar</cite></p>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">kinkernel.</span></span><span class="sig-name descname"><span class="pre">Cell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Bases: <a class="reference internal" href="#kinkernel.cells.BaseCell" title="kinkernel.cells.base.BaseCell"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseCell</span></code></a>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">InputModelT</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">OutputModelT</span></code>]</p>
+<p>A concrete implementation of the BaseCell class.</p>
+<p>This class is meant to be used as a base for specific cell implementations
+that do not require additional attributes or methods beyond those provided by BaseCell.
+Subclasses of this class should provide specific <cite>role</cite>, <cite>description</cite>,
+<cite>input_format</cite>, <cite>output_format</cite>, and implement the <cite>execute</cite> method.</p>
+<dl>
+<dt>Example:</dt><dd><dl>
+<dt>class MyCell(Cell[MyInputModel, MyOutputModel]):</dt><dd><p>role = ‘example_role’
+description = ‘An example cell implementation.’
+input_format = MyInputModel
+output_format = MyOutputModel</p>
+<dl class="simple">
+<dt>def execute(self, input_data: MyInputModel) -&gt; MyOutputModel:</dt><dd><p># Implementation of cell logic goes here.
+pass</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>Note that this class can be directly instantiated if no additional functionality is needed.</p>
+<dl class="simple">
+<dt>Usage:</dt><dd><p># Assuming MyInputModel and MyOutputModel are defined and imported Pydantic models
+my_cell = Cell[MyInputModel, MyOutputModel]()
+result = my_cell.execute(my_input_data)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">kinkernel.</span></span><span class="sig-name descname"><span class="pre">ConfigModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_vars</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#kinkernel.config.EnvVar" title="kinkernel.config.base.EnvVar"><span class="pre">EnvVar</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Defines the configuration for a cell with an optional list of environment variables.</p>
+<p>The model can be extended to include additional configuration parameters as needed.</p>
+<dl class="simple">
+<dt>Attributes:</dt><dd><dl class="simple">
+<dt>env_vars (Optional[List[EnvVar]]): A list of <cite>EnvVar</cite> instances representing</dt><dd><p>environment variables. Defaults to an empty list if not provided.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">env_vars</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#kinkernel.config.EnvVar" title="kinkernel.config.base.EnvVar"><span class="pre">EnvVar</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">ConfigDict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">model_fields</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">FieldInfo</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'env_vars':</span> <span class="pre">FieldInfo(annotation=Union[List[EnvVar],</span> <span class="pre">NoneType],</span> <span class="pre">required=False,</span> <span class="pre">default=[])}</span></em></dt>
+<dd><p>Metadata about the fields defined on the model,
+mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</p>
+<p>This replaces <cite>Model.__fields__</cite> from Pydantic V1.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">kinkernel.</span></span><span class="sig-name descname"><span class="pre">EnvVar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Represents an environment variable as a key-value pair.</p>
+<dl class="simple">
+<dt>Attributes:</dt><dd><p>key (str): The name of the environment variable.
+value (str): The value associated with the environment variable.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">key</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">ConfigDict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">model_fields</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">FieldInfo</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'key':</span> <span class="pre">FieldInfo(annotation=str,</span> <span class="pre">required=True),</span> <span class="pre">'value':</span> <span class="pre">FieldInfo(annotation=str,</span> <span class="pre">required=True)}</span></em></dt>
+<dd><p>Metadata about the fields defined on the model,
+mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</p>
+<p>This replaces <cite>Model.__fields__</cite> from Pydantic V1.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-kinkernel.cells">
+<span id="cells"></span><h1>Cells<a class="headerlink" href="#module-kinkernel.cells" title="Link to this heading"></a></h1>
+<p>This module initializes the <cite>cells</cite> folder, which includes the definitions of cell-related classes.</p>
+<p>The <cite>cells</cite> folder provides the foundational abstract classes and concrete implementations
+required for creating and managing cells, which are autonomous agents within the system.</p>
+<dl class="simple">
+<dt>Classes:</dt><dd><p>BaseCell (class): Abstract base class for a Cell, defining the required interface and common behavior.
+Cell (class): A concrete implementation of BaseCell, intended to be subclassed for specific cell behaviors.
+ResponseModel (class): A Pydantic model representing the standard response format for a cell’s execution.</p>
+</dd>
+</dl>
+<p>The <cite>__all__</cite> list in this module specifies the public classes that are available for import
+when the package is imported using the <cite>from package import *</cite> syntax.</p>
+<dl class="simple">
+<dt>See Also:</dt><dd><p><cite>kinkernel.cells.base</cite>
+<cite>kinkernel.cells.cell</cite></p>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="kinkernel.cells.BaseCell">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">kinkernel.cells.</span></span><span class="sig-name descname"><span class="pre">BaseCell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kinkernel.cells.BaseCell" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">InputModelT</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">OutputModelT</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Abstract base class for a Cell, which is an autonomous agent in the system.</p>
+<p>This class should be subclassed with specific implementations that define
+the <cite>role</cite>, <cite>description</cite>, <cite>input_format</cite>, <cite>output_format</cite>, and the <cite>execute</cite> method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>role</strong> – The role of the cell within the system.</p></li>
+<li><p><strong>description</strong> – A brief description of the cell’s purpose.</p></li>
+<li><p><strong>input_format</strong> – A Pydantic model describing the expected input format.</p></li>
+<li><p><strong>output_format</strong> – A Pydantic model describing the expected output format.</p></li>
+<li><p><strong>config</strong> – An optional configuration model for the cell.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="kinkernel.cells.BaseCell.config">
+<span class="sig-name descname"><span class="pre">config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#kinkernel.config.ConfigModel" title="kinkernel.config.base.ConfigModel"><span class="pre">ConfigModel</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#kinkernel.cells.BaseCell.config" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="kinkernel.cells.BaseCell.description">
+<span class="sig-name descname"><span class="pre">description</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#kinkernel.cells.BaseCell.description" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kinkernel.cells.BaseCell.get_description">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_description</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#kinkernel.cells.BaseCell.get_description" title="Link to this definition"></a></dt>
+<dd><p>Get the description of the cell.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The description of the cell.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – If the <cite>description</cite> is not defined.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kinkernel.cells.BaseCell.get_input_format">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_input_format</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#kinkernel.cells.BaseCell.get_input_format" title="Link to this definition"></a></dt>
+<dd><p>Get the JSON schema of the input format model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The JSON schema of the input format as a string.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – If the <cite>input_format</cite> is not defined.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kinkernel.cells.BaseCell.get_input_schema">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_input_schema</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#kinkernel.cells.BaseCell.get_input_schema" title="Link to this definition"></a></dt>
+<dd><p>Retrieves the JSON schema for the input model of the cell.</p>
+<p>The schema is cleaned to replace any <cite>$ref</cite> references with their actual definitions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The JSON schema of the input model.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>NotImplementedError</strong> – If the <cite>input_format</cite> is not defined in the subclass.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kinkernel.cells.BaseCell.get_output_format">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_output_format</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#kinkernel.cells.BaseCell.get_output_format" title="Link to this definition"></a></dt>
+<dd><p>Get the JSON schema of the output format model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The JSON schema of the output format as a string.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – If the <cite>output_format</cite> is not defined.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kinkernel.cells.BaseCell.get_output_schema">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_output_schema</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#kinkernel.cells.BaseCell.get_output_schema" title="Link to this definition"></a></dt>
+<dd><p>Retrieves the JSON schema for the output model of the cell.</p>
+<p>The schema is cleaned to replace any <cite>$ref</cite> references with their actual definitions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The JSON schema of the output model.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>NotImplementedError</strong> – If the <cite>output_format</cite> is not defined in the subclass.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kinkernel.cells.BaseCell.get_role">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_role</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#kinkernel.cells.BaseCell.get_role" title="Link to this definition"></a></dt>
+<dd><p>Get the role of the cell.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The role of the cell.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – If the <cite>role</cite> is not defined.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="kinkernel.cells.BaseCell.input_format">
+<span class="sig-name descname"><span class="pre">input_format</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="pre">InputModelT</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#kinkernel.cells.BaseCell.input_format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="kinkernel.cells.BaseCell.output_format">
+<span class="sig-name descname"><span class="pre">output_format</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="pre">OutputModelT</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#kinkernel.cells.BaseCell.output_format" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="kinkernel.cells.BaseCell.role">
+<span class="sig-name descname"><span class="pre">role</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#kinkernel.cells.BaseCell.role" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="kinkernel.cells.BaseCell.run">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_json</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#kinkernel.cells.BaseCell.run" title="Link to this definition"></a></dt>
+<dd><p>Asynchronously process the input JSON string and return the result as a JSON.</p>
+<p>This method acquires a mutex, validates the input JSON against the
+<cite>input_format</cite> Pydantic model, executes the cell’s logic by calling the
+<cite>_execute</cite> method, and then validates and serializes the output using
+the <cite>output_format</cite> Pydantic model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>input_json</strong> – A JSON string representing the input data to be processed.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A JSON representing the response: ResponseModel, which could be the output data
+or an error message.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>NotImplementedError</strong> – If the input_format or output_format is not defined.</p></li>
+<li><p><strong>ValidationError</strong> – If the input data does not pass validation according to
+the input_format Pydantic model.</p></li>
+<li><p><strong>Exception</strong> – If any other exception occurs during the processing of the input.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="kinkernel.cells.Cell">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">kinkernel.cells.</span></span><span class="sig-name descname"><span class="pre">Cell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kinkernel.cells.Cell" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#kinkernel.cells.BaseCell" title="kinkernel.cells.base.BaseCell"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseCell</span></code></a>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">InputModelT</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">OutputModelT</span></code>]</p>
+<p>A concrete implementation of the BaseCell class.</p>
+<p>This class is meant to be used as a base for specific cell implementations
+that do not require additional attributes or methods beyond those provided by BaseCell.
+Subclasses of this class should provide specific <cite>role</cite>, <cite>description</cite>,
+<cite>input_format</cite>, <cite>output_format</cite>, and implement the <cite>execute</cite> method.</p>
+<dl>
+<dt>Example:</dt><dd><dl>
+<dt>class MyCell(Cell[MyInputModel, MyOutputModel]):</dt><dd><p>role = ‘example_role’
+description = ‘An example cell implementation.’
+input_format = MyInputModel
+output_format = MyOutputModel</p>
+<dl class="simple">
+<dt>def execute(self, input_data: MyInputModel) -&gt; MyOutputModel:</dt><dd><p># Implementation of cell logic goes here.
+pass</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>Note that this class can be directly instantiated if no additional functionality is needed.</p>
+<dl class="simple">
+<dt>Usage:</dt><dd><p># Assuming MyInputModel and MyOutputModel are defined and imported Pydantic models
+my_cell = Cell[MyInputModel, MyOutputModel]()
+result = my_cell.execute(my_input_data)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="kinkernel.cells.ResponseModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">kinkernel.cells.</span></span><span class="sig-name descname"><span class="pre">ResponseModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ResponseType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kinkernel.cells.ResponseModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>A Pydantic model that represents a standard response from a cell.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>type</strong> – The type of response, indicating success or error.</p></li>
+<li><p><strong>content</strong> – The content of the response, which may be a descriptive message or serialized data in JSON format.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="kinkernel.cells.ResponseModel.content">
+<span class="sig-name descname"><span class="pre">content</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#kinkernel.cells.ResponseModel.content" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="kinkernel.cells.ResponseModel.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">ConfigDict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#kinkernel.cells.ResponseModel.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="kinkernel.cells.ResponseModel.model_fields">
+<span class="sig-name descname"><span class="pre">model_fields</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">FieldInfo</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'content':</span> <span class="pre">FieldInfo(annotation=str,</span> <span class="pre">required=True),</span> <span class="pre">'type':</span> <span class="pre">FieldInfo(annotation=ResponseType,</span> <span class="pre">required=True)}</span></em><a class="headerlink" href="#kinkernel.cells.ResponseModel.model_fields" title="Link to this definition"></a></dt>
+<dd><p>Metadata about the fields defined on the model,
+mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</p>
+<p>This replaces <cite>Model.__fields__</cite> from Pydantic V1.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="kinkernel.cells.ResponseModel.type">
+<span class="sig-name descname"><span class="pre">type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ResponseType</span></em><a class="headerlink" href="#kinkernel.cells.ResponseModel.type" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-kinkernel.config">
+<span id="config"></span><h1>Config<a class="headerlink" href="#module-kinkernel.config" title="Link to this heading"></a></h1>
+<p>This module serves as the entry point for the <cite>kinkernel.config</cite> package. It re-exports
+the <cite>EnvVar</cite> and <cite>ConfigModel</cite> classes from the <cite>kinkernel.config.base</cite> module.</p>
+<p>The <cite>EnvVar</cite> class is used to represent environment variables as key-value pairs,
+while the <cite>ConfigModel</cite> class allows for defining and managing a set of configuration
+parameters for a cell, which can include environment variables and potentially other
+settings.</p>
+<dl>
+<dt>Example:</dt><dd><p>from kinkernel.config import EnvVar, ConfigModel</p>
+<p># Create an environment variable instance
+database_url = EnvVar(key=’DATABASE_URL’, value=’postgres://user:password&#64;localhost/db’)</p>
+<p># Create a configuration model with the environment variable
+config = ConfigModel(env_vars=[database_url])</p>
+</dd>
+<dt>See Also:</dt><dd><p><cite>kinkernel.config.base</cite>: The module where <cite>EnvVar</cite> and <cite>ConfigModel</cite> are defined.</p>
+</dd>
+<dt>Available Classes:</dt><dd><ul class="simple">
+<li><p><cite>EnvVar</cite>: Represents a single environment variable.</p></li>
+<li><p><cite>ConfigModel</cite>: Holds the configuration for a cell, which may include multiple environment variables.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="kinkernel.config.ConfigModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">kinkernel.config.</span></span><span class="sig-name descname"><span class="pre">ConfigModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_vars</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#kinkernel.config.EnvVar" title="kinkernel.config.base.EnvVar"><span class="pre">EnvVar</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kinkernel.config.ConfigModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Defines the configuration for a cell with an optional list of environment variables.</p>
+<p>The model can be extended to include additional configuration parameters as needed.</p>
+<dl class="simple">
+<dt>Attributes:</dt><dd><dl class="simple">
+<dt>env_vars (Optional[List[EnvVar]]): A list of <cite>EnvVar</cite> instances representing</dt><dd><p>environment variables. Defaults to an empty list if not provided.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="kinkernel.config.ConfigModel.env_vars">
+<span class="sig-name descname"><span class="pre">env_vars</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#kinkernel.config.EnvVar" title="kinkernel.config.base.EnvVar"><span class="pre">EnvVar</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#kinkernel.config.ConfigModel.env_vars" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="kinkernel.config.ConfigModel.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">ConfigDict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#kinkernel.config.ConfigModel.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="kinkernel.config.ConfigModel.model_fields">
+<span class="sig-name descname"><span class="pre">model_fields</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">FieldInfo</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'env_vars':</span> <span class="pre">FieldInfo(annotation=Union[List[EnvVar],</span> <span class="pre">NoneType],</span> <span class="pre">required=False,</span> <span class="pre">default=[])}</span></em><a class="headerlink" href="#kinkernel.config.ConfigModel.model_fields" title="Link to this definition"></a></dt>
+<dd><p>Metadata about the fields defined on the model,
+mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</p>
+<p>This replaces <cite>Model.__fields__</cite> from Pydantic V1.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="kinkernel.config.EnvVar">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">kinkernel.config.</span></span><span class="sig-name descname"><span class="pre">EnvVar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kinkernel.config.EnvVar" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Represents an environment variable as a key-value pair.</p>
+<dl class="simple">
+<dt>Attributes:</dt><dd><p>key (str): The name of the environment variable.
+value (str): The value associated with the environment variable.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="kinkernel.config.EnvVar.key">
+<span class="sig-name descname"><span class="pre">key</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#kinkernel.config.EnvVar.key" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="kinkernel.config.EnvVar.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">ConfigDict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#kinkernel.config.EnvVar.model_config" title="Link to this definition"></a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="kinkernel.config.EnvVar.model_fields">
+<span class="sig-name descname"><span class="pre">model_fields</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">FieldInfo</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'key':</span> <span class="pre">FieldInfo(annotation=str,</span> <span class="pre">required=True),</span> <span class="pre">'value':</span> <span class="pre">FieldInfo(annotation=str,</span> <span class="pre">required=True)}</span></em><a class="headerlink" href="#kinkernel.config.EnvVar.model_fields" title="Link to this definition"></a></dt>
+<dd><p>Metadata about the fields defined on the model,
+mapping of field names to [<cite>FieldInfo</cite>][pydantic.fields.FieldInfo].</p>
+<p>This replaces <cite>Model.__fields__</cite> from Pydantic V1.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="kinkernel.config.EnvVar.value">
+<span class="sig-name descname"><span class="pre">value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#kinkernel.config.EnvVar.value" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-kinkernel.tools">
+<span id="tools"></span><h1>Tools<a class="headerlink" href="#module-kinkernel.tools" title="Link to this heading"></a></h1>
+<p>This package provides tools for wrapping and interacting with OpenAI’s Functions.</p>
+<p>The <cite>OpenAiFunctionCell</cite> class offers a high-level interface to execute BaseCell objects
+asynchronously and to access their properties and input arguments schema in order to use them with OpenAI
+functions.</p>
+<p>The <cite>cell_to_openai_function</cite> function is a utility that converts a list of BaseCell objects
+into a list of <cite>OpenAiFunctionCell</cite> instances for easier manipulation.</p>
+<dl class="simple">
+<dt>Classes:</dt><dd><ul class="simple">
+<li><p>OpenAiFunctionCell: Wraps a BaseCell to provide a convenient interface for execution and property access.</p></li>
+</ul>
+</dd>
+<dt>Functions:</dt><dd><ul class="simple">
+<li><p>cell_to_openai_function(cells): Converts a list of BaseCell objects into a list of OpenAiFunctionCell instances.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="kinkernel.tools.OpenAiFunctionCell">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">kinkernel.tools.</span></span><span class="sig-name descname"><span class="pre">OpenAiFunctionCell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cell</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#kinkernel.cells.BaseCell" title="kinkernel.cells.base.BaseCell"><span class="pre">BaseCell</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kinkernel.tools.OpenAiFunctionCell" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class representing an OpenAI function calls that wraps around a DK BaseCell object, providing
+a convenient interface to access its properties and execute it asynchronously.</p>
+<dl class="simple">
+<dt>Attributes:</dt><dd><p>cell (BaseCell): The underlying BaseCell instance.
+name (str): The role name of the cell.
+description (str): The description of the cell.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="kinkernel.tools.OpenAiFunctionCell.ainvoke">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ainvoke</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="headerlink" href="#kinkernel.tools.OpenAiFunctionCell.ainvoke" title="Link to this definition"></a></dt>
+<dd><p>Asynchronously invoke the cell with the given input.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>input (Union[str, Dict[str, Any]]): The input data to pass to the cell. Can be a JSON string or a dictionary.</p>
+</dd>
+<dt>Returns:</dt><dd><p>Any: The output content from the cell after execution.</p>
+</dd>
+<dt>Raises:</dt><dd><p>TypeError: If the input cannot be serialized to JSON.
+KeyError: If the expected output key ‘content’ is missing from the cell’s response.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="kinkernel.tools.OpenAiFunctionCell.args">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">args</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span></em><a class="headerlink" href="#kinkernel.tools.OpenAiFunctionCell.args" title="Link to this definition"></a></dt>
+<dd><p>Retrieve the input arguments schema for the cell.</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>Dict[str, Any]: A dictionary representing the input arguments schema.</p>
+</dd>
+<dt>Raises:</dt><dd><p>ValueError: If the input schema is not found or cannot be parsed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="kinkernel.tools.cell_to_openai_function">
+<span class="sig-prename descclassname"><span class="pre">kinkernel.tools.</span></span><span class="sig-name descname"><span class="pre">cell_to_openai_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cells</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#kinkernel.cells.BaseCell" title="kinkernel.cells.base.BaseCell"><span class="pre">BaseCell</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#kinkernel.tools.OpenAiFunctionCell" title="kinkernel.tools.openai_function_cell.OpenAiFunctionCell"><span class="pre">OpenAiFunctionCell</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#kinkernel.tools.cell_to_openai_function" title="Link to this definition"></a></dt>
+<dd><p>Convert a list of BaseCell instances to a list of OpenAiFunctionCell instances.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>cells (List[BaseCell]): The list of BaseCell instances to convert.</p>
+</dd>
+<dt>Returns:</dt><dd><p>List[OpenAiFunctionCell]: A list of OpenAiFunctionCell instances.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-kinkernel.utils">
+<span id="utils"></span><h1>Utils<a class="headerlink" href="#module-kinkernel.utils" title="Link to this heading"></a></h1>
+<p>This package provides utils functions.</p>
+<p>The <cite>replace_refs_with_defs</cite> function cleans a JSON schema by replacing <cite>$ref</cite> references with their actual definitions.</p>
+<dl class="simple">
+<dt>Functions:</dt><dd><ul class="simple">
+<li><p>replace_refs_with_defs(schema): Cleans a JSON schema by replacing <cite>$ref</cite> references with their actual definitions.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py function">
+<dt class="sig sig-object py" id="kinkernel.utils.replace_refs_with_defs">
+<span class="sig-prename descclassname"><span class="pre">kinkernel.utils.</span></span><span class="sig-name descname"><span class="pre">replace_refs_with_defs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#kinkernel.utils.replace_refs_with_defs" title="Link to this definition"></a></dt>
+<dd><p>Replaces all <cite>$ref</cite> references in a JSON schema with their corresponding definitions from the <cite>$defs</cite> section.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>schema</strong> (<em>dict</em>) – The JSON schema containing <cite>$ref</cite> references and a <cite>$defs</cite> section.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The JSON schema with all <cite>$ref</cite> references replaced by their actual definitions.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="quickstart.html" class="btn btn-neutral float-left" title="Quickstart" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, DigitalKin.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
