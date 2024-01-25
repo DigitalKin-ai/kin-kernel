@@ -43,7 +43,7 @@ jobs:
       - name: Test with pytest
         run: pytest
 
-      - name: codecov-umbrella
+      - name: Upload test results to Codecov
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
