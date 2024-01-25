@@ -34,3 +34,11 @@ Tools
    :members:
    :undoc-members:
    :show-inheritance:
+
+Utils
+=====
+
+.. automodule:: kinkernel.utils
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -4,7 +4,7 @@ import pytest
 
 from pydantic import BaseModel
 
-from kinkernel.cells import BaseCell
+from kinkernel.cells.base import BaseCell, ResponseType
 
 
 # Define Pydantic models for testing purposes
@@ -219,3 +219,217 @@ def test_missing_output_format():
                 return TestInputModel(x=input_data.x, y=input_data.y)
 
         CellWithoutInputFormat()
+
+
+def test_get_role_success():
+    assert (
+        ConcreteCell.get_role() == "test"
+    ), "get_role should return the correct role when defined"
+
+
+def test_get_role_failure():
+    with pytest.raises(NotImplementedError) as exc_info:
+
+        class CellWithoutRole(BaseCell[TestInputModel, TestOutputModel]):
+            role = "will be removed"
+            description = "No role"
+            input_format = TestInputModel
+            output_format = TestOutputModel
+
+            async def _execute(self, input_data: TestInputModel) -> TestOutputModel:
+                return TestOutputModel(result=input_data.y)
+
+        CellWithoutRole.role = None
+        CellWithoutRole.get_role()
+
+    assert "'CellWithoutRole' class does not define a 'role'." in str(
+        exc_info.value
+    ), "get_role should raise NotImplementedError with proper message when role is not defined"
+
+
+def test_get_description_success():
+    assert (
+        ConcreteCell.get_description() == "A test cell"
+    ), "get_description should return the correct description when defined"
+
+
+def test_get_description_failure():
+    with pytest.raises(NotImplementedError) as exc_info:
+
+        class CellWithoutDescription(BaseCell[TestInputModel, TestOutputModel]):
+            role = "test"
+            description = "Will be removed"
+            input_format = TestInputModel
+            output_format = TestOutputModel
+
+            async def _execute(self, input_data: TestInputModel) -> TestOutputModel:
+                return TestOutputModel(result=input_data.y)
+
+        CellWithoutDescription.description = None
+        CellWithoutDescription.get_description()
+
+    assert "'CellWithoutDescription' class does not define a 'description'." in str(
+        exc_info.value
+    ), "get_description should raise NotImplementedError with proper message when description is not defined"
+
+
+def test_get_input_format_failure():
+    with pytest.raises(NotImplementedError) as exc_info:
+
+        class CellWithoutInputFormat(BaseCell[TestInputModel, TestOutputModel]):
+            role = "test"
+            description = "description"
+            input_format = TestInputModel
+            output_format = TestOutputModel
+
+            async def _execute(self, input_data: TestInputModel) -> TestOutputModel:
+                return TestOutputModel(result=input_data.y)
+
+        CellWithoutInputFormat.input_format = None
+        CellWithoutInputFormat.get_input_format()
+
+    assert "'CellWithoutInputFormat' class does not define an 'input_format'." in str(
+        exc_info.value
+    ), "get_input_format should raise NotImplementedError with proper message when input_format is not defined"
+
+
+def test_get_output_format_failure():
+    with pytest.raises(NotImplementedError) as exc_info:
+
+        class CellWithoutOutputFormat(BaseCell[TestInputModel, TestOutputModel]):
+            role = "test"
+            description = "description"
+            input_format = TestInputModel
+            output_format = TestOutputModel
+
+            async def _execute(self, input_data: TestInputModel) -> TestOutputModel:
+                return TestOutputModel(result=input_data.y)
+
+        CellWithoutOutputFormat.output_format = None
+        CellWithoutOutputFormat.get_output_format()
+
+    assert "'CellWithoutOutputFormat' class does not define an 'output_format'." in str(
+        exc_info.value
+    ), "get_output_format should raise NotImplementedError with proper message when output_format is not defined"
+
+
+def test_get_input_schema_success():
+    result = {
+        "name": "test",
+        "parameters": {
+            "properties": {
+                "x": {"title": "X", "type": "integer"},
+                "y": {"title": "Y", "type": "integer"},
+            },
+            "required": ["x", "y"],
+            "type": "object",
+        },
+    }
+
+    assert json.dumps(ConcreteCell.get_input_schema()) == json.dumps(
+        result
+    ), "get_input_schema should return the correct input_schema when defined"
+
+
+def test_get_input_schema_failure():
+    with pytest.raises(NotImplementedError) as exc_info:
+
+        class CellWithoutInputSchema(BaseCell[TestInputModel, TestOutputModel]):
+            role = "test"
+            description = "description"
+            input_format = TestInputModel
+            output_format = TestOutputModel
+
+            async def _execute(self, input_data: TestInputModel) -> TestOutputModel:
+                return TestOutputModel(result=input_data.y)
+
+        CellWithoutInputSchema.input_format = None
+        CellWithoutInputSchema.get_input_schema()
+
+    assert "'CellWithoutInputSchema' class does not define an 'input_format'." in str(
+        exc_info.value
+    ), "get_input_schema should raise NotImplementedError with proper message when input_format is not defined"
+
+
+def test_get_output_schema_success():
+    result = {
+        "name": "test",
+        "parameters": {
+            "properties": {
+                "result": {"title": "Result", "type": "integer"},
+            },
+            "required": ["result"],
+            "type": "object",
+        },
+    }
+
+    assert json.dumps(ConcreteCell.get_output_schema()) == json.dumps(
+        result
+    ), "get_output_schema should return the correct output_schema when defined"
+
+
+def test_get_output_schema_failure():
+    with pytest.raises(NotImplementedError) as exc_info:
+
+        class CellWithoutOutputSchema(BaseCell[TestInputModel, TestOutputModel]):
+            role = "test"
+            description = "description"
+            input_format = TestInputModel
+            output_format = TestOutputModel
+
+            async def _execute(self, input_data: TestInputModel) -> TestOutputModel:
+                return TestOutputModel(result=input_data.y)
+
+        CellWithoutOutputSchema.output_format = None
+        CellWithoutOutputSchema.get_output_schema()
+
+    assert "'CellWithoutOutputSchema' class does not define an 'output_format'." in str(
+        exc_info.value
+    ), "get_output_schema should raise NotImplementedError with proper message when output_format is not defined"
+
+
+@pytest.mark.asyncio
+async def test_run_output_schema_failure():
+    class CellWithoutOutputSchema(BaseCell[TestInputModel, TestOutputModel]):
+        role = "test"
+        description = "description"
+        input_format = TestInputModel
+        output_format = TestOutputModel
+
+        async def _execute(self, input_data: TestInputModel) -> TestOutputModel:
+            return TestOutputModel(result=input_data.y)
+
+    cell = CellWithoutOutputSchema()
+    cell.output_format = None
+    input_json = '{"x": 1, "y": 2}'
+    response = await cell.run(input_json)
+    assert (
+        response["type"] == ResponseType.ERROR
+    ), "run should return an error type when output_format is not defined"
+    assert (
+        response["content"] == "Input and output formats must be defined."
+    ), "run should return an error content message when output_format is not defined"
+
+
+@pytest.mark.asyncio
+async def test_run_input_schema_failure():
+    class CellWithoutInputSchema(BaseCell[TestInputModel, TestOutputModel]):
+        role = "test"
+        description = "description"
+        input_format = TestInputModel
+        output_format = TestOutputModel
+
+        async def _execute(self, input_data: TestInputModel) -> TestOutputModel:
+            return TestOutputModel(result=input_data.y)
+
+    cell = CellWithoutInputSchema()
+    cell.input_format = None
+    print(f"{cell.input_format=}")
+    input_json = '{"x": 1, "y": 2}'
+    response = await cell.run(input_json)
+    assert (
+        response["type"] == ResponseType.ERROR
+    ), "run should return an error type when input_format is not defined"
+    assert (
+        response["content"] == "Input and output formats must be defined."
+    ), "run should return an error content message when input_format is not defined"
