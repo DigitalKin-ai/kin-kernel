@@ -1,0 +1,3 @@
+[submodule "service-apis"]
+	path = service-apis
+	url = git@github.com:DigitalKin-ai/service-apis.git
