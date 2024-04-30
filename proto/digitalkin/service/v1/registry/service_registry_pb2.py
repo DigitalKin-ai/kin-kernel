@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 from proto.validate import validate_pb2 as validate_dot_validate__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n5digitalkin/service/v1/registry/service_registry.proto\x12\x1e\x64igitalkin.service.v1.registry\x1a\x17validate/validate.proto\"\xbd\x01\n\x0fRegisterRequest\x12&\n\nservice_id\x18\x01 \x01(\tB\x07\xfa\x42\x04r\x02\x10\x01R\tserviceId\x12>\n\x0cservice_type\x18\x02 \x01(\tB\x1b\xfa\x42\x18r\x16R\x07triggerR\x04toolR\x05\x61gentR\x0bserviceType\x12!\n\x07\x61\x64\x64ress\x18\x03 \x01(\tB\x07\xfa\x42\x04r\x02\x10\x01R\x07\x61\x64\x64ress\x12\x1f\n\x04port\x18\x04 \x01(\x05\x42\x0b\xfa\x42\x08\x1a\x06\x18\xff\xff\x03(\x01R\x04port\",\n\x10RegisterResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\"2\n\x11\x44\x65registerRequest\x12\x1d\n\nservice_id\x18\x01 \x01(\tR\tserviceId\"7\n\x12\x44\x65registerResponse\x12!\n\x07success\x18\x01 \x01(\x08\x42\x07\xfa\x42\x04r\x02\x10\x01R\x07success\"9\n\x0f\x44iscoverRequest\x12&\n\nservice_id\x18\x01 \x01(\tB\x07\xfa\x42\x04r\x02\x10\x01R\tserviceId\"\xae\x01\n\x10\x44iscoverResponse\x12>\n\x0cservice_type\x18\x01 \x01(\tB\x1b\xfa\x42\x18r\x16R\x07triggerR\x04toolR\x05\x61gentR\x0bserviceType\x12!\n\x07\x61\x64\x64ress\x18\x02 \x01(\tB\x07\xfa\x42\x04r\x02\x10\x01R\x07\x61\x64\x64ress\x12\x1f\n\x04port\x18\x03 \x01(\x05\x42\x0b\xfa\x42\x08\x1a\x06\x18\xff\xff\x03(\x01R\x04port\x12\x16\n\x06status\x18\x04 \x01(\x08R\x06status\"U\n\x13UpdateStatusRequest\x12&\n\nservice_id\x18\x01 \x01(\tB\x07\xfa\x42\x04r\x02\x10\x01R\tserviceId\x12\x16\n\x06status\x18\x02 \x01(\x08R\x06status\"0\n\x14UpdateStatusResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success2\x84\x04\n\x0fServiceRegistry\x12v\n\x0fRegisterService\x12/.digitalkin.service.v1.registry.RegisterRequest\x1a\x30.digitalkin.service.v1.registry.RegisterResponse\"\x00\x12|\n\x11\x44\x65registerService\x12\x31.digitalkin.service.v1.registry.DeregisterRequest\x1a\x32.digitalkin.service.v1.registry.DeregisterResponse\"\x00\x12v\n\x0f\x44iscoverService\x12/.digitalkin.service.v1.registry.DiscoverRequest\x1a\x30.digitalkin.service.v1.registry.DiscoverResponse\"\x00\x12\x82\x01\n\x13UpdateServiceStatus\x12\x33.digitalkin.service.v1.registry.UpdateStatusRequest\x1a\x34.digitalkin.service.v1.registry.UpdateStatusResponse\"\x00\x42\xd8\x01\n\"com.digitalkin.service.v1.registryB\x14ServiceRegistryProtoH\x02P\x01\xa2\x02\x04\x44SVR\xaa\x02\x1e\x44igitalkin.Service.V1.Registry\xca\x02\x1e\x44igitalkin\\Service\\V1\\Registry\xe2\x02*Digitalkin\\Service\\V1\\Registry\\GPBMetadata\xea\x02!Digitalkin::Service::V1::Registryb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n5digitalkin/service/v1/registry/service_registry.proto\x12\x1e\x64igitalkin.service.v1.registry\x1a\x17validate/validate.proto\"\xbb\x01\n\x0fRegisterRequest\x12&\n\nservice_id\x18\x01 \x01(\tB\x07\xfa\x42\x04r\x02\x10\x01R\tserviceId\x12<\n\x0cservice_type\x18\x02 \x01(\tB\x19\xfa\x42\x16r\x14R\x07triggerR\x04toolR\x03kinR\x0bserviceType\x12!\n\x07\x61\x64\x64ress\x18\x03 \x01(\tB\x07\xfa\x42\x04r\x02\x10\x01R\x07\x61\x64\x64ress\x12\x1f\n\x04port\x18\x04 \x01(\x05\x42\x0b\xfa\x42\x08\x1a\x06\x18\xff\xff\x03(\x01R\x04port\",\n\x10RegisterResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\"2\n\x11\x44\x65registerRequest\x12\x1d\n\nservice_id\x18\x01 \x01(\tR\tserviceId\"7\n\x12\x44\x65registerResponse\x12!\n\x07success\x18\x01 \x01(\x08\x42\x07\xfa\x42\x04r\x02\x10\x01R\x07success\"9\n\x0f\x44iscoverRequest\x12&\n\nservice_id\x18\x01 \x01(\tB\x07\xfa\x42\x04r\x02\x10\x01R\tserviceId\"\xac\x01\n\x10\x44iscoverResponse\x12<\n\x0cservice_type\x18\x01 \x01(\tB\x19\xfa\x42\x16r\x14R\x07triggerR\x04toolR\x03kinR\x0bserviceType\x12!\n\x07\x61\x64\x64ress\x18\x02 \x01(\tB\x07\xfa\x42\x04r\x02\x10\x01R\x07\x61\x64\x64ress\x12\x1f\n\x04port\x18\x03 \x01(\x05\x42\x0b\xfa\x42\x08\x1a\x06\x18\xff\xff\x03(\x01R\x04port\x12\x16\n\x06status\x18\x04 \x01(\x08R\x06status\"U\n\x13UpdateStatusRequest\x12&\n\nservice_id\x18\x01 \x01(\tB\x07\xfa\x42\x04r\x02\x10\x01R\tserviceId\x12\x16\n\x06status\x18\x02 \x01(\x08R\x06status\"0\n\x14UpdateStatusResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success2\x84\x04\n\x0fServiceRegistry\x12v\n\x0fRegisterService\x12/.digitalkin.service.v1.registry.RegisterRequest\x1a\x30.digitalkin.service.v1.registry.RegisterResponse\"\x00\x12|\n\x11\x44\x65registerService\x12\x31.digitalkin.service.v1.registry.DeregisterRequest\x1a\x32.digitalkin.service.v1.registry.DeregisterResponse\"\x00\x12v\n\x0f\x44iscoverService\x12/.digitalkin.service.v1.registry.DiscoverRequest\x1a\x30.digitalkin.service.v1.registry.DiscoverResponse\"\x00\x12\x82\x01\n\x13UpdateServiceStatus\x12\x33.digitalkin.service.v1.registry.UpdateStatusRequest\x1a\x34.digitalkin.service.v1.registry.UpdateStatusResponse\"\x00\x42\xd8\x01\n\"com.digitalkin.service.v1.registryB\x14ServiceRegistryProtoH\x02P\x01\xa2\x02\x04\x44SVR\xaa\x02\x1e\x44igitalkin.Service.V1.Registry\xca\x02\x1e\x44igitalkin\\Service\\V1\\Registry\xe2\x02*Digitalkin\\Service\\V1\\Registry\\GPBMetadata\xea\x02!Digitalkin::Service::V1::Registryb\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'digitalkin.service.v1.registry.service_registry_pb2', globals())
@@ -25,7 +25,7 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _REGISTERREQUEST.fields_by_name['service_id']._options = None
   _REGISTERREQUEST.fields_by_name['service_id']._serialized_options = b'\372B\004r\002\020\001'
   _REGISTERREQUEST.fields_by_name['service_type']._options = None
-  _REGISTERREQUEST.fields_by_name['service_type']._serialized_options = b'\372B\030r\026R\007triggerR\004toolR\005agent'
+  _REGISTERREQUEST.fields_by_name['service_type']._serialized_options = b'\372B\026r\024R\007triggerR\004toolR\003kin'
   _REGISTERREQUEST.fields_by_name['address']._options = None
   _REGISTERREQUEST.fields_by_name['address']._serialized_options = b'\372B\004r\002\020\001'
   _REGISTERREQUEST.fields_by_name['port']._options = None
@@ -35,7 +35,7 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _DISCOVERREQUEST.fields_by_name['service_id']._options = None
   _DISCOVERREQUEST.fields_by_name['service_id']._serialized_options = b'\372B\004r\002\020\001'
   _DISCOVERRESPONSE.fields_by_name['service_type']._options = None
-  _DISCOVERRESPONSE.fields_by_name['service_type']._serialized_options = b'\372B\030r\026R\007triggerR\004toolR\005agent'
+  _DISCOVERRESPONSE.fields_by_name['service_type']._serialized_options = b'\372B\026r\024R\007triggerR\004toolR\003kin'
   _DISCOVERRESPONSE.fields_by_name['address']._options = None
   _DISCOVERRESPONSE.fields_by_name['address']._serialized_options = b'\372B\004r\002\020\001'
   _DISCOVERRESPONSE.fields_by_name['port']._options = None
@@ -43,21 +43,21 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _UPDATESTATUSREQUEST.fields_by_name['service_id']._options = None
   _UPDATESTATUSREQUEST.fields_by_name['service_id']._serialized_options = b'\372B\004r\002\020\001'
   _REGISTERREQUEST._serialized_start=115
-  _REGISTERREQUEST._serialized_end=304
-  _REGISTERRESPONSE._serialized_start=306
-  _REGISTERRESPONSE._serialized_end=350
-  _DEREGISTERREQUEST._serialized_start=352
-  _DEREGISTERREQUEST._serialized_end=402
-  _DEREGISTERRESPONSE._serialized_start=404
-  _DEREGISTERRESPONSE._serialized_end=459
-  _DISCOVERREQUEST._serialized_start=461
-  _DISCOVERREQUEST._serialized_end=518
-  _DISCOVERRESPONSE._serialized_start=521
-  _DISCOVERRESPONSE._serialized_end=695
-  _UPDATESTATUSREQUEST._serialized_start=697
-  _UPDATESTATUSREQUEST._serialized_end=782
-  _UPDATESTATUSRESPONSE._serialized_start=784
-  _UPDATESTATUSRESPONSE._serialized_end=832
-  _SERVICEREGISTRY._serialized_start=835
-  _SERVICEREGISTRY._serialized_end=1351
+  _REGISTERREQUEST._serialized_end=302
+  _REGISTERRESPONSE._serialized_start=304
+  _REGISTERRESPONSE._serialized_end=348
+  _DEREGISTERREQUEST._serialized_start=350
+  _DEREGISTERREQUEST._serialized_end=400
+  _DEREGISTERRESPONSE._serialized_start=402
+  _DEREGISTERRESPONSE._serialized_end=457
+  _DISCOVERREQUEST._serialized_start=459
+  _DISCOVERREQUEST._serialized_end=516
+  _DISCOVERRESPONSE._serialized_start=519
+  _DISCOVERRESPONSE._serialized_end=691
+  _UPDATESTATUSREQUEST._serialized_start=693
+  _UPDATESTATUSREQUEST._serialized_end=778
+  _UPDATESTATUSRESPONSE._serialized_start=780
+  _UPDATESTATUSRESPONSE._serialized_end=828
+  _SERVICEREGISTRY._serialized_start=831
+  _SERVICEREGISTRY._serialized_end=1347
 # @@protoc_insertion_point(module_scope)

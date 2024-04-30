@@ -1,0 +1,195 @@
+{
+  "edges": [
+    {
+      "source": "n_1",
+      "sourceHandle": "text:::content",
+      "target": "n_2",
+      "targetHandle": "text:::FEC",
+      "type": "custom",
+      "data": {
+        "color": "#C99",
+        "running": true
+      },
+      "id": "xy-edge__n_1text:::content-n_2text:::FEC"
+    },
+    {
+      "source": "n_2",
+      "sourceHandle": "csv:::FEC",
+      "target": "n_3",
+      "targetHandle": "csv:::file",
+      "type": "custom",
+      "data": {
+        "color": "#9C9",
+        "running": true
+      },
+      "id": "xy-edge__n_2csv:::FEC-n_3csv:::file"
+    },
+    {
+      "source": "n_2",
+      "sourceHandle": "text:::# facture manquante",
+      "target": "n_4",
+      "targetHandle": "text:::# facture",
+      "type": "custom",
+      "data": {
+        "color": "#C99",
+        "running": true
+      },
+      "id": "xy-edge__n_2text:::# facture manquante-n_4text:::# facture"
+    },
+    {
+      "source": "n_4",
+      "sourceHandle": "text:::facture",
+      "target": "n_2",
+      "targetHandle": "text:::facture",
+      "type": "custom",
+      "data": {
+        "color": "#C99",
+        "running": true
+      },
+      "id": "xy-edge__n_4text:::facture-n_2text:::facture"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "n_1",
+      "type": "wfbox",
+      "position": {
+        "x": 139.5,
+        "y": 208
+      },
+      "data": {
+        "id": "cron multiplier",
+        "name": "gmail",
+        "type": "trigger",
+        "color": "#686",
+        "targets": [
+          {
+            "label": "smtp",
+            "type": "url"
+          },
+          {
+            "label": "email",
+            "type": "email"
+          },
+          {
+            "label": "password",
+            "type": "text"
+          }
+        ],
+        "sources": [
+          {
+            "label": "from",
+            "type": "email"
+          },
+          {
+            "label": "content",
+            "type": "text"
+          }
+        ]
+      },
+      "measured": {
+        "width": 80,
+        "height": 104
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "n_2",
+      "type": "wfbox",
+      "position": {
+        "x": 390,
+        "y": 225
+      },
+      "data": {
+        "id": "multiplier1",
+        "name": "comptable",
+        "type": "tool",
+        "color": "#668",
+        "targets": [
+          {
+            "label": "FEC",
+            "type": "text"
+          },
+          {
+            "label": "facture",
+            "type": "text"
+          }
+        ],
+        "sources": [
+          {
+            "label": "FEC",
+            "type": "csv"
+          },
+          {
+            "label": "# facture manquante",
+            "type": "text"
+          }
+        ]
+      },
+      "measured": {
+        "width": 80,
+        "height": 92
+      }
+    },
+    {
+      "id": "n_3",
+      "type": "wfbox",
+      "position": {
+        "x": 620,
+        "y": 269.5
+      },
+      "data": {
+        "id": "1",
+        "name": "csv",
+        "type": "view",
+        "color": "#886",
+        "targets": [
+          {
+            "label": "file",
+            "type": "csv"
+          }
+        ],
+        "sources": []
+      },
+      "measured": {
+        "width": 80,
+        "height": 56
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "n_4",
+      "type": "wfbox",
+      "position": {
+        "x": 388.5,
+        "y": 368
+      },
+      "data": {
+        "id": "multiplier1",
+        "name": "relance",
+        "type": "tool",
+        "color": "#668",
+        "targets": [
+          {
+            "label": "# facture",
+            "type": "text"
+          }
+        ],
+        "sources": [
+          {
+            "label": "facture",
+            "type": "text"
+          }
+        ]
+      },
+      "measured": {
+        "width": 80,
+        "height": 68
+      },
+      "selected": false,
+      "dragging": false
+    }
+  ]
+}

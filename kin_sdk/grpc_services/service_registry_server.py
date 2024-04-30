@@ -32,7 +32,6 @@ class ServiceRegistry(service_registry_pb2_grpc.ServiceRegistryServicer):
     @validate_grpc_request
     def DiscoverService(self, request, context):
         service = self.services.get(request.service_id, None)
-        print(f"Service: {service}")
         if service:
             return service_registry_pb2.DiscoverResponse(
                 service_type=service["type"],
@@ -49,9 +48,8 @@ class ServiceRegistry(service_registry_pb2_grpc.ServiceRegistryServicer):
             return service_registry_pb2.UpdateStatusResponse(success=True)
         return service_registry_pb2.UpdateStatusResponse(success=False)
 
-    @classmethod
-    def add_to_server(cls, server):
-        service_registry_pb2_grpc.add_ServiceRegistryServicer_to_server(cls(), server)
+    def add_to_server(self, server):
+        service_registry_pb2_grpc.add_ServiceRegistryServicer_to_server(self, server)
 
 
 class ServiceRegistryServer(GRPCServerBase):

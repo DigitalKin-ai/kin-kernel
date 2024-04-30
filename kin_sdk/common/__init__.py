@@ -1,4 +1,13 @@
-from kin_sdk.common import logger
-from kin_sdk.common.validate_grpc_request import validate_grpc_request
+from kin_sdk.common.logger import logger
+from kin_sdk.common.validate_grpc_request import (
+    validate_grpc_request,
+    validate_stream_grpc_request,
+)
+from kin_sdk.common.pydantic_validation_error import pydantic_validation_error
 
-__all__ = ["logger", "validate_grpc_request"]
+__all__ = [
+    "logger",
+    "validate_grpc_request",
+    "validate_stream_grpc_request",
+    "pydantic_validation_error",
+]

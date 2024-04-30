@@ -63,32 +63,39 @@ def main():
     paths_option = " ".join(f"--path {path}" for path in proto_paths)
     command = f"buf generate {proto_dir} --template {proto_dir}/{buf_file} --include-imports -o {output_dir} {paths_option}"
 
-    print(command)
+    print(f"\nCommand: [\n\t- {command}\n]\n")
 
-    # Use subprocess.run to execute the command
-    result = subprocess.run(
-        command, shell=True, text=True, capture_output=True, check=True
-    )
-
-    # Check if the command was successful
-    if result.returncode == 0:
-        print("Command executed successfully!")
-        print("Output:")
-        print(result.stdout)
-        # Create __init__.py files after successful generation
-        create_init_files(output_dir)
-        print(f"Initialized Python package structure in {output_dir}")
-
-        # Add import prefix
-        import_prefix = "proto"  # Define the prefix here
-        add_import_prefix(output_dir, import_prefix, "digitalkin")
-        add_import_prefix(output_dir, import_prefix, "validate")
-        print(
-            f"Added import prefix '{import_prefix}' to all Python files in {output_dir}"
+    try:
+        # Use subprocess.run to execute the command
+        result = subprocess.run(
+            command, shell=True, text=True, capture_output=True, check=True
         )
-    else:
-        print("Command failed with the following error:")
-        print(result.stderr)
+
+        print(result)
+
+        # Check if the command was successful
+        if result.returncode == 0:
+            print("Command executed successfully!")
+            print("Output:")
+            print(result.stdout)
+            # Create __init__.py files after successful generation
+            create_init_files(output_dir)
+            print(f"Initialized Python package structure in {output_dir}")
+
+            # Add import prefix
+            import_prefix = "proto"  # Define the prefix here
+            add_import_prefix(output_dir, import_prefix, "digitalkin")
+            add_import_prefix(output_dir, import_prefix, "validate")
+            print(
+                f"Added import prefix '{import_prefix}' to all Python files in {output_dir}"
+            )
+        else:
+            print("Command failed with the following error:")
+            print(result.stderr)
+    except subprocess.CalledProcessError as e:
+        print("Subprocess error", e.stderr)
+    except Exception as e:
+        print("Error", str(e))
 
 
 if __name__ == "__main__":

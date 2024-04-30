@@ -1,6 +1,6 @@
-from concurrent import futures
-from typing import Any
 import grpc
+from concurrent import futures
+from grpc._server import _Server
 
 from kin_sdk.common.logger import logger
 
@@ -19,18 +19,30 @@ class GRPCServerBase:
         add_to_server(server): Abstract method to add the servicer to the server.
     """
 
-    def __init__(self, servicer: Any, port: str, max_workers: int = 10) -> None:
+    def __init__(
+        self,
+        servicer_class: "GRPCServerBase",
+        port: int,
+        servicer_args: tuple = (),
+        servicer_kwargs: dict = {},
+        max_workers: int = 10,
+    ) -> None:
         """
         Initializes the GRPCServerBase instance.
 
         Args:
-            servicer (Any): An instance of a gRPC servicer.
+            servicer_class (Type): The class of the gRPC servicer.
             port (str): The port number to bind the server to.
+            servicer_args (tuple): Arguments for the servicer's constructor.
+            servicer_kwargs (dict): Keyword arguments for the servicer's constructor.
             max_workers (int): The maximum number of worker threads.
         """
-        self.servicer = servicer
+        self.servicer_class = servicer_class
+        self.servicer_args = servicer_args
+        self.servicer_kwargs = servicer_kwargs
         self.port = port
         self.max_workers = max_workers
+        self.__server: _Server = None
 
     def serve(self) -> None:
         """
@@ -38,15 +50,24 @@ class GRPCServerBase:
 
         The server runs indefinitely until an external interruption or termination.
         """
-        server = grpc.server(futures.ThreadPoolExecutor(max_workers=self.max_workers))
-        self.servicer.add_to_server(server)
-        server.add_insecure_port(f"[::]:{self.port}")
-        logger.info("Server starting on port %s...", self.port)
-        server.start()
-        server.wait_for_termination()
+        self.__server = grpc.server(
+            futures.ThreadPoolExecutor(max_workers=self.max_workers)
+        )
+        servicer = self.servicer_class(*self.servicer_args, **self.servicer_kwargs)
+        servicer.add_to_server(self.__server)
+        self.__server.add_insecure_port(f"[::]:{self.port}")
+        logger.info("🤖 Service starting on port %s", self.port)
+        self.__server.start()
+        self.__server.wait_for_termination()
 
-    @classmethod
-    def add_to_server(cls, server: grpc.Server) -> None:
+    def serve_stop(self, grace: int = 0) -> None:
+        """
+        Stops the server.
+        """
+        logger.info("🛑 Stopping service on port %s", self.port)
+        self.__server.stop(grace)
+
+    def add_to_server(self, server: grpc.Server) -> None:
         """
         Abstract method to add the servicer to the server. Must be implemented by subclasses.
 
