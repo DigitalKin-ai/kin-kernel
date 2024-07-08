@@ -26,5 +26,5 @@ if __name__ == "__main__":
         service_port=50050,
         registry_address="localhost:50051",
     )
-    kin_workflow.start()
+    kin_workflow.start(kin_id="test")
     print("Hello, World!")

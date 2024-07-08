@@ -149,7 +149,7 @@ class KinService(kin_service_pb2_grpc.KinServiceServicer):
                 job_id = self.job_manager.create_job(setup_data, kin_id, trigger_id)
 
                 # Start the job in a separate thread
-                self.executor.submit(self._start_job, input_data, job_id)
+                self.executor.submit(self._start_job, input_data, kin_id, job_id)
 
                 # Send the response
                 return kin_service_pb2.KinResponse(
@@ -176,9 +176,10 @@ class KinService(kin_service_pb2_grpc.KinServiceServicer):
                     kin_id=None,
                 )
 
-    def _start_job(self, input_data: InputModelT, job_id: str) -> None:
+    def _start_job(self, input_data: InputModelT, kin_id: str, job_id: str) -> None:
         """
         Starts the job in a separate thread.
+        TODO: replace kin_id with service_id ?
 
         :param input_data: The input data for the job.
         :param job_id: The ID of the job.
@@ -186,7 +187,7 @@ class KinService(kin_service_pb2_grpc.KinServiceServicer):
         try:
             # Update job status to STARTING
             self.job_manager.update_job_status(job_id, JobStatus.STARTING)
-            self.kin.start()
+            self.kin.start(kin_id)
 
             if not self.job_manager.update_job_status(job_id, JobStatus.PROCESSING):
                 raise ValueError(f"😵 Kin {job_id} not found.")

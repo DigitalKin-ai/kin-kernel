@@ -4,7 +4,7 @@ TODO: add await async every where
 """
 
 import asyncio
-from typing import Callable, Dict
+from typing import Callable, Dict, List, Any
 
 from pydantic import BaseModel
 
@@ -24,7 +24,7 @@ class WorkflowOutput(BaseModel):
 
 
 class WorkflowSetup(BaseModel):
-    result: float
+    pass
 
 
 class KinWorkflow(BaseKin):
@@ -100,22 +100,25 @@ class KinWorkflow(BaseKin):
                 self.tools[data_id] = service_model
                 logger.info("🧰 Adding tool service: %s to the list", data_id)
 
-    async def __load_workflow(self) -> None:
+    async def __load_workflow(self, kin_id: str) -> List[Dict[str, Any]] | None:
         """
         This method loads the workflow from the database.
+
+        :param kin_id: The kin_id of the workflow.
+        :return: The workflow.
         """
-        workflows = await self.db_storage.storage_load(kin_id="test", table="workflows")
+        workflows = await self.db_storage.storage_load(kin_id=kin_id, table="workflows")
         if workflows is None:
             logger.error("Error loading workflow from the database.")
             return None
         return workflows[0]
 
-    def start(self) -> None:
+    def start(self, kin_id: str) -> None:
         """
         Starts the trigger.
         """
         # Load workflow from db
-        workflow = asyncio.run(self.__load_workflow())
+        workflow = asyncio.run(self.__load_workflow(kin_id=kin_id))
 
         # add triggers and tools
         self.register_services(workflow["nodes"])
