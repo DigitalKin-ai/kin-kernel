@@ -23,7 +23,7 @@ if __name__ == "__main__":
         description="This is the first Kin workflow.",
         service_id="first kin workflow",
         service_address="localhost",
-        service_port=50054,
+        service_port=50050,
         registry_address="localhost:50051",
     )
     kin_workflow.start()

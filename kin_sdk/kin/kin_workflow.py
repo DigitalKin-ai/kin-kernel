@@ -1,15 +1,17 @@
 """
 Todo: sphinx docstring
+TODO: add await async every where
 """
 
-import json
-from typing import Callable, Union, Dict, NoReturn
+import asyncio
+from typing import Callable, Dict
 
 from pydantic import BaseModel
 
 from kin_sdk.grpc_services.models import ServiceModel
 from kin_sdk.kin.base import BaseKin
 from kin_sdk.common import logger
+from kin_sdk.module.storage import DBStorage
 
 
 class WorkflowInput(BaseModel):
@@ -23,16 +25,6 @@ class WorkflowOutput(BaseModel):
 
 class WorkflowSetup(BaseModel):
     result: float
-
-
-# method to load json file from /examples/data/setup_example.json
-def load_json_file() -> Union[dict | None]:
-    try:
-        with open("examples/data/setup_example.json", "r") as file:
-            return json.load(file)
-    except FileNotFoundError:
-        print("File not found")
-        return None
 
 
 class KinWorkflow(BaseKin):
@@ -63,6 +55,8 @@ class KinWorkflow(BaseKin):
             registry_address=registry_address,
             max_workers=max_workers,
         )
+
+        self.db_storage = DBStorage()
 
     def register_services(self, nodes: list[dict]) -> None:
         """
@@ -96,7 +90,7 @@ class KinWorkflow(BaseKin):
             # If the data_type is different from the service_type, we raise an error
             if data_type != service_model.service_type:
                 raise ValueError(
-                    f"The {data_type}: {data_id} has been registred as a {service_model.service_type} in the service registry",
+                    f"The {data_type}: {data_id} has been registred as a {service_model.service_type} in the service registry but as a {service_model.service_type} in the workflow.",
                 )
 
             if data_type == "trigger":
@@ -106,12 +100,22 @@ class KinWorkflow(BaseKin):
                 self.tools[data_id] = service_model
                 logger.info("🧰 Adding tool service: %s to the list", data_id)
 
+    async def __load_workflow(self) -> None:
+        """
+        This method loads the workflow from the database.
+        """
+        workflows = await self.db_storage.storage_load(kin_id="test", table="workflows")
+        if workflows is None:
+            logger.error("Error loading workflow from the database.")
+            return None
+        return workflows[0]
+
     def start(self) -> None:
         """
         Starts the trigger.
         """
         # Load workflow from db
-        workflow = load_json_file()
+        workflow = asyncio.run(self.__load_workflow())
 
         # add triggers and tools
         self.register_services(workflow["nodes"])
