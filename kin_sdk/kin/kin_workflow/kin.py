@@ -117,13 +117,18 @@ class KinWorkflow(BaseKin):
         """
         Starts the trigger.
         """
-        # Load workflow from db
-        workflow = asyncio.run(self.__load_workflow(kin_id=kin_id))
+        try:
+            # Load workflow from db
+            workflow = asyncio.run(self.__load_workflow(kin_id=kin_id))
 
-        # add triggers and tools
-        self.register_services(workflow["nodes"])
+            # add triggers and tools
+            self.register_services(workflow["nodes"])
 
-        logger.info("🚀 Workflow has been started...")
+            logger.info("🚀 Workflow has been started...")
+        except Exception as e:
+            logger.error(f"Error loading workflow: {e}")
+
+        return None
 
     def execute(
         self,
