@@ -4,18 +4,27 @@ TODO: add await async every where
 """
 
 import asyncio
-from typing import Callable, Dict, List, Any
-
-from pydantic import BaseModel
+from typing import Callable, Dict, List, Any, Type
+from pydantic import BaseModel, create_model
 
 from kin_sdk.grpc_services.models import ServiceModel
 from kin_sdk.kin.base import BaseKin
 from kin_sdk.common import logger
 from kin_sdk.module.storage import DBStorage
+from kin_sdk.kin.kin_workflow.graph import GraphExecutor
 
+
+def create_dynamic_model(fields: dict) -> Type[BaseModel]:
+    """
+    Create a dynamic Pydantic model with the given fields.
+
+    :param fields: A dictionary where keys are field names and values are field types.
+    :return: A dynamically created Pydantic model class.
+    """
+    return create_model('DynamicModel', **fields)
 
 class WorkflowInput(BaseModel):
-    pass
+    trigger_id: str
 
 
 class WorkflowOutput(BaseModel):
@@ -57,6 +66,7 @@ class KinWorkflow(BaseKin):
         )
 
         self.db_storage = DBStorage()
+        self.graphs_executor = None  # TODO manage multi connections
 
     def register_services(self, nodes: list[dict]) -> None:
         """
@@ -124,6 +134,11 @@ class KinWorkflow(BaseKin):
             # add triggers and tools
             self.register_services(workflow["nodes"])
 
+            # create a graph executor
+            self.graphs_executor = GraphExecutor(
+                graph=workflow,
+            )
+
             logger.info("🚀 Workflow has been started...")
         except Exception as e:
             logger.error(f"Error loading workflow: {e}")
@@ -139,9 +154,7 @@ class KinWorkflow(BaseKin):
         """
         Executes the trigger.
         """
-        # setup
-        # kin_id
-        # trigger_id
+        input_data.
         print("Executing Kin Workflow...")
 
     def stop(self) -> None:

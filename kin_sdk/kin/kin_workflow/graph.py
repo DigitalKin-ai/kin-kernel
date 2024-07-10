@@ -98,7 +98,7 @@ class GraphExecutor:
                         input["updated_at"] = datetime.datetime.now()
                 break
 
-    def execute_node(self, node_id: str) -> None:
+    async def execute_node(self, node_id: str) -> None:
         """
         Executes a single node and updates its successors.
 
@@ -106,6 +106,7 @@ class GraphExecutor:
             node_id (str): The ID of the node to execute.
         """
         node = self.nodes[node_id]
+        # construct input data
         input_data = {
             input["label"]: {
                 "value": input.get("value", None),
@@ -113,21 +114,26 @@ class GraphExecutor:
                 "optional": input.get("optional", False),
             }
             for input in node.inputs
+            if "label" in input
         }
         print(
             f"{datetime.datetime.now()} - Executing node {node_id} with inputs: {input_data}"
         )
-
+        # Verify if all inputs have values except for optional inputs
         verify_values = [
             (values["value"] is not None or values.get("optional", False))
             for values in input_data.values()
         ]
+        # Verify if all nodes has been updated except for nodes that have never been executed
         verify_update = [
             values["updated_at"] is None or values["updated_at"] > node.last_execution
             for values in input_data.values()
         ]
 
         try:
+            # Verify if all inputs have values except for optional inputs
+            # and if all nodes has been updated except for nodes that have never been executed
+            # if not, skip the node
             if not (all(verify_values) and any(verify_update)):
                 print(
                     f"{datetime.datetime.now()} - Skipping node {node_id} due to input conditions."
@@ -135,8 +141,10 @@ class GraphExecutor:
                 return
 
             with self.lock:
-                output_data = node.execute(input_data)
+                # Launch the node execution in a thread-safe manner and retrieve the output data
+                output_data = await node.execute(input_data)
 
+                # Propagate the output data to the successors
                 for successor in self.graph.successors(node_id):
                     self.update_successor_inputs(
                         successor,
@@ -144,6 +152,7 @@ class GraphExecutor:
                         self.graph.get_edge_data(node_id, successor),
                     )
 
+                    # construct input data for successor
                     successor_input_data = {
                         input["label"]: {
                             "value": input.get("value", None),
@@ -151,29 +160,37 @@ class GraphExecutor:
                             "optional": input.get("optional", False),
                         }
                         for input in self.nodes[successor].inputs
+                        if "label" in input
                     }
 
+                    # Verify if all inputs have values except for optional inputs
                     verify_successor_values = [
                         (values["value"] is not None or values.get("optional", False))
                         for values in successor_input_data.values()
                     ]
+                    # Verify if all nodes has been updated except for nodes that have never been executed
                     verify_successor_update = [
                         values["updated_at"] is None
                         or values["updated_at"] > node.last_execution
                         for values in successor_input_data.values()
                     ]
-                    if not (all(verify_values) and any(verify_update)):
+
+                    # Verify if all inputs have values except for optional inputs
+                    # and if all nodes has been updated except for nodes that have never been executed
+                    # if not, skip the successor else add it to the execution queue
+                    if not (
+                        all(verify_successor_values) and any(verify_successor_update)
+                    ):
                         print(
                             f"{datetime.datetime.now()} - Skipping successor {successor} due to input conditions."
                         )
                         return
-
-                    if all(verify_successor_values) and any(verify_successor_update):
+                    else:
                         self.execution_queue.put(successor)
                         print(
                             f"{datetime.datetime.now()} - Adding node {successor} to execution queue."
                         )
-
+                # Update the node execution count and timestamp
                 self.nodes[node_id].last_execution = datetime.datetime.now()
         except Exception as e:
             print(f"{datetime.datetime.now()} - Error executing node {node_id}: {e}")
@@ -186,14 +203,17 @@ class GraphExecutor:
         Args:
             initial_node (str): The ID of the initial node to start execution from.
         """
-        self.check_for_cycles()
+        # self.check_for_cycles()
+        # Start with an initial node
         self.execution_queue.put(initial_node)
         print(
             f"{datetime.datetime.now()} - Adding initial node {initial_node} to execution queue."
         )
 
+        # Execute the nodes in parallel using a thread pool
         with ThreadPoolExecutor(max_workers=10) as executor:
             futures = {}
+            # Keep executing nodes until the execution queue is empty and all nodes have completed and all futures have completed
             while (
                 not (
                     self.execution_queue.empty()
@@ -204,14 +224,18 @@ class GraphExecutor:
                 )
                 or futures
             ):
+                # Check if an error occurred during execution
                 if self.error_occurred.is_set():
                     break
 
+                # While the execution queue is not empty, submit nodes for execution
                 while not self.execution_queue.empty():
+                    # Get the next node to execute
                     node_id = self.execution_queue.get()
                     print(
                         f"{datetime.datetime.now()} - Getting node {node_id} from execution queue."
                     )
+                    # Submit the node for execution
                     if node_id is not None:
                         future = executor.submit(self.execute_node, node_id)
                         futures[future] = node_id
@@ -219,6 +243,7 @@ class GraphExecutor:
                         f"{datetime.datetime.now()} - {node_id}",
                         [f"{nid}: {self.nodes[nid].status}" for nid in self.nodes],
                     )
+
                 # Check completed futures
                 for future in as_completed(futures):
                     node_id = futures.pop(future)

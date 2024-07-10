@@ -15,6 +15,22 @@ STARTING: TriggerStatus
 STOPPED: TriggerStatus
 SUCCESS: TriggerStatus
 
+class GetTriggerInputRequest(_message.Message):
+    __slots__ = ["llm_format", "trigger_id"]
+    LLM_FORMAT_FIELD_NUMBER: _ClassVar[int]
+    TRIGGER_ID_FIELD_NUMBER: _ClassVar[int]
+    llm_format: bool
+    trigger_id: str
+    def __init__(self, trigger_id: _Optional[str] = ..., llm_format: bool = ...) -> None: ...
+
+class GetTriggerOutputRequest(_message.Message):
+    __slots__ = ["llm_format", "trigger_id"]
+    LLM_FORMAT_FIELD_NUMBER: _ClassVar[int]
+    TRIGGER_ID_FIELD_NUMBER: _ClassVar[int]
+    llm_format: bool
+    trigger_id: str
+    def __init__(self, trigger_id: _Optional[str] = ..., llm_format: bool = ...) -> None: ...
+
 class GetTriggerStatusRequest(_message.Message):
     __slots__ = ["trigger_id"]
     TRIGGER_ID_FIELD_NUMBER: _ClassVar[int]
@@ -36,6 +52,22 @@ class StopTriggerRequest(_message.Message):
     TRIGGER_ID_FIELD_NUMBER: _ClassVar[int]
     trigger_id: str
     def __init__(self, trigger_id: _Optional[str] = ...) -> None: ...
+
+class TriggerInputResponse(_message.Message):
+    __slots__ = ["input_schema", "success"]
+    INPUT_SCHEMA_FIELD_NUMBER: _ClassVar[int]
+    SUCCESS_FIELD_NUMBER: _ClassVar[int]
+    input_schema: _struct_pb2.Struct
+    success: bool
+    def __init__(self, success: bool = ..., input_schema: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ...) -> None: ...
+
+class TriggerOutputResponse(_message.Message):
+    __slots__ = ["output_schema", "success"]
+    OUTPUT_SCHEMA_FIELD_NUMBER: _ClassVar[int]
+    SUCCESS_FIELD_NUMBER: _ClassVar[int]
+    output_schema: _struct_pb2.Struct
+    success: bool
+    def __init__(self, success: bool = ..., output_schema: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ...) -> None: ...
 
 class TriggerResponse(_message.Message):
     __slots__ = ["message", "success", "trigger_id"]

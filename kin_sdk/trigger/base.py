@@ -314,6 +314,106 @@ class TriggerService(trigger_service_pb2_grpc.TriggerServiceServicer):
                     trigger_id=None,
                 )
 
+    @validate_grpc_request
+    def GetTriggerInput(
+        self, request, context: grpc.ServicerContext
+    ) -> trigger_service_pb2.TriggerInputResponse:
+        """
+        Retrieves the Input of a trigger.
+
+        :param request: The gRPC request containing the trigger ID.
+        :param context: The gRPC context.
+        :return: A TriggerInputResponse give input schema of the trigger.
+        """
+        with self.tracer.start_span("get_trigger_input"):
+            try:
+                json_request = json_format.MessageToDict(
+                    request,
+                    preserving_proto_field_name=True,
+                )
+                trigger_id = json_request.get("trigger_id", None)
+                llm_format = json_request.get("llm_format", False)
+
+                if not trigger_id:
+                    raise ValueError("😵 Trigger ID is required.")
+
+                struct_input = json_format.ParseDict(
+                    json.loads(self.trigger.get_input_format(llm_format=llm_format)),
+                    struct_pb2.Struct(),
+                )
+
+                return trigger_service_pb2.TriggerInputResponse(
+                    success=True,
+                    input_schema=struct_input,
+                )
+
+            except ValidationError as e:
+                error_message = pydantic_validation_error(e, context)
+                logger.error(error_message)  # Validation Error
+                return trigger_service_pb2.TriggerInputResponse(
+                    success=False,
+                    input_schema=None,
+                )
+            except Exception as e:
+                logger.error("Exception Error: %s", e)
+                context.set_code(grpc.StatusCode.INTERNAL)
+                context.set_details(str(e))
+
+                return trigger_service_pb2.TriggerInputResponse(
+                    success=False,
+                    input_schema=None,
+                )
+
+    @validate_grpc_request
+    def GetTriggerOutput(
+        self, request, context: grpc.ServicerContext
+    ) -> trigger_service_pb2.TriggerOutputResponse:
+        """
+        Retrieves the Output of a trigger.
+
+        :param request: The gRPC request containing the trigger ID.
+        :param context: The gRPC context.
+        :return: A TriggerOutputResponse give output schema of the trigger.
+        """
+        with self.tracer.start_span("get_trigger_output"):
+            try:
+                json_request = json_format.MessageToDict(
+                    request,
+                    preserving_proto_field_name=True,
+                )
+                trigger_id = json_request.get("trigger_id", None)
+                llm_format = json_request.get("llm_format", False)
+
+                if not trigger_id:
+                    raise ValueError("😵 Trigger ID is required.")
+
+                struct_input = json_format.ParseDict(
+                    json.loads(self.trigger.get_output_format(llm_format)),
+                    struct_pb2.Struct(),
+                )
+
+                return trigger_service_pb2.TriggerOutputResponse(
+                    success=True,
+                    output_schema=struct_input,
+                )
+
+            except ValidationError as e:
+                error_message = pydantic_validation_error(e, context)
+                logger.error(error_message)  # Validation Error
+                return trigger_service_pb2.TriggerOutputResponse(
+                    success=False,
+                    output_schema=None,
+                )
+            except Exception as e:
+                logger.error("Exception Error: %s", e)
+                context.set_code(grpc.StatusCode.INTERNAL)
+                context.set_details(str(e))
+
+                return trigger_service_pb2.TriggerOutputResponse(
+                    success=False,
+                    output_schema=None,
+                )
+
     def add_to_server(self, server: grpc.Server) -> None:
         """
         Adds this service to the given gRPC server.
@@ -416,7 +516,39 @@ class BaseTrigger(Generic[InputModelT, OutputModelT, SetupModelT], ServiceServer
         )
 
     @classmethod
-    def get_output_format(cls) -> str:
+    def __args_schema(cls, model: BaseModel):
+        """
+        Get the JSON schema of the model.
+        """
+        schema = model.model_json_schema()
+        if "title" in schema:
+            del schema["title"]
+        if "description" in schema:
+            del schema["description"]
+        return {
+            "name": cls.name,
+            "description": cls.description,
+            "parameters": schema,
+        }
+
+    @classmethod
+    def get_input_format(cls, llm_format: bool = False) -> str:
+        """
+        Get the JSON schema of the input format model.
+
+        :return: The JSON schema of the input format as a string.
+        :raises NotImplementedError: If the `input_format` is not defined.
+        """
+        if cls.output_format is not None:
+            if llm_format:
+                return json.dumps(cls.__args_schema(cls.input_format), indent=2)
+            return json.dumps(cls.input_format.model_json_schema(), indent=2)
+        raise NotImplementedError(
+            f"'{cls.__name__}' class does not define an 'input_format'."
+        )
+
+    @classmethod
+    def get_output_format(cls, llm_format: bool = False) -> str:
         """
         Get the JSON schema of the output format model.
 
@@ -424,13 +556,15 @@ class BaseTrigger(Generic[InputModelT, OutputModelT, SetupModelT], ServiceServer
         :raises NotImplementedError: If the `output_format` is not defined.
         """
         if cls.output_format is not None:
+            if llm_format:
+                return json.dumps(cls.__args_schema(cls.output_format), indent=2)
             return json.dumps(cls.output_format.model_json_schema(), indent=2)
         raise NotImplementedError(
             f"'{cls.__name__}' class does not define an 'output_format'."
         )
 
     @classmethod
-    def get_setup_format(cls) -> str:
+    def get_setup_format(cls, llm_format: bool = False) -> str:
         """
         Gets the JSON schema of the setup format model.
 
@@ -438,6 +572,8 @@ class BaseTrigger(Generic[InputModelT, OutputModelT, SetupModelT], ServiceServer
         :raises NotImplementedError: If the `setup_format` is not defined.
         """
         if cls.setup_format is not None:
+            if llm_format:
+                return json.dumps(cls.__args_schema(cls.setup_format), indent=2)
             return json.dumps(cls.setup_format.model_json_schema(), indent=2)
         raise NotImplementedError(
             f"'{cls.__name__}' class does not define an 'setup_format'."

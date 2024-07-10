@@ -29,6 +29,16 @@ class TriggerServiceStub(object):
                 request_serializer=digitalkin_dot_service_dot_v1_dot_trigger_dot_trigger__service__pb2.GetTriggerStatusRequest.SerializeToString,
                 response_deserializer=digitalkin_dot_service_dot_v1_dot_trigger_dot_trigger__service__pb2.TriggerStatusResponse.FromString,
                 )
+        self.GetTriggerInput = channel.unary_unary(
+                '/digitalkin.service.v1.trigger.TriggerService/GetTriggerInput',
+                request_serializer=digitalkin_dot_service_dot_v1_dot_trigger_dot_trigger__service__pb2.GetTriggerInputRequest.SerializeToString,
+                response_deserializer=digitalkin_dot_service_dot_v1_dot_trigger_dot_trigger__service__pb2.TriggerInputResponse.FromString,
+                )
+        self.GetTriggerOutput = channel.unary_unary(
+                '/digitalkin.service.v1.trigger.TriggerService/GetTriggerOutput',
+                request_serializer=digitalkin_dot_service_dot_v1_dot_trigger_dot_trigger__service__pb2.GetTriggerOutputRequest.SerializeToString,
+                response_deserializer=digitalkin_dot_service_dot_v1_dot_trigger_dot_trigger__service__pb2.TriggerOutputResponse.FromString,
+                )
 
 
 class TriggerServiceServicer(object):
@@ -52,6 +62,18 @@ class TriggerServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetTriggerInput(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetTriggerOutput(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_TriggerServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -69,6 +91,16 @@ def add_TriggerServiceServicer_to_server(servicer, server):
                     servicer.GetTriggerStatus,
                     request_deserializer=digitalkin_dot_service_dot_v1_dot_trigger_dot_trigger__service__pb2.GetTriggerStatusRequest.FromString,
                     response_serializer=digitalkin_dot_service_dot_v1_dot_trigger_dot_trigger__service__pb2.TriggerStatusResponse.SerializeToString,
+            ),
+            'GetTriggerInput': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetTriggerInput,
+                    request_deserializer=digitalkin_dot_service_dot_v1_dot_trigger_dot_trigger__service__pb2.GetTriggerInputRequest.FromString,
+                    response_serializer=digitalkin_dot_service_dot_v1_dot_trigger_dot_trigger__service__pb2.TriggerInputResponse.SerializeToString,
+            ),
+            'GetTriggerOutput': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetTriggerOutput,
+                    request_deserializer=digitalkin_dot_service_dot_v1_dot_trigger_dot_trigger__service__pb2.GetTriggerOutputRequest.FromString,
+                    response_serializer=digitalkin_dot_service_dot_v1_dot_trigger_dot_trigger__service__pb2.TriggerOutputResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -128,5 +160,39 @@ class TriggerService(object):
         return grpc.experimental.unary_unary(request, target, '/digitalkin.service.v1.trigger.TriggerService/GetTriggerStatus',
             digitalkin_dot_service_dot_v1_dot_trigger_dot_trigger__service__pb2.GetTriggerStatusRequest.SerializeToString,
             digitalkin_dot_service_dot_v1_dot_trigger_dot_trigger__service__pb2.TriggerStatusResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def GetTriggerInput(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/digitalkin.service.v1.trigger.TriggerService/GetTriggerInput',
+            digitalkin_dot_service_dot_v1_dot_trigger_dot_trigger__service__pb2.GetTriggerInputRequest.SerializeToString,
+            digitalkin_dot_service_dot_v1_dot_trigger_dot_trigger__service__pb2.TriggerInputResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def GetTriggerOutput(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/digitalkin.service.v1.trigger.TriggerService/GetTriggerOutput',
+            digitalkin_dot_service_dot_v1_dot_trigger_dot_trigger__service__pb2.GetTriggerOutputRequest.SerializeToString,
+            digitalkin_dot_service_dot_v1_dot_trigger_dot_trigger__service__pb2.TriggerOutputResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
