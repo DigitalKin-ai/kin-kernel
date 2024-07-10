@@ -5,7 +5,7 @@ TODO: add await async every where
 
 import asyncio
 from typing import Callable, Dict, List, Any, Type
-from pydantic import BaseModel, create_model
+from pydantic import BaseModel, create_model, Field
 
 from kin_sdk.grpc_services.models import ServiceModel
 from kin_sdk.kin.base import BaseKin
@@ -14,17 +14,42 @@ from kin_sdk.module.storage import DBStorage
 from kin_sdk.kin.kin_workflow.graph import GraphExecutor
 
 
-def create_dynamic_model(fields: dict) -> Type[BaseModel]:
+def update_model_with_fields(
+    base_model: Type[BaseModel], fields_model: Type[BaseModel]
+) -> Type[BaseModel]:
     """
-    Create a dynamic Pydantic model with the given fields.
+    Update the base model with fields from another model.
 
-    :param fields: A dictionary where keys are field names and values are field types.
-    :return: A dynamically created Pydantic model class.
+    :param base_model: The base Pydantic model class to be updated.
+    :param fields_model: The Pydantic model class whose fields will be added to the base model.
+    :return: The updated Pydantic model class.
     """
-    return create_model('DynamicModel', **fields)
+    # Create a copy of the base model's annotations and fields
+    updated_annotations = base_model.__annotations__.copy()
+    updated_fields = {
+        name: getattr(base_model, name) for name in base_model.__annotations__
+    }
+
+    # Add fields from the fields_model
+    for field_name, field_type in fields_model.__annotations__.items():
+        updated_annotations[field_name] = field_type
+        updated_fields[field_name] = getattr(fields_model, field_name, ...)
+
+    # Create a new model class with the updated annotations and fields
+    updated_model = create_model(
+        "UpdatedWorkflowInput",
+        __base__=base_model,
+        **{
+            name: (field_type, updated_fields[name])
+            for name, field_type in updated_annotations.items()
+        },
+    )
+
+    return updated_model
+
 
 class WorkflowInput(BaseModel):
-    trigger_id: str
+    trigger_id: str = Field(..., description="trigger id of the class")
 
 
 class WorkflowOutput(BaseModel):
@@ -134,11 +159,12 @@ class KinWorkflow(BaseKin):
             # add triggers and tools
             self.register_services(workflow["nodes"])
 
-            # create a graph executor
+            # create a graph executor
             self.graphs_executor = GraphExecutor(
                 graph=workflow,
             )
 
+            self.get_service_input(service_id="fibonacci_trigger")
             logger.info("🚀 Workflow has been started...")
         except Exception as e:
             logger.error(f"Error loading workflow: {e}")
@@ -154,7 +180,7 @@ class KinWorkflow(BaseKin):
         """
         Executes the trigger.
         """
-        input_data.
+        # self.get_service_input(service_id=input_data.trigger_id)
         print("Executing Kin Workflow...")
 
     def stop(self) -> None:

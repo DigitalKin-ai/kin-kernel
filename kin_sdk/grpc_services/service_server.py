@@ -5,6 +5,8 @@ from google.protobuf import json_format
 
 import proto.digitalkin.service.v1.registry.service_registry_pb2_grpc as service_registry_pb2_grpc
 import proto.digitalkin.service.v1.registry.service_registry_pb2 as service_registry_pb2
+import proto.digitalkin.service.v1.trigger.trigger_service_pb2_grpc as trigger_service_pb2_grpc
+import proto.digitalkin.service.v1.trigger.trigger_service_pb2 as trigger_service_pb2
 
 from kin_sdk.grpc_services.models import ServiceModel
 from kin_sdk.grpc_services.grpc_server_base import GRPCServerBase
@@ -73,7 +75,7 @@ class ServiceServer(GRPCServerBase):
             service_id (str): Unique identifier for the service.
 
         Returns:
-            bool: True if the service is found, False otherwise.
+            ServiceModel: ServiceModel if the service is found, None otherwise.
         """
         try:
             with grpc.insecure_channel(self.registry_address) as channel:
@@ -116,6 +118,44 @@ class ServiceServer(GRPCServerBase):
         except Exception:
             logger.error("Error deregistering service: %s", self.service_port)
             return False
+
+    def get_service_input(self, service_id: str) -> Optional[ServiceModel]:
+        """
+        Get the input of a service.
+
+        Args:
+            service_id (str): Unique identifier for the service.
+
+        Returns:
+            bool: True if the service is found, False otherwise.
+        """
+        try:
+            service_model: ServiceModel = self.search_service(service_id)
+
+            if service_model is None:
+                raise ValueError(
+                    f"The service: {service_id} is not found in the service registry"
+                )
+
+            with grpc.insecure_channel(
+                f"{service_model.address}:{service_model.port}"
+            ) as channel:
+                stub = trigger_service_pb2_grpc.TriggerServiceStub(channel)
+                request = trigger_service_pb2.GetTriggerInputRequest(
+                    trigger_id=service_model.service_id,
+                    llm_format=True,
+                )
+                print(service_model)
+                response = stub.GetTriggerInput(request)
+                json_response = json_format.MessageToDict(
+                    response,
+                    preserving_proto_field_name=True,
+                )
+                print(json_response)
+                return json_response
+        except Exception as e:
+            logger.error(f"Error retreaving inputs for service {service_id}: {e}")
+            return None
 
     def serve(self) -> None:
         """
