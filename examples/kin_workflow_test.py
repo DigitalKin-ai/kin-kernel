@@ -5,6 +5,7 @@ TODO: sphinx docstring
 # import json
 # from typing import Union
 from kin_sdk.kin.kin_workflow import KinWorkflow
+from kin_sdk.kin.kin_workflow.kin import WorkflowInput, WorkflowSetup, WorkflowOutput
 
 
 # method to load json file from /examples/data/setup_example.json
@@ -17,6 +18,10 @@ from kin_sdk.kin.kin_workflow import KinWorkflow
 #         return None
 
 
+def callback(output: WorkflowOutput):
+    print("callback: ", output)
+
+
 if __name__ == "__main__":
     kin_workflow = KinWorkflow(
         name="First Kin Workflow",
@@ -27,4 +32,8 @@ if __name__ == "__main__":
         registry_address="localhost:50051",
     )
     kin_workflow.start(kin_id="test")
+    input_data = WorkflowInput(trigger_id="fibonacci_trigger")
+    setup_data = WorkflowSetup()
+
+    kin_workflow.execute(input_data, setup_data, callback)
     print("Hello, World!")

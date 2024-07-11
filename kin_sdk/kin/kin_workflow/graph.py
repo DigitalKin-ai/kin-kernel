@@ -1,6 +1,7 @@
 import datetime
+import asyncio
 import threading
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Literal
 from queue import Queue
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -27,6 +28,8 @@ class GraphExecutor:
             node["id"]: Node(
                 node_id=node["id"],
                 node_type=node["type"],
+                service_type=node["data"]["type"],
+                service_id=node["data"]["id"],
                 inputs=node["data"]["targets"],
                 outputs=node["data"]["sources"],
             )
@@ -36,6 +39,35 @@ class GraphExecutor:
         self.error_occurred = threading.Event()
         self.execution_queue = Queue()
         self.lock = threading.Lock()
+
+    def get_services_nodes(
+        self, service_type: Literal["trigger", "tool", "kin", "view"]
+    ) -> List[str]:
+        """
+        Returns the trigger nodes in the graph.
+        :param service_type: The type of service to search for.
+
+        Returns:
+            List[str]: The IDs of the trigger nodes.
+        """
+        return [
+            (node_id, node.service_id)
+            for node_id, node in self.nodes.items()
+            if node.service_type == service_type
+        ]
+
+    def get_node_id_by_service_id(self, service_id: str) -> str:
+        """
+        Returns the node id by service id.
+        :param service_id: The service id to search for.
+
+        Returns:
+            str: The ID of the node.
+        """
+        for node_id, node in self.nodes.items():
+            if node.service_id == service_id:
+                return node_id
+        return ""
 
     def add_edges(self, edges: List[Dict[str, Any]]) -> None:
         """
@@ -98,14 +130,31 @@ class GraphExecutor:
                         input["updated_at"] = datetime.datetime.now()
                 break
 
-    async def execute_node(self, node_id: str) -> None:
+    async def check_setup(self, node: Node) -> None:
+        """
+        Checks if the their is values in the node else get setup from the service
+        """
+        # check if the node has already been initialized by checking if any of the inputs has a value
+        is_already_init = any(
+            [input.get("value", None) is not None for input in node.inputs]
+        )
+        print(is_already_init)
+
+    async def async_execute_node(self, node_id: str) -> None:
         """
         Executes a single node and updates its successors.
 
         Args:
             node_id (str): The ID of the node to execute.
         """
+        print("herherhreherhreherh")
+        print("herherhreherhreherh")
+        print("herherhreherhreherh")
+        print("herherhreherhreherh")
+        print("herherhreherhreherh")
         node = self.nodes[node_id]
+        await self.check_setup(node)
+        assert "a" == "b", "a is not equal to b"
         # construct input data
         input_data = {
             input["label"]: {
@@ -141,6 +190,7 @@ class GraphExecutor:
                 return
 
             with self.lock:
+                print("here")
                 # Launch the node execution in a thread-safe manner and retrieve the output data
                 output_data = await node.execute(input_data)
 
@@ -196,7 +246,10 @@ class GraphExecutor:
             print(f"{datetime.datetime.now()} - Error executing node {node_id}: {e}")
             self.error_occurred.set()
 
-    def execute(self, initial_node: str = "n_1") -> None:
+    def execute_node(self, *args, **kwargs) -> None:
+        asyncio.run(self.async_execute_node(*args, **kwargs))
+
+    def execute(self, initial_node: str) -> None:
         """
         Executes the graph starting from the initial node.
 

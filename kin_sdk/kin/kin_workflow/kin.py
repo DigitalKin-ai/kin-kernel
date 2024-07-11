@@ -148,6 +148,15 @@ class KinWorkflow(BaseKin):
             return None
         return workflows[0]
 
+    def get_kin_input(self) -> Dict[str, Any]:
+        inputs_schema = {
+            trigger_id: self.get_service_input(service_id=trigger_id)
+            for _node_id, trigger_id in self.graphs_executor.get_services_nodes(
+                "trigger"
+            )
+        }
+        return inputs_schema
+
     def start(self, kin_id: str) -> None:
         """
         Starts the trigger.
@@ -164,7 +173,6 @@ class KinWorkflow(BaseKin):
                 graph=workflow,
             )
 
-            self.get_service_input(service_id="fibonacci_trigger")
             logger.info("🚀 Workflow has been started...")
         except Exception as e:
             logger.error(f"Error loading workflow: {e}")
@@ -180,7 +188,16 @@ class KinWorkflow(BaseKin):
         """
         Executes the trigger.
         """
-        # self.get_service_input(service_id=input_data.trigger_id)
+        # setups_id =  setups:fibonacci_setup
+        # dynamic input model
+        print("trigger_id: ", input_data.trigger_id)
+        inputs_schema = self.get_kin_input()
+        print(inputs_schema.get(input_data.trigger_id, {}))
+        initial_node = self.graphs_executor.get_node_id_by_service_id(
+            input_data.trigger_id
+        )
+        self.graphs_executor.execute(initial_node)  # le noeud doit avoir des values
+        # 2. declanchement du workflow avec les inputs du trigger
         print("Executing Kin Workflow...")
 
     def stop(self) -> None:

@@ -22,11 +22,15 @@ class Node:
         self,
         node_id: str,
         node_type: str,
+        service_type: str,
+        service_id: str,
         inputs: List[Dict[str, Any]],
         outputs: List[Dict[str, Any]],
     ):
         self.node_id = node_id
         self.node_type = node_type
+        self.service_type = service_type
+        self.service_id = service_id
         self.inputs = inputs
         self.outputs = outputs
         self.status = "pending"  # 'pending', 'running', 'completed', 'failed'
@@ -45,7 +49,7 @@ class Node:
         """
         self.status = "running"
         print(f"Executing node {self.node_type}:{self.node_id}")
-        time.sleep(5)  # Simulate some work being done
+        await time.sleep(5)  # Simulate some work being done
         output_data = {
             output["label"]: f"output_of_{output['label']}_{self.node_id}"
             for output in self.outputs

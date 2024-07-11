@@ -119,7 +119,9 @@ class ServiceServer(GRPCServerBase):
             logger.error("Error deregistering service: %s", self.service_port)
             return False
 
-    def get_service_input(self, service_id: str) -> Optional[ServiceModel]:
+    def get_service_input(
+        self, service_id: str, llm_format: bool = False
+    ) -> Optional[ServiceModel]:
         """
         Get the input of a service.
 
@@ -143,7 +145,7 @@ class ServiceServer(GRPCServerBase):
                 stub = trigger_service_pb2_grpc.TriggerServiceStub(channel)
                 request = trigger_service_pb2.GetTriggerInputRequest(
                     trigger_id=service_model.service_id,
-                    llm_format=True,
+                    llm_format=llm_format,
                 )
                 print(service_model)
                 response = stub.GetTriggerInput(request)
@@ -151,7 +153,6 @@ class ServiceServer(GRPCServerBase):
                     response,
                     preserving_proto_field_name=True,
                 )
-                print(json_response)
                 return json_response
         except Exception as e:
             logger.error(f"Error retreaving inputs for service {service_id}: {e}")
