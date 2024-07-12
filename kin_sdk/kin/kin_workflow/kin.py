@@ -208,7 +208,13 @@ class KinWorkflow(BaseKin):
         initial_node = self.graphs_executor.get_node_id_by_service_id(
             input_data.trigger_id
         )
-        self.graphs_executor.execute(initial_node)  # le noeud doit avoir des values
+
+        async def service_callback(service_id: str):
+            print(f"Service callback: {service_id}")
+
+        self.graphs_executor.execute(
+            initial_node, service_callback
+        )  # le noeud doit avoir des values
         # 2. declanchement du workflow avec les inputs du trigger
         print("Executing Kin Workflow...")
 

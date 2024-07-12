@@ -1,7 +1,7 @@
 import datetime
 import asyncio
 import threading
-from typing import Any, Dict, List, Literal
+from typing import Any, Dict, List, Literal, Callable
 from queue import Queue
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -139,7 +139,9 @@ class GraphExecutor:
                         input["updated_at"] = datetime.datetime.now()
                 break
 
-    async def async_execute_node(self, node_id: str) -> None:
+    async def async_execute_node(
+        self, node_id: str, service_callback: Callable
+    ) -> None:
         """
         Executes a single node and updates its successors.
 
@@ -161,9 +163,6 @@ class GraphExecutor:
             if "label" in input
         }
 
-        print(
-            f"{datetime.datetime.now()} - Executing node {node_id} with inputs: {input_data}"
-        )
         # Verify if all inputs have values except for optional inputs
         verify_values = [
             (values["value"] is not None or values.get("optional", False))
@@ -192,7 +191,7 @@ class GraphExecutor:
 
             with self.lock:
                 # Launch the node execution in a thread-safe manner and retrieve the output data
-                output_data = await node.execute(input_data)
+                output_data = await node.execute(input_data, service_callback)
 
                 # Propagate the output data to the successors
                 for successor in self.graph.successors(node_id):
@@ -249,7 +248,7 @@ class GraphExecutor:
     def execute_node(self, *args, **kwargs) -> None:
         asyncio.run(self.async_execute_node(*args, **kwargs))
 
-    def execute(self, initial_node: str) -> None:
+    def execute(self, initial_node: str, service_callback: Callable) -> None:
         """
         Executes the graph starting from the initial node.
 
@@ -290,7 +289,9 @@ class GraphExecutor:
                     )
                     # Submit the node for execution
                     if node_id is not None:
-                        future = executor.submit(self.execute_node, node_id)
+                        future = executor.submit(
+                            self.execute_node, node_id, service_callback
+                        )
                         futures[future] = node_id
                     print(
                         f"{datetime.datetime.now()} - {node_id}",

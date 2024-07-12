@@ -1,6 +1,6 @@
 import datetime
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Callable
 
 
 class Node:
@@ -40,7 +40,9 @@ class Node:
         self.last_execution = None
         self.setup = setup
 
-    async def execute(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute(
+        self, input_data: Dict[str, Any], service_callback: Callable
+    ) -> Dict[str, Any]:
         """
         Executes the node with the given input data.
 
@@ -52,11 +54,13 @@ class Node:
         """
         self.status = "running"
         print(f"Executing node {self.service_type}:{self.node_id}")
+        await service_callback(self.service_id)
         time.sleep(5)  # Simulate some work being done
         output_data = {
             output["label"]: f"output_of_{output['label']}_{self.node_id}"
             for output in self.outputs
         }
+        print(output_data)
         self.outputs = [
             {
                 **output,
