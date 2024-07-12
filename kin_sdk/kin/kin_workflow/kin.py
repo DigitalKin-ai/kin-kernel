@@ -211,6 +211,7 @@ class KinWorkflow(BaseKin):
 
         async def service_callback(service_id: str):
             print(f"Service callback: {service_id}")
+            raise NotImplementedError
 
         self.graphs_executor.execute(
             initial_node, service_callback

@@ -119,6 +119,9 @@ class ServiceServer(GRPCServerBase):
             logger.error("Error deregistering service: %s", self.service_port)
             return False
 
+    def execute_service(self, service_id: str, input_data: dict) -> Optional[dict]:
+        raise NotImplementedError
+
     def get_service_input(
         self, service_id: str, llm_format: bool = False
     ) -> Optional[ServiceModel]:
