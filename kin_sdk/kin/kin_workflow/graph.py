@@ -22,8 +22,15 @@ class GraphExecutor:
         execution_queue (Queue): A queue to manage node execution order.
     """
 
-    def __init__(self, graph: Dict[str, Any]):
+    def __init__(self, graph: Dict[str, Any], setups: Dict[str, Any]):
         self.graph = nx.DiGraph()
+        # format the setups data
+        formated_setups = {
+            data["service_id"]: data.get("content", {})
+            for data in setups.get("data", [])
+            if data.get("service_id", None) is not None
+        }
+        # create the nodes
         self.nodes = {
             node["id"]: Node(
                 node_id=node["id"],
@@ -32,6 +39,7 @@ class GraphExecutor:
                 service_id=node["data"]["id"],
                 inputs=node["data"]["targets"],
                 outputs=node["data"]["sources"],
+                setup=formated_setups.get(f"services:{node['data']['id']}", {}),
             )
             for node in graph["nodes"]
         }
@@ -39,6 +47,7 @@ class GraphExecutor:
         self.error_occurred = threading.Event()
         self.execution_queue = Queue()
         self.lock = threading.Lock()
+        self.setups = setups
 
     def get_services_nodes(
         self, service_type: Literal["trigger", "tool", "kin", "view"]
@@ -130,16 +139,6 @@ class GraphExecutor:
                         input["updated_at"] = datetime.datetime.now()
                 break
 
-    async def check_setup(self, node: Node) -> None:
-        """
-        Checks if the their is values in the node else get setup from the service
-        """
-        # check if the node has already been initialized by checking if any of the inputs has a value
-        is_already_init = any(
-            [input.get("value", None) is not None for input in node.inputs]
-        )
-        print(is_already_init)
-
     async def async_execute_node(self, node_id: str) -> None:
         """
         Executes a single node and updates its successors.
@@ -147,14 +146,10 @@ class GraphExecutor:
         Args:
             node_id (str): The ID of the node to execute.
         """
-        print("herherhreherhreherh")
-        print("herherhreherhreherh")
-        print("herherhreherhreherh")
-        print("herherhreherhreherh")
-        print("herherhreherhreherh")
         node = self.nodes[node_id]
-        await self.check_setup(node)
-        assert "a" == "b", "a is not equal to b"
+        print(
+            f"\n\n----\n{datetime.datetime.now()} - Executing node {node.service_type}:{node_id}."
+        )
         # construct input data
         input_data = {
             input["label"]: {
@@ -165,6 +160,7 @@ class GraphExecutor:
             for input in node.inputs
             if "label" in input
         }
+
         print(
             f"{datetime.datetime.now()} - Executing node {node_id} with inputs: {input_data}"
         )
@@ -179,18 +175,22 @@ class GraphExecutor:
             for values in input_data.values()
         ]
 
+        # Verify if it is the initial trigger node
+        initial_trigger = (
+            node.service_type == "trigger" and node.last_execution is None
+        )  # TODO: improve that
+
         try:
-            # Verify if all inputs have values except for optional inputs
+            # Verify if it not the initial_trigger and if all inputs have values except for optional inputs
             # and if all nodes has been updated except for nodes that have never been executed
             # if not, skip the node
-            if not (all(verify_values) and any(verify_update)):
+            if not initial_trigger and not (all(verify_values) and any(verify_update)):
                 print(
                     f"{datetime.datetime.now()} - Skipping node {node_id} due to input conditions."
                 )
                 return
 
             with self.lock:
-                print("here")
                 # Launch the node execution in a thread-safe manner and retrieve the output data
                 output_data = await node.execute(input_data)
 

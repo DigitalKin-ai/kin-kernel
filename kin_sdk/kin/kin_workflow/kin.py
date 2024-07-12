@@ -157,6 +157,13 @@ class KinWorkflow(BaseKin):
         }
         return inputs_schema
 
+    async def get_kin_setup(self, kin_id, setup_id) -> Dict[str, Any]:
+        setups = await self.db_storage.storage_load_setup(
+            kin_id=kin_id, setup_id=setup_id
+        )
+
+        return setups
+
     def start(self, kin_id: str) -> None:
         """
         Starts the trigger.
@@ -168,9 +175,15 @@ class KinWorkflow(BaseKin):
             # add triggers and tools
             self.register_services(workflow["nodes"])
 
+            setups_id = "fibonacci_setup"  # TODO: get setup_id from params
+
+            # load setups from db
+            setups = asyncio.run(self.get_kin_setup(kin_id, setups_id))
+
             # create a graph executor
             self.graphs_executor = GraphExecutor(
                 graph=workflow,
+                setups=setups,
             )
 
             logger.info("🚀 Workflow has been started...")
@@ -188,7 +201,6 @@ class KinWorkflow(BaseKin):
         """
         Executes the trigger.
         """
-        # setups_id =  setups:fibonacci_setup
         # dynamic input model
         print("trigger_id: ", input_data.trigger_id)
         inputs_schema = self.get_kin_input()
