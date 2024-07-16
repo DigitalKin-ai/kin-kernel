@@ -14,7 +14,7 @@ class ServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.StartService = channel.stream_stream(
+        self.StartService = channel.unary_stream(
                 '/digitalkin.service.v1.Service/StartService',
                 request_serializer=digitalkin_dot_service_dot_v1_dot_service__pb2.StartServiceRequest.SerializeToString,
                 response_deserializer=digitalkin_dot_service_dot_v1_dot_service__pb2.ServiceResponse.FromString,
@@ -44,7 +44,7 @@ class ServiceStub(object):
 class ServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def StartService(self, request_iterator, context):
+    def StartService(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -77,7 +77,7 @@ class ServiceServicer(object):
 
 def add_ServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'StartService': grpc.stream_stream_rpc_method_handler(
+            'StartService': grpc.unary_stream_rpc_method_handler(
                     servicer.StartService,
                     request_deserializer=digitalkin_dot_service_dot_v1_dot_service__pb2.StartServiceRequest.FromString,
                     response_serializer=digitalkin_dot_service_dot_v1_dot_service__pb2.ServiceResponse.SerializeToString,
@@ -113,7 +113,7 @@ class Service(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def StartService(request_iterator,
+    def StartService(request,
             target,
             options=(),
             channel_credentials=None,
@@ -123,7 +123,7 @@ class Service(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.stream_stream(request_iterator, target, '/digitalkin.service.v1.Service/StartService',
+        return grpc.experimental.unary_stream(request, target, '/digitalkin.service.v1.Service/StartService',
             digitalkin_dot_service_dot_v1_dot_service__pb2.StartServiceRequest.SerializeToString,
             digitalkin_dot_service_dot_v1_dot_service__pb2.ServiceResponse.FromString,
             options, channel_credentials,

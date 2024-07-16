@@ -10,7 +10,7 @@ import proto.digitalkin.service.v1.trigger.trigger_service_pb2 as trigger_servic
 
 from kin_sdk.grpc_services.models import ServiceModel
 from kin_sdk.grpc_services.grpc_server_base import GRPCServerBase
-from kin_sdk.common import logger
+from kin_sdk.common import logger, ServiceType
 
 
 class ServiceServer(GRPCServerBase):
@@ -24,7 +24,7 @@ class ServiceServer(GRPCServerBase):
         service_id: str,
         service_address: str,
         service_port: int,
-        service_type: Literal["kin", "tool", "trigger"],
+        service_type: ServiceType,
         registry_address: str,
         servicer_class: Type,
         servicer_args: tuple = (),

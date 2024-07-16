@@ -11,7 +11,6 @@ import grpc
 from pydantic import BaseModel
 from google.protobuf import json_format, struct_pb2
 
-import kin_sdk.service.service as service
 import proto.digitalkin.service.v1.service_pb2 as service_pb2
 import proto.digitalkin.service.v1.service_pb2_grpc as service_pb2_grpc
 from kin_sdk.grpc_services import ServiceServer, ServiceModel
@@ -24,7 +23,7 @@ SetupModelT = TypeVar("SetupModelT", bound=BaseModel)
 
 class BaseService(Generic[InputModelT, OutputModelT, SetupModelT], ServiceServer, ABC):
     """
-    Abstract base class for defining a trigger.
+    Abstract base class for defining a service.
     """
 
     name: str
@@ -43,7 +42,7 @@ class BaseService(Generic[InputModelT, OutputModelT, SetupModelT], ServiceServer
         max_workers: int = 10,
     ):
         """
-        Initializes the BaseTrigger.
+        Initializes the BaseService.
 
         :param service_id: The ID of the service.
         :param service_address: The address of the service.
@@ -58,13 +57,23 @@ class BaseService(Generic[InputModelT, OutputModelT, SetupModelT], ServiceServer
             service_address=service_address,
             service_port=service_port,
             service_type=service_type,
-            servicer_class=service.Service,
+            servicer_class=self.__get_service_class(),
             servicer_kwargs=dict(
                 service=self,
             ),
             registry_address=registry_address,
             max_workers=max_workers,
         )
+
+    def __get_service_class(self) -> Type[service_pb2_grpc.ServiceServicer]:
+        """
+        Gets the service class.
+
+        :return: The service class.
+        """
+        from kin_sdk.service.service import Service
+
+        return Service
 
     def __init_subclass__(cls, **kwargs):
         """
@@ -190,10 +199,10 @@ class BaseService(Generic[InputModelT, OutputModelT, SetupModelT], ServiceServer
         callback: Callable[[OutputModelT], None],
     ) -> None:
         """
-        Executes the trigger.
+        Executes the service.
 
-        :param input_data: The input data for the trigger.
-        :param setup_data: The setup data for the trigger.
+        :param input_data: The input data for the service.
+        :param setup_data: The setup data for the service.
         :param callback: The callback to call with the output data.
         """
         raise NotImplementedError("Subclasses must implement 'execute' abstract method")
@@ -201,7 +210,7 @@ class BaseService(Generic[InputModelT, OutputModelT, SetupModelT], ServiceServer
     @abstractmethod
     def stop(self) -> None:  # ? Other params like service_id ?
         """
-        Stops the trigger.
+        Stops the service.
         """
         raise NotImplementedError("Subclasses must implement 'stop' abstract method")
 

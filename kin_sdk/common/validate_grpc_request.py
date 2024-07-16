@@ -1,5 +1,7 @@
 import time
 import grpc
+import uuid
+
 from functools import wraps
 from typing import Dict, Any, Iterator, Callable
 
@@ -7,7 +9,9 @@ from google.protobuf import json_format, struct_pb2
 from protoc_gen_validate.validator import validate, ValidationFailed
 
 
-from kin_sdk.common import logger
+from kin_sdk.common.logger import logger
+from kin_sdk.common.room import Room
+from kin_sdk.common.validated_request import ValidatedRequest
 
 
 def merge_dicts(accumulated_dict: Dict[str, Any], new_dict: Dict[str, Any]) -> None:
@@ -163,6 +167,125 @@ def validate_stream_grpc_request():
                     ),
                     context,
                 )
+
+            except ValidationFailed as e:
+                # Handle validation errors
+                logger.error("Validation Error: %s", e)
+                context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+                context.set_details(str(e))
+            except Exception as e:
+                # Handle other exceptions that may occur
+                logger.error("Validate Exception Error: %s", e)
+                context.set_code(grpc.StatusCode.INTERNAL)
+                context.set_details(str(e))
+
+        return wrapper
+
+    return decorator
+
+
+def validate_stream_request():
+    """
+    TODO: sphinx docstring
+    """
+
+    def decorator(func: Callable):
+        @wraps(func)
+        def wrapper(self, request, context: grpc.ServicerContext):
+            """
+            Todo: sphinx docstring
+            """
+            try:
+                # Extract service name from metadata
+                metadata = dict(context.invocation_metadata())
+                service_id = metadata.get("service_id", None)
+                role = metadata.get("role", "actor")
+                room_id = metadata.get("room_id", str(uuid.uuid4()))
+
+                if not service_id:
+                    context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+                    context.set_details("Service ID metadata is required.")
+                    return
+
+                if not room_id:
+                    room_id = str(uuid.uuid4())
+                    with self.lock:
+                        self.rooms[room_id] = Room()
+
+                if room_id not in self.rooms:
+                    return func(
+                        self,
+                        ValidatedRequest(request, False, "Room does not exist."),
+                        context,
+                    )
+
+                room = self.rooms[room_id]
+
+                if role == "actor":
+                    room.actors.add(service_id)
+                elif role == "guest":
+                    room.guests.add(service_id)
+
+                assert "a" == "b", "stop"
+
+            #     # Initialize room if not exists
+            #     with self.lock:
+            #         if service_name not in self.rooms:
+            #             self.rooms[service_name] = {
+            #                 "clients": 0,
+            #                 "data": None,
+            #                 "type": None,
+            #                 "last_update": time.time(),
+            #             }
+
+            #     self.rooms[service_name]["clients"] += 1
+            #     # Process incoming requests
+            #     for request in request_iterator:
+            #         with self.lock:
+            #             self.rooms[service_name]["type"] = type(request)
+            #             data_dict = (
+            #                 json_format.MessageToDict(
+            #                     self.rooms[service_name]["data"],
+            #                     preserving_proto_field_name=True,
+            #                 )
+            #                 if self.rooms[service_name]["data"]
+            #                 else {}
+            #             )
+            #             merge_dicts(
+            #                 data_dict,
+            #                 json_format.MessageToDict(
+            #                     request,
+            #                     preserving_proto_field_name=True,
+            #                 ),
+            #             )
+            #             self.rooms[service_name]["data"] = json_format.ParseDict(
+            #                 data_dict, type(request)()
+            #             )
+            #             self.rooms[service_name]["last_update"] = time.time()
+
+            #     # Decrease the number of clients when the stream ends
+            #     with self.lock:
+            #         self.rooms[service_name]["clients"] -= 1
+            #         if self.rooms[service_name]["clients"] <= 0:
+            #             self.condition.notify_all()
+
+            #     if self.rooms[service_name]["clients"] <= 0:
+            #         # Execute the merged request
+            #         with self.lock:
+            #             merged_request = self.rooms[service_name]["data"]
+            #             del self.rooms[service_name]
+            #             validate(merged_request)
+
+            #         return func(self, merged_request, context)
+
+            #     return func(
+            #         self,
+            #         json_format.ParseDict(
+            #             {"partial_request": True},
+            #             struct_pb2.Struct(),
+            #         ),
+            #         context,
+            #     )
 
             except ValidationFailed as e:
                 # Handle validation errors
