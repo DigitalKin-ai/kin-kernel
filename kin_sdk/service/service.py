@@ -24,7 +24,11 @@ class Service(service_pb2_grpc.ServiceServicer):
     def StartService(
         self, validated_request: ValidatedRequest, context: grpc.ServicerContext
     ) -> Generator[service_pb2.ServiceResponse, Any, Any]:
+        """
+        https://medium.com/@iamdeepaksinghh/create-a-real-time-chat-service-using-grpc-in-python-fc63127d570c
+        """
         try:
+            # check if the request is valid
             if not validated_request.success:
                 raise Exception(validated_request.details)
 
