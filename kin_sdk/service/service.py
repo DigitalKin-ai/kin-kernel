@@ -3,20 +3,20 @@ TODO: sphinx docstring
 """
 
 import threading
-from typing import Dict, Any, Generator
+from typing import Any, Generator
 import grpc
 from opentelemetry import trace
 
 import proto.digitalkin.service.v1.service_pb2 as service_pb2
 import proto.digitalkin.service.v1.service_pb2_grpc as service_pb2_grpc
 from kin_sdk.service.base import BaseService
-from kin_sdk.common import Room, validate_stream_request, ValidatedRequest
+from kin_sdk.common import Rooms, validate_stream_request, ValidatedRequest
 
 
 class Service(service_pb2_grpc.ServiceServicer):
     def __init__(self, service: BaseService):
         self.service = service
-        self.rooms: Dict[str, Room] = {}
+        self.rooms: Rooms = Rooms()
         self.tracer = trace.get_tracer(self.service.__class__.__name__)
         self.lock = threading.Lock()
 
@@ -42,7 +42,7 @@ class Service(service_pb2_grpc.ServiceServicer):
             )
             return
         except Exception as e:
-            print(e)
+            print("Error:", e)
             context.set_code(grpc.StatusCode.INTERNAL)
             context.set_details(str(e))
             yield service_pb2.ServiceResponse(

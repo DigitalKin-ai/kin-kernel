@@ -12,15 +12,24 @@ def run() -> None:
         room = input("Enter room name: ")
 
         def generate_messages() -> Iterator[chat_pb2.ChatMessage]:
-            while True:
-                message = input()
-                yield chat_pb2.ChatMessage(
-                    user_name=user_name, message=message, room=room
-                )
+            try:
+                while True:
+                    message = input()
+                    if message.lower() == "exit":
+                        print("Disconnecting...")
+                        break
+                    yield chat_pb2.ChatMessage(
+                        user_name=user_name, message=message, room=room
+                    )
+            except grpc.RpcError as e:
+                print(f"Error: {e}")
 
         def receive_messages(responses: Iterator[chat_pb2.ChatMessage]) -> None:
-            for response in responses:
-                print(f"\r{response.user_name}: {response.message}\n> ", end="")
+            try:
+                for response in responses:
+                    print(f"\r{response.user_name}: {response.message}\n> ", end="")
+            except grpc.RpcError as e:
+                print(f"Error: {e}")
 
         responses = stub.JoinChat(generate_messages())
 

@@ -34,8 +34,8 @@ class ChatService(chat_pb2_grpc.ChatServiceServicer):
             print("message_sender")
             while True:
                 message = message_queue.get()
-                print(f"Yielding message: {message}")
                 if message is None:
+                    print("User disconnected")
                     break
                 yield message
 
@@ -43,20 +43,23 @@ class ChatService(chat_pb2_grpc.ChatServiceServicer):
 
         def handle_incoming_messages() -> None:
             has_subscription = False
-            for chat_message in request_iterator:
-                user_name = chat_message.user_name
-                room = chat_message.room
+            try:
+                for chat_message in request_iterator:
+                    user_name = chat_message.user_name
+                    room = chat_message.room
 
-                if not has_subscription:
-                    print("Subscribing to room ", room)
-                    self.pubsub.subscribe(room, callback)
-                    has_subscription = True
+                    if not has_subscription:
+                        print("Subscribing to room ", room)
+                        self.pubsub.subscribe(room, callback)
+                        has_subscription = True
 
-                if chat_message.message:
-                    print(f"Publish message: {chat_message.message}")
-                    self.pubsub.publish(user_name, room, chat_message.message)
-
-            message_queue.put(None)  # Sentinel to stop the message_sender
+                    if chat_message.message:
+                        print(f"Publish message: {chat_message.message}")
+                        self.pubsub.publish(user_name, room, chat_message.message)
+            except grpc.RpcError as e:
+                print(f"Client disconnected with error: {e}")
+            finally:
+                message_queue.put(None)  # Sentinel to stop the message_sender
 
         # Start the incoming message handler in a separate thread
         incoming_thread = Thread(target=handle_incoming_messages)

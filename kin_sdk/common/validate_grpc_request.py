@@ -3,14 +3,16 @@ import grpc
 import uuid
 
 from functools import wraps
-from typing import Dict, Any, Iterator, Callable
+from typing import Dict, Any, Iterator, Callable, Literal, Optional
 
+from pydantic import BaseModel, Field, model_validator
 from google.protobuf import json_format, struct_pb2
 from protoc_gen_validate.validator import validate, ValidationFailed
+from pydantic_core import PydanticUndefinedType
 
 
 from kin_sdk.common.logger import logger
-from kin_sdk.common.room import Room
+from kin_sdk.common.rooms import Rooms
 from kin_sdk.common.validated_request import ValidatedRequest
 
 
@@ -184,6 +186,70 @@ def validate_stream_grpc_request():
     return decorator
 
 
+class Metadata(BaseModel):
+    service_id: str = Field(..., description="The unique identifier of the service")
+    service_role: Literal["owner", "member"] = Field(
+        default="member", description="The role of the service"
+    )
+    room_id: Optional[uuid.UUID] = Field(
+        ..., description="The unique identifier of the room"
+    )
+
+    @model_validator(mode="before")
+    def set_defaults_for_none(cls, values):
+        fields = cls.model_fields
+        for field_name, field_info in fields.items():
+            value = values.get(field_name)
+            default_value = (
+                field_info.default
+                if not isinstance(field_info.default, PydanticUndefinedType)
+                else None
+            )
+            default_factory = (
+                field_info.default_factory
+                if not isinstance(field_info.default_factory, PydanticUndefinedType)
+                else None
+            )
+
+            if value is None:
+                if default_value is not None:
+                    values[field_name] = default_value
+                elif default_factory is not None:
+                    values[field_name] = default_factory()
+
+        return values
+
+
+def get_metadata(context: grpc.ServicerContext):
+    """
+    Extract metadata from the gRPC context.
+
+    Parameters:
+        context (grpc.ServicerContext): The gRPC context object.
+
+    Returns:
+        Dict: A dictionary containing the metadata key-value pairs.
+    """
+    try:
+        # Extract service name from metadata
+        metadata = dict(context.invocation_metadata())
+        service_id = metadata.get("service_id", None)
+        service_role = metadata.get("service_role", None)
+        room_id = metadata.get("room_id", None)
+
+        if not service_id:
+            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+            context.set_details("Service ID metadata is required.")
+            return
+
+        return Metadata(
+            service_id=service_id, service_role=service_role, room_id=room_id
+        )
+    except grpc.RpcError as e:
+        logger.error("Error getting metadata: %s", e)
+        return {}
+
+
 def validate_stream_request():
     """
     TODO: sphinx docstring
@@ -195,36 +261,52 @@ def validate_stream_request():
             """
             Todo: sphinx docstring
             """
+            if not hasattr(self, "rooms"):
+                raise AttributeError(
+                    f"{self.__class__.__name__} instance must have a 'rooms' attribute."
+                )
+
+            if not isinstance(self.rooms, Rooms):
+                raise TypeError(
+                    f"The 'rooms' attribute must be of type Rooms, got {type(self.rooms).__name__}."
+                )
+
             try:
-                # Extract service name from metadata
-                metadata = dict(context.invocation_metadata())
-                service_id = metadata.get("service_id", None)
-                role = metadata.get("role", "actor")
-                room_id = metadata.get("room_id", str(uuid.uuid4()))
+                # Extract metadata
+                metadata = get_metadata(context)
+                print(metadata)
 
-                if not service_id:
-                    context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
-                    context.set_details("Service ID metadata is required.")
-                    return
-
-                if not room_id:
-                    room_id = str(uuid.uuid4())
+                # Create room if not exists
+                if not metadata.room_id:
+                    metadata.room_id = uuid.uuid4()
                     with self.lock:
-                        self.rooms[room_id] = Room()
+                        self.rooms.create_room(metadata.room_id)
 
-                if room_id not in self.rooms:
+                # Check if room exists
+                if not self.rooms.get_room(metadata.room_id):
                     return func(
                         self,
                         ValidatedRequest(request, False, "Room does not exist."),
                         context,
                     )
 
-                room = self.rooms[room_id]
+                # Add service to room
+                self.rooms.add_service_to_room(
+                    room_id=metadata.room_id,
+                    service_id=metadata.service_id,
+                    service_role=metadata.service_role,
+                )
 
-                if role == "actor":
-                    room.actors.add(service_id)
-                elif role == "guest":
-                    room.guests.add(service_id)
+                print(f"Service: {metadata.service_id} joined room: {metadata.room_id}")
+                print(
+                    f"Room: {metadata.room_id} has {len(self.rooms.get_room(metadata.room_id).owners)} owners"
+                )
+                print(
+                    f"Room: {metadata.room_id} has {len(self.rooms.get_room(metadata.room_id).members)} members"
+                )
+                print(
+                    f"Room: {metadata.room_id} has {len(self.rooms.get_room(metadata.room_id).inputs.items())} inputs"
+                )
 
                 assert "a" == "b", "stop"
 
