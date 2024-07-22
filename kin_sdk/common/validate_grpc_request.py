@@ -2,6 +2,7 @@ import time
 import grpc
 import uuid
 
+from datetime import datetime
 from functools import wraps
 from typing import Dict, Any, Iterator, Callable, Literal, Optional
 
@@ -240,14 +241,14 @@ def get_metadata(context: grpc.ServicerContext):
         if not service_id:
             context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
             context.set_details("Service ID metadata is required.")
-            return
+            raise ValueError("Service ID metadata is required.")
 
         return Metadata(
             service_id=service_id, service_role=service_role, room_id=room_id
         )
     except grpc.RpcError as e:
         logger.error("Error getting metadata: %s", e)
-        return {}
+        raise e
 
 
 def validate_stream_request():
@@ -257,7 +258,7 @@ def validate_stream_request():
 
     def decorator(func: Callable):
         @wraps(func)
-        def wrapper(self, request, context: grpc.ServicerContext):
+        def wrapper(self, request_iterator, context: grpc.ServicerContext):
             """
             Todo: sphinx docstring
             """
@@ -274,7 +275,7 @@ def validate_stream_request():
             try:
                 # Extract metadata
                 metadata = get_metadata(context)
-                print(metadata)
+                print(f"metadata: {metadata}")
 
                 # Create room if not exists
                 if not metadata.room_id:
@@ -286,7 +287,9 @@ def validate_stream_request():
                 if not self.rooms.get_room(metadata.room_id):
                     return func(
                         self,
-                        ValidatedRequest(request, False, "Room does not exist."),
+                        ValidatedRequest(
+                            request_iterator, False, "Room does not exist."
+                        ),
                         context,
                     )
 
@@ -305,10 +308,62 @@ def validate_stream_request():
                     f"Room: {metadata.room_id} has {len(self.rooms.get_room(metadata.room_id).members)} members"
                 )
                 print(
-                    f"Room: {metadata.room_id} has {len(self.rooms.get_room(metadata.room_id).inputs.items())} inputs"
+                    f"Room: {metadata.room_id} has {len(self.rooms.get_room(metadata.room_id).inputs.items())} inputs\n-----\n"
                 )
 
+                try:
+                    for chat_message in request_iterator:
+                        print(f"chat_message: {chat_message}")
+                except grpc.RpcError as e:
+                    print(f"Client disconnected with error: {e}")
+                finally:
+                    print("Removing disconnected client from room")
+                    print(metadata)
+                    self.rooms.remove_service_from_room(
+                        metadata.room_id, metadata.service_id, metadata.service_role
+                    )
+                    print(
+                        f"Room: {metadata.room_id} has {len(self.rooms.get_room(metadata.room_id).owners)} owners"
+                    )
+                    print(
+                        f"Room: {metadata.room_id} has {len(self.rooms.get_room(metadata.room_id).members)} members"
+                    )
+                    print(
+                        f"Room: {metadata.room_id} expires_at: {self.rooms.get_room(metadata.room_id).expires_at}"
+                    )
+                counter = 0
+                while counter < 10:
+                    try:
+                        counter += 1
+                        print(f"counter: {counter}")
+                        print(self.rooms.get_room(metadata.room_id))
+                        print(self.rooms.get_room(metadata.room_id).expires_at)
+                        print(
+                            self.rooms.get_room(metadata.room_id).expires_at
+                            - time.time()
+                        )
+
+                        expires_at_datetime = datetime.fromtimestamp(
+                            self.rooms.get_room(metadata.room_id).expires_at
+                        )
+                        formatted_time = expires_at_datetime.strftime(
+                            "%d %B %Y %H:%M:%S"
+                        )
+                        print(formatted_time)
+                        print(
+                            f"is expired: {self.rooms.get_room(metadata.room_id).is_expired()}"
+                        )
+                        self.rooms.remove_expired_rooms()
+                        time.sleep(10)
+                    except Exception as e:
+                        print(f"Error: {e}")
+                        break
                 assert "a" == "b", "stop"
+
+                # 1. request_iterator loop to add request input in the room and send it to other services
+                # 2. receive message from the room with the new inputs values
+                # 3. if owner is present and send instruction,then try to validate(merged_request) and then return func and disconnect all other members, and delete the room
+                # 4. if all member disconnect and no services are left in the room, init a 2 minutes timer to delete the room
 
             #     # Initialize room if not exists
             #     with self.lock:

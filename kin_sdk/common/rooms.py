@@ -2,13 +2,17 @@
 TODO: sphinx docstring
 """
 
+import time
 from collections import defaultdict
 from typing import Callable, DefaultDict, Union
 from uuid import UUID
 
 
+EXPIRATION_TIME = 10
+
+
 class Room:
-    def __init__(self, id: UUID):
+    def __init__(self, id: UUID, expiration_time: int = EXPIRATION_TIME):
         self.__id = id
         self.__owners = set()
         self.__members = set()
@@ -17,6 +21,7 @@ class Room:
             Callable
         )
         self.__expires_at = None
+        self.__expiration_time = expiration_time
 
     # Getters
     @property
@@ -65,30 +70,52 @@ class Room:
         else:
             raise Exception("Invalid service role")
 
+    def get_number_of_services(self) -> int:
+        """
+        Get the number of services in the room
+        """
+        return len(self.owners) + len(self.members)
+
     # Setters
     def add_owner(self, service_id: str) -> None:
         """
         Add an owner to the room
         """
+        self.__expires_at = None
         self.__owners.add(service_id)
 
     def remove_owner(self, service_id: str) -> None:
         """
-        Remove an owner from the room
+        Remove an owner from the room and set the expiration time if there is no more services in the room
         """
         self.__owners.remove(service_id)
+        if self.get_number_of_services() <= 0:
+            # if there is no more services in the room, set the expiration time in two minutes timestamp
+            self.__expires_at = int(time.time()) + self.__expiration_time
+
+    def is_expired(self) -> bool:
+        """
+        Check if the room is expired
+        """
+        if self.__expires_at is not None:
+            return int(time.time()) > self.__expires_at
+        return False
 
     def add_member(self, service_id: str) -> None:
         """
         Add a member to the room
         """
+        self.__expires_at = None
         self.__members.add(service_id)
 
     def remove_member(self, service_id: str) -> None:
         """
-        Remove a member from the room
+        Remove a member from the room and set the expiration time if there is no more services in the room
         """
         self.__members.remove(service_id)
+        if self.get_number_of_services() <= 0:
+            # if there is no more services in the room, set the expiration time in two minutes timestamp
+            self.__expires_at = int(time.time()) + self.__expiration_time
 
     def set_expiration(self, expires_at: int) -> None:
         """
@@ -247,3 +274,13 @@ class Rooms:
             return self.__rooms.get(room_id, None).get_services(service_role)
         except KeyError:
             raise Exception("Room not found")
+
+    def remove_expired_rooms(self) -> None:
+        """
+        Remove expired rooms
+        """
+        expired_room_ids = [
+            room_id for room_id, room in self.__rooms.items() if room.is_expired()
+        ]
+        for room_id in expired_room_ids:
+            self.__rooms.pop(room_id)
