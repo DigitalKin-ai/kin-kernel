@@ -14,6 +14,7 @@ from google.protobuf import json_format, struct_pb2
 from protoc_gen_validate.validator import validate, ValidationFailed
 from pydantic_core import PydanticUndefinedType
 
+import proto.digitalkin.service.v1.service_pb2 as service_pb2
 
 from kin_sdk.common.logger import logger
 from kin_sdk.common.rooms import Rooms
@@ -306,9 +307,15 @@ def validate_stream_request():
 
                 def callback(request: Dict[str, Any]) -> None:
                     print("callback", request)
+                    message_queue.put(request)
+
+                print("Subscribing to room ", metadata.room_id)
+                self.rooms.subscribe_to_room(
+                    metadata.room_id, metadata.service_id, callback
+                )
 
                 def handle_incoming_messages() -> None:
-                    has_subscription = False
+                    # has_subscription = False
                     try:
                         for request in request_iterator:
                             # Process incoming messages convert it to dict
@@ -319,13 +326,6 @@ def validate_stream_request():
                                 if request
                                 else {}
                             )
-
-                            if not has_subscription:
-                                print("Subscribing to room ", metadata.room_id)
-                                self.rooms.subscribe_to_room(
-                                    metadata.room_id, metadata.service_id, callback
-                                )
-                                has_subscription = True
 
                             # Publish request message to room
                             with self.lock:
@@ -343,16 +343,66 @@ def validate_stream_request():
                 incoming_thread = Thread(target=handle_incoming_messages)
                 incoming_thread.start()
 
-                def message_sender() -> None:
+                def message_sender() -> Iterator[service_pb2.ServiceResponse]:
                     print("message_sender")
                     while True:
                         message = message_queue.get()
-                        if message is None:
-                            print("User disconnected")
-                            break
-                        print(message)
+                        print("message", message)
 
-                message_sender()
+                        # exit condition, this will terminate the stream
+                        if message is None or message.get("command", None) == "exit":
+                            print(f"Service {metadata.service_id} disconnected")
+                            return
+
+                        # yield the message to the client
+                        yield service_pb2.ServiceResponse(
+                            success=True,
+                            message=str(
+                                json_format.ParseDict(message, struct_pb2.Struct())
+                            ),
+                            service_id=self.service.service_id,
+                        )
+
+                # Return the message sender generator
+                for item in message_sender():
+                    yield item
+
+                # if the stream ends, remove the service from the room if it is a member
+                if metadata.service_role == "member" or (
+                    metadata.service_role == "owner"
+                    and len(self.rooms.get_room(metadata.room_id).owners) > 1
+                ):
+                    with self.lock:
+                        self.rooms.remove_service_from_room(
+                            room_id=metadata.room_id,
+                            service_id=metadata.service_id,
+                            service_role=metadata.service_role,
+                        )
+                        print("close")
+                    return None
+                elif (
+                    metadata.service_role == "owner"
+                    and len(self.rooms.get_room(metadata.room_id).owners) <= 1
+                ):
+                    # if the stream ends and the owner is the only one left in the room
+                    # eject all members
+                    self.rooms.publish_to_room(  # TODO update callback message add sender id and command
+                        metadata.room_id, metadata.service_id, {"command": "exit"}
+                    )
+                    req = self.rooms.get_room(metadata.room_id).request.copy()
+                    print(req)
+                    req.pop("command")
+                    print(req)
+                    request = json_format.ParseDict(
+                        req,
+                        service_pb2.StartServiceRequest(),
+                    )
+                    print("her1e", request)
+                    validate(request)
+                    print("here", request)
+                    return func(self, request, context)
+                    # delete the room
+                print("here")
                 # counter = 0
                 # while counter < 10:
                 #     try:
@@ -385,16 +435,16 @@ def validate_stream_request():
                     self,
                     json_format.ParseDict(
                         {"partial_request": True},
-                        struct_pb2.Struct(),
+                        service_pb2.StartServiceRequest(),
                     ),
                     context,
                 )
                 assert "a" == "b", "stop"
 
                 # // 1. request_iterator loop to add request input in the room and send it to other services
-                # 2. receive message from the room with the new inputs values
+                # // 2. receive message from the room with the new inputs values
                 # 3. if owner is present and send instruction,then try to validate(merged_request) and then return func and disconnect all other members, and delete the room
-                # 4. if all member disconnect and no services are left in the room, init a 2 minutes timer to delete the room
+                # // 4. if all member disconnect and no services are left in the room, init a 2 minutes timer to delete the room
 
             #     # Initialize room if not exists
             #     with self.lock:
@@ -460,8 +510,18 @@ def validate_stream_request():
                 logger.error("Validation Error: %s", e)
                 context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
                 context.set_details(str(e))
+            except grpc.RpcError as e:
+                if e.code() == grpc.StatusCode.ABORTED:
+                    print("Le serveur a éjecté le client :", e.details())
+                    context.set_code(grpc.StatusCode.ABORTED)
+                    context.set_details("teststest", str(e))
+                else:
+                    print("Erreur lors de la communication avec le serveur :", e)
+                    context.set_code(grpc.StatusCode.INTERNAL)
+                    context.set_details(str(e))
             except Exception as e:
                 # Handle other exceptions that may occur
+                print("Validate Exception Error: %s", e)
                 logger.error("Validate Exception Error: %s", e)
                 context.set_code(grpc.StatusCode.INTERNAL)
                 context.set_details(str(e))
