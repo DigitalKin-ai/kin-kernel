@@ -8,6 +8,7 @@ from kin_sdk.common.pydantic_validation_error import pydantic_validation_error
 from kin_sdk.common.types import ServiceType
 from kin_sdk.common.rooms import Room, Rooms
 from kin_sdk.common.validated_request import ValidatedRequest
+from kin_sdk.common.merge_dicts import merge_dicts
 
 __all__ = [
     "logger",
@@ -19,4 +20,5 @@ __all__ = [
     "Room",
     "Rooms",
     "ValidatedRequest",
+    "merge_dicts",
 ]

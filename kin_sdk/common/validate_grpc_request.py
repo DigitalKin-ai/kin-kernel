@@ -2,9 +2,12 @@ import time
 import grpc
 import uuid
 
-from datetime import datetime
+from threading import Thread
+
+# from datetime import datetime
 from functools import wraps
 from typing import Dict, Any, Iterator, Callable, Literal, Optional
+from queue import Queue
 
 from pydantic import BaseModel, Field, model_validator
 from google.protobuf import json_format, struct_pb2
@@ -275,7 +278,7 @@ def validate_stream_request():
             try:
                 # Extract metadata
                 metadata = get_metadata(context)
-                print(f"metadata: {metadata}")
+                message_queue = Queue()
 
                 # Create room if not exists
                 if not metadata.room_id:
@@ -294,73 +297,101 @@ def validate_stream_request():
                     )
 
                 # Add service to room
-                self.rooms.add_service_to_room(
-                    room_id=metadata.room_id,
-                    service_id=metadata.service_id,
-                    service_role=metadata.service_role,
-                )
+                with self.lock:
+                    self.rooms.add_service_to_room(
+                        room_id=metadata.room_id,
+                        service_id=metadata.service_id,
+                        service_role=metadata.service_role,
+                    )
 
-                print(f"Service: {metadata.service_id} joined room: {metadata.room_id}")
-                print(
-                    f"Room: {metadata.room_id} has {len(self.rooms.get_room(metadata.room_id).owners)} owners"
-                )
-                print(
-                    f"Room: {metadata.room_id} has {len(self.rooms.get_room(metadata.room_id).members)} members"
-                )
-                print(
-                    f"Room: {metadata.room_id} has {len(self.rooms.get_room(metadata.room_id).inputs.items())} inputs\n-----\n"
-                )
+                def callback(request: Dict[str, Any]) -> None:
+                    print("callback", request)
 
-                try:
-                    for chat_message in request_iterator:
-                        print(f"chat_message: {chat_message}")
-                except grpc.RpcError as e:
-                    print(f"Client disconnected with error: {e}")
-                finally:
-                    print("Removing disconnected client from room")
-                    print(metadata)
-                    self.rooms.remove_service_from_room(
-                        metadata.room_id, metadata.service_id, metadata.service_role
-                    )
-                    print(
-                        f"Room: {metadata.room_id} has {len(self.rooms.get_room(metadata.room_id).owners)} owners"
-                    )
-                    print(
-                        f"Room: {metadata.room_id} has {len(self.rooms.get_room(metadata.room_id).members)} members"
-                    )
-                    print(
-                        f"Room: {metadata.room_id} expires_at: {self.rooms.get_room(metadata.room_id).expires_at}"
-                    )
-                counter = 0
-                while counter < 10:
+                def handle_incoming_messages() -> None:
+                    has_subscription = False
                     try:
-                        counter += 1
-                        print(f"counter: {counter}")
-                        print(self.rooms.get_room(metadata.room_id))
-                        print(self.rooms.get_room(metadata.room_id).expires_at)
-                        print(
-                            self.rooms.get_room(metadata.room_id).expires_at
-                            - time.time()
-                        )
+                        for request in request_iterator:
+                            # Process incoming messages convert it to dict
+                            request_dict = (
+                                json_format.MessageToDict(
+                                    request, preserving_proto_field_name=True
+                                )
+                                if request
+                                else {}
+                            )
 
-                        expires_at_datetime = datetime.fromtimestamp(
-                            self.rooms.get_room(metadata.room_id).expires_at
-                        )
-                        formatted_time = expires_at_datetime.strftime(
-                            "%d %B %Y %H:%M:%S"
-                        )
-                        print(formatted_time)
-                        print(
-                            f"is expired: {self.rooms.get_room(metadata.room_id).is_expired()}"
-                        )
-                        self.rooms.remove_expired_rooms()
-                        time.sleep(10)
-                    except Exception as e:
-                        print(f"Error: {e}")
-                        break
+                            if not has_subscription:
+                                print("Subscribing to room ", metadata.room_id)
+                                self.rooms.subscribe_to_room(
+                                    metadata.room_id, metadata.service_id, callback
+                                )
+                                has_subscription = True
+
+                            # Publish request message to room
+                            with self.lock:
+                                print(f"Publish message: {request_dict}")
+                                self.rooms.publish_to_room(
+                                    metadata.room_id, metadata.service_id, request_dict
+                                )
+
+                    except grpc.RpcError as e:
+                        print(f"Client disconnected with error: {e}")
+                    finally:
+                        message_queue.put(None)  # Sentinel to stop the message_sender
+
+                # Start the incoming message handler in a separate thread
+                incoming_thread = Thread(target=handle_incoming_messages)
+                incoming_thread.start()
+
+                def message_sender() -> None:
+                    print("message_sender")
+                    while True:
+                        message = message_queue.get()
+                        if message is None:
+                            print("User disconnected")
+                            break
+                        print(message)
+
+                message_sender()
+                # counter = 0
+                # while counter < 10:
+                #     try:
+                #         counter += 1
+                #         print(f"counter: {counter}")
+                #         print(self.rooms.get_room(metadata.room_id))
+                #         print(self.rooms.get_room(metadata.room_id).expires_at)
+                #         print(
+                #             self.rooms.get_room(metadata.room_id).expires_at
+                #             - time.time()
+                #         )
+
+                #         expires_at_datetime = datetime.fromtimestamp(
+                #             self.rooms.get_room(metadata.room_id).expires_at
+                #         )
+                #         formatted_time = expires_at_datetime.strftime(
+                #             "%d %B %Y %H:%M:%S"
+                #         )
+                #         print(formatted_time)
+                #         print(
+                #             f"is expired: {self.rooms.get_room(metadata.room_id).is_expired()}"
+                #         )
+                #         self.rooms.remove_expired_rooms()
+                #         time.sleep(10)
+                #     except Exception as e:
+                #         print(f"Error: {e}")
+                #         break
+
+                return func(
+                    self,
+                    json_format.ParseDict(
+                        {"partial_request": True},
+                        struct_pb2.Struct(),
+                    ),
+                    context,
+                )
                 assert "a" == "b", "stop"
 
-                # 1. request_iterator loop to add request input in the room and send it to other services
+                # // 1. request_iterator loop to add request input in the room and send it to other services
                 # 2. receive message from the room with the new inputs values
                 # 3. if owner is present and send instruction,then try to validate(merged_request) and then return func and disconnect all other members, and delete the room
                 # 4. if all member disconnect and no services are left in the room, init a 2 minutes timer to delete the room

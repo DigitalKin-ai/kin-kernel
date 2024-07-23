@@ -3,10 +3,11 @@ TODO: sphinx docstring
 """
 
 import time
+from uuid import UUID
 from collections import defaultdict
 from typing import Callable, DefaultDict, Union
-from uuid import UUID
 
+from kin_sdk.common.merge_dicts import merge_dicts
 
 EXPIRATION_TIME = 10
 
@@ -16,7 +17,7 @@ class Room:
         self.__id = id
         self.__owners = set()
         self.__members = set()
-        self.__inputs = {}
+        self.__request = {}
         self.__subscribers: DefaultDict[str, Callable[[str], None]] = defaultdict(
             Callable
         )
@@ -46,11 +47,11 @@ class Room:
         return self.__members
 
     @property
-    def inputs(self) -> dict:
+    def request(self) -> dict:
         """
-        Get the inputs in the room
+        Get the request in the room
         """
-        return self.__inputs
+        return self.__request
 
     @property
     def expires_at(self) -> Union[int, None]:
@@ -81,14 +82,16 @@ class Room:
         """
         Add an owner to the room
         """
-        self.__expires_at = None
         self.__owners.add(service_id)
+        self.__subscribers[service_id] = None
+        self.__expires_at = None
 
     def remove_owner(self, service_id: str) -> None:
         """
         Remove an owner from the room and set the expiration time if there is no more services in the room
         """
         self.__owners.remove(service_id)
+        self.unsubscribe(service_id)
         if self.get_number_of_services() <= 0:
             # if there is no more services in the room, set the expiration time in two minutes timestamp
             self.__expires_at = int(time.time()) + self.__expiration_time
@@ -105,14 +108,16 @@ class Room:
         """
         Add a member to the room
         """
-        self.__expires_at = None
         self.__members.add(service_id)
+        self.__subscribers[service_id] = None
+        self.__expires_at = None
 
     def remove_member(self, service_id: str) -> None:
         """
         Remove a member from the room and set the expiration time if there is no more services in the room
         """
         self.__members.remove(service_id)
+        self.unsubscribe(service_id)
         if self.get_number_of_services() <= 0:
             # if there is no more services in the room, set the expiration time in two minutes timestamp
             self.__expires_at = int(time.time()) + self.__expiration_time
@@ -157,7 +162,7 @@ class Room:
         Subscribe to a service
         """
         try:
-            self.__subscribers.get(service_id, None).append(callback)
+            self.__subscribers[service_id] = callback
         except KeyError:
             raise Exception("Service not found")
 
@@ -170,15 +175,16 @@ class Room:
 
         self.__subscribers.pop(service_id)
 
-    def publish(self, service_id: str, inputs: dict) -> None:
+    def publish(self, service_id: str, request: dict) -> None:
         """
         Publish to all subscribers
         """
-        print(f"Service: {service_id} publish to all subscribers: {inputs}")
-        # TODO: add input to the room inputs
+        print(f"Service: {service_id} publish to all subscribers: {request}")
+        self.__request = merge_dicts(self.__request, request)
+        print(f"Room: {self.id} \n\t- request: {self.__request}")
         for id, callback in self.__subscribers.items():
             print(f"\t- From room: {self.id} - to service_id: {id}")
-            callback(self.inputs)
+            callback(self.__request)
 
 
 class Rooms:
@@ -257,12 +263,12 @@ class Rooms:
         except KeyError:
             raise Exception("Room not found")
 
-    def publish_to_room(self, room_id: UUID, service_id: str, inputs: dict) -> None:
+    def publish_to_room(self, room_id: UUID, service_id: str, request: dict) -> None:
         """
         Publish to a room
         """
         try:
-            self.__rooms.get(room_id, None).publish(service_id, inputs)
+            self.__rooms.get(room_id, None).publish(service_id, request)
         except KeyError:
             raise Exception("Room not found")
 
