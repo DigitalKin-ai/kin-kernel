@@ -8,12 +8,16 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 
 CANCELED: ServiceStatus
 DESCRIPTOR: _descriptor.FileDescriptor
+DESTROY: RequestType
+EXIT: RequestType
 EXPIRED: ServiceStatus
 FAILED: ServiceStatus
 PROCESSING: ServiceStatus
+SEND: RequestType
 STARTING: ServiceStatus
 STOPPED: ServiceStatus
 SUCCESS: ServiceStatus
+VALIDATE: RequestType
 
 class GetServiceInputRequest(_message.Message):
     __slots__ = ["llm_format", "service_id"]
@@ -74,14 +78,16 @@ class ServiceStatusResponse(_message.Message):
     def __init__(self, success: bool = ..., status: _Optional[_Union[ServiceStatus, str]] = ..., service_id: _Optional[str] = ...) -> None: ...
 
 class StartServiceRequest(_message.Message):
-    __slots__ = ["input", "service_ids", "setup_id"]
+    __slots__ = ["input", "request_type", "service_ids", "setup_id"]
     INPUT_FIELD_NUMBER: _ClassVar[int]
+    REQUEST_TYPE_FIELD_NUMBER: _ClassVar[int]
     SERVICE_IDS_FIELD_NUMBER: _ClassVar[int]
     SETUP_ID_FIELD_NUMBER: _ClassVar[int]
     input: _struct_pb2.Struct
+    request_type: RequestType
     service_ids: _containers.RepeatedScalarFieldContainer[str]
     setup_id: str
-    def __init__(self, input: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., setup_id: _Optional[str] = ..., service_ids: _Optional[_Iterable[str]] = ...) -> None: ...
+    def __init__(self, input: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., setup_id: _Optional[str] = ..., service_ids: _Optional[_Iterable[str]] = ..., request_type: _Optional[_Union[RequestType, str]] = ...) -> None: ...
 
 class StopServiceRequest(_message.Message):
     __slots__ = ["service_id"]
@@ -90,4 +96,7 @@ class StopServiceRequest(_message.Message):
     def __init__(self, service_id: _Optional[str] = ...) -> None: ...
 
 class ServiceStatus(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
+    __slots__ = []
+
+class RequestType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = []

@@ -8,6 +8,7 @@ from collections import defaultdict
 from typing import Callable, DefaultDict, Union
 
 from kin_sdk.common.merge_dicts import merge_dicts
+from kin_sdk.common.types import RequestType
 
 EXPIRATION_TIME = 10
 
@@ -23,6 +24,7 @@ class Room:
         )
         self.__expires_at = None
         self.__expiration_time = expiration_time
+        self.__lock = False  # if true it is impossible to join this room
 
     # Getters
     @property
@@ -80,8 +82,11 @@ class Room:
     # Setters
     def add_owner(self, service_id: str) -> None:
         """
-        Add an owner to the room
+        Add an owner to the room and so reset the expiration time also raise an exception if the room is locked
         """
+        if self.__lock:
+            raise Exception("Room is locked")
+
         self.__owners.add(service_id)
         self.__subscribers[service_id] = None
         self.__expires_at = None
@@ -95,6 +100,7 @@ class Room:
         if self.get_number_of_services() <= 0:
             # if there is no more services in the room, set the expiration time in two minutes timestamp
             self.__expires_at = int(time.time()) + self.__expiration_time
+            self.__lock = True
 
     def is_expired(self) -> bool:
         """
@@ -106,8 +112,11 @@ class Room:
 
     def add_member(self, service_id: str) -> None:
         """
-        Add a member to the room
+        Add a member to the room and so reset the expiration time also raise an exception if the room is locked
         """
+        if self.__lock:
+            raise Exception("Room is locked")
+
         self.__members.add(service_id)
         self.__subscribers[service_id] = None
         self.__expires_at = None
@@ -121,6 +130,7 @@ class Room:
         if self.get_number_of_services() <= 0:
             # if there is no more services in the room, set the expiration time in two minutes timestamp
             self.__expires_at = int(time.time()) + self.__expiration_time
+            self.__lock = True
 
     def set_expiration(self, expires_at: int) -> None:
         """
@@ -175,7 +185,7 @@ class Room:
 
         self.__subscribers.pop(service_id)
 
-    def publish(self, service_id: str, request: dict) -> None:
+    def publish(self, service_id: str, request: dict, command: RequestType) -> None:
         """
         Publish to all subscribers
         """
@@ -184,7 +194,7 @@ class Room:
         print(f"Room: {self.id} \n\t- request: {self.__request}")
         for id, callback in self.__subscribers.items():
             print(f"\t- From room: {self.id} - to service_id: {id}")
-            callback(self.__request)
+            callback(service_id, self.__request, command)
 
 
 class Rooms:
@@ -263,12 +273,14 @@ class Rooms:
         except KeyError:
             raise Exception("Room not found")
 
-    def publish_to_room(self, room_id: UUID, service_id: str, request: dict) -> None:
+    def publish_to_room(
+        self, room_id: UUID, service_id: str, request: dict, command: RequestType
+    ) -> None:
         """
         Publish to a room
         """
         try:
-            self.__rooms.get(room_id, None).publish(service_id, request)
+            self.__rooms.get(room_id, None).publish(service_id, request, command)
         except KeyError:
             raise Exception("Room not found")
 
@@ -281,7 +293,7 @@ class Rooms:
         except KeyError:
             raise Exception("Room not found")
 
-    def remove_expired_rooms(self) -> None:
+    def remove_expired_rooms(self) -> None:  # TODO : do not forget to call this method
         """
         Remove expired rooms
         """

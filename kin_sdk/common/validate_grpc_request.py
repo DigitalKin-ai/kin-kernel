@@ -14,11 +14,11 @@ from google.protobuf import json_format, struct_pb2
 from protoc_gen_validate.validator import validate, ValidationFailed
 from pydantic_core import PydanticUndefinedType
 
+from kin_sdk.common.types import RequestType
 import proto.digitalkin.service.v1.service_pb2 as service_pb2
 
 from kin_sdk.common.logger import logger
 from kin_sdk.common.rooms import Rooms
-from kin_sdk.common.validated_request import ValidatedRequest
 
 
 def merge_dicts(accumulated_dict: Dict[str, Any], new_dict: Dict[str, Any]) -> None:
@@ -289,13 +289,7 @@ def validate_stream_request():
 
                 # Check if room exists
                 if not self.rooms.get_room(metadata.room_id):
-                    return func(
-                        self,
-                        ValidatedRequest(
-                            request_iterator, False, "Room does not exist."
-                        ),
-                        context,
-                    )
+                    raise ValueError(f"Room {metadata.room_id} does not exist.")
 
                 # Add service to room
                 with self.lock:
@@ -305,9 +299,11 @@ def validate_stream_request():
                         service_role=metadata.service_role,
                     )
 
-                def callback(request: Dict[str, Any]) -> None:
-                    print("callback", request)
-                    message_queue.put(request)
+                def callback(
+                    service_id: str, request: Dict[str, Any], command: RequestType
+                ) -> None:
+                    print("callback", service_id, request, command)
+                    message_queue.put((service_id, request, command))
 
                 print("Subscribing to room ", metadata.room_id)
                 self.rooms.subscribe_to_room(
@@ -315,9 +311,9 @@ def validate_stream_request():
                 )
 
                 def handle_incoming_messages() -> None:
-                    # has_subscription = False
                     try:
                         for request in request_iterator:
+                            print(f"\n\n---\nrequest: [\n{request}\n]\n---\n---\n\n")
                             # Process incoming messages convert it to dict
                             request_dict = (
                                 json_format.MessageToDict(
@@ -330,14 +326,33 @@ def validate_stream_request():
                             # Publish request message to room
                             with self.lock:
                                 print(f"Publish message: {request_dict}")
-                                self.rooms.publish_to_room(
-                                    metadata.room_id, metadata.service_id, request_dict
+                                print(
+                                    "request_dict:",
+                                    request_dict.get("request_type", None),
                                 )
+                                if metadata.service_role == "owner":
+                                    self.rooms.publish_to_room(
+                                        metadata.room_id,
+                                        metadata.service_id,
+                                        request_dict,
+                                        request_dict.get(
+                                            "request_type", RequestType.SEND
+                                        ),
+                                    )
+                                else:
+                                    self.rooms.publish_to_room(
+                                        metadata.room_id,
+                                        metadata.service_id,
+                                        request_dict,
+                                        RequestType.SEND,
+                                    )
 
                     except grpc.RpcError as e:
                         print(f"Client disconnected with error: {e}")
                     finally:
-                        message_queue.put(None)  # Sentinel to stop the message_sender
+                        message_queue.put(
+                            (metadata.service_id, None, RequestType.EXIT)
+                        )  # Sentinel to stop the message_sender
 
                 # Start the incoming message handler in a separate thread
                 incoming_thread = Thread(target=handle_incoming_messages)
@@ -346,20 +361,20 @@ def validate_stream_request():
                 def message_sender() -> Iterator[service_pb2.ServiceResponse]:
                     print("message_sender")
                     while True:
-                        message = message_queue.get()
-                        print("message", message)
+                        sender_id, request, command = message_queue.get()
+                        print(
+                            f"Received a request from {sender_id}: request: \n {request}"
+                        )
 
                         # exit condition, this will terminate the stream
-                        if message is None or message.get("command", None) == "exit":
+                        if request is None or command == RequestType.EXIT:
                             print(f"Service {metadata.service_id} disconnected")
                             return
 
                         # yield the message to the client
                         yield service_pb2.ServiceResponse(
                             success=True,
-                            message=str(
-                                json_format.ParseDict(message, struct_pb2.Struct())
-                            ),
+                            message=str(request),
                             service_id=self.service.service_id,
                         )
 
@@ -367,41 +382,38 @@ def validate_stream_request():
                 for item in message_sender():
                     yield item
 
-                # if the stream ends, remove the service from the room if it is a member
-                if metadata.service_role == "member" or (
-                    metadata.service_role == "owner"
-                    and len(self.rooms.get_room(metadata.room_id).owners) > 1
-                ):
-                    with self.lock:
-                        self.rooms.remove_service_from_room(
-                            room_id=metadata.room_id,
-                            service_id=metadata.service_id,
-                            service_role=metadata.service_role,
-                        )
-                        print("close")
-                    return None
-                elif (
+                if (
                     metadata.service_role == "owner"
                     and len(self.rooms.get_room(metadata.room_id).owners) <= 1
                 ):
                     # if the stream ends and the owner is the only one left in the room
                     # eject all members
-                    self.rooms.publish_to_room(  # TODO update callback message add sender id and command
-                        metadata.room_id, metadata.service_id, {"command": "exit"}
+                    self.rooms.publish_to_room(
+                        metadata.room_id, metadata.service_id, {}, RequestType.EXIT
                     )
-                    req = self.rooms.get_room(metadata.room_id).request.copy()
-                    print(req)
-                    req.pop("command")
-                    print(req)
-                    request = json_format.ParseDict(
-                        req,
-                        service_pb2.StartServiceRequest(),
+                    # req = self.rooms.get_room(metadata.room_id).request.copy()
+                    # request = json_format.ParseDict(
+                    #     req,
+                    #     service_pb2.StartServiceRequest(),
+                    # )
+                    # validate(request)
+                    print(
+                        self.rooms.get_room(metadata.room_id).get_number_of_services()
                     )
-                    print("her1e", request)
-                    validate(request)
-                    print("here", request)
-                    return func(self, request, context)
-                    # delete the room
+
+                with self.lock:
+                    self.rooms.remove_service_from_room(
+                        room_id=metadata.room_id,
+                        service_id=metadata.service_id,
+                        service_role=metadata.service_role,
+                    )
+                    print("close")
+                print(self.rooms.get_room(metadata.room_id).get_number_of_services())
+                return None
+                # return func(self, request, context)
+                # delete the room
+
+                print(len(self.rooms.rooms))
                 print("here")
                 # counter = 0
                 # while counter < 10:
@@ -507,9 +519,10 @@ def validate_stream_request():
 
             except ValidationFailed as e:
                 # Handle validation errors
-                logger.error("Validation Error: %s", e)
+                logger.error("Validation Error: %s ", str(e))
                 context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
                 context.set_details(str(e))
+                return
             except grpc.RpcError as e:
                 if e.code() == grpc.StatusCode.ABORTED:
                     print("Le serveur a éjecté le client :", e.details())
