@@ -1,7 +1,6 @@
 import time
 import grpc
 import uuid
-
 from threading import Thread
 
 # from datetime import datetime
@@ -300,10 +299,10 @@ def validate_stream_request():
                     )
 
                 def callback(
-                    service_id: str, request: Dict[str, Any], command: RequestType
+                    service_id: str, request: Dict[str, Any], request_type: RequestType
                 ) -> None:
-                    print("callback", service_id, request, command)
-                    message_queue.put((service_id, request, command))
+                    print("callback", service_id, request, request_type)
+                    message_queue.put((service_id, request, request_type))
 
                 print("Subscribing to room ", metadata.room_id)
                 self.rooms.subscribe_to_room(
@@ -326,18 +325,16 @@ def validate_stream_request():
                             # Publish request message to room
                             with self.lock:
                                 print(f"Publish message: {request_dict}")
-                                print(
-                                    "request_dict:",
-                                    request_dict.get("request_type", None),
-                                )
+                                # extract request_type from the request_dict
+                                request_type = RequestType[
+                                    request_dict.pop("request_type", "SEND")
+                                ]
                                 if metadata.service_role == "owner":
                                     self.rooms.publish_to_room(
                                         metadata.room_id,
                                         metadata.service_id,
                                         request_dict,
-                                        request_dict.get(
-                                            "request_type", RequestType.SEND
-                                        ),
+                                        request_type,
                                     )
                                 else:
                                     self.rooms.publish_to_room(
@@ -358,29 +355,57 @@ def validate_stream_request():
                 incoming_thread = Thread(target=handle_incoming_messages)
                 incoming_thread.start()
 
+                # usefull to know if we want to try to validate the request
+                is_validate: bool = False
+
                 def message_sender() -> Iterator[service_pb2.ServiceResponse]:
                     print("message_sender")
                     while True:
-                        sender_id, request, command = message_queue.get()
+                        sender_id, request, request_type = message_queue.get()
                         print(
-                            f"Received a request from {sender_id}: request: \n {request}"
+                            f"Received a request from {sender_id}: request: {request_type} \n {request}"
                         )
 
                         # exit condition, this will terminate the stream
-                        if request is None or command == RequestType.EXIT:
+                        if request is None or request_type == RequestType.EXIT:
                             print(f"Service {metadata.service_id} disconnected")
-                            return
+                            break
 
-                        # yield the message to the client
-                        yield service_pb2.ServiceResponse(
-                            success=True,
-                            message=str(request),
-                            service_id=self.service.service_id,
+                        print(
+                            f"\t- metadata.service_role: {metadata.service_role}\n\t- metadata.service_id: {metadata.service_id}\n\t- sender_id: {sender_id}"
                         )
 
+                        if (
+                            metadata.service_role == "owner"
+                            and metadata.service_id == sender_id
+                            and request_type == RequestType.VALIDATE
+                        ):
+                            print("Validate request")
+                            yield (None, True)
+                            break
+
+                        # yield the message to the client
+                        yield (
+                            service_pb2.ServiceResponse(
+                                success=True,
+                                message=str(request),
+                                service_id=self.service.service_id,
+                            ),
+                            False,
+                        )
+                    print("end")
+                    return None
+
                 # Return the message sender generator
-                for item in message_sender():
+                for item, need_validate in message_sender():
+                    is_validate = need_validate
+                    print(f"is_validate s: {is_validate}")
+                    if item is None:
+                        break
                     yield item
+                print(f"is_validate: {is_validate}")
+                print(len(self.rooms.get_room(metadata.room_id).owners))
+                print(metadata.service_role)
 
                 if (
                     metadata.service_role == "owner"
@@ -408,114 +433,35 @@ def validate_stream_request():
                         service_role=metadata.service_role,
                     )
                     print("close")
-                print(self.rooms.get_room(metadata.room_id).get_number_of_services())
-                return None
-                # return func(self, request, context)
-                # delete the room
-
-                print(len(self.rooms.rooms))
-                print("here")
-                # counter = 0
-                # while counter < 10:
-                #     try:
-                #         counter += 1
-                #         print(f"counter: {counter}")
-                #         print(self.rooms.get_room(metadata.room_id))
-                #         print(self.rooms.get_room(metadata.room_id).expires_at)
-                #         print(
-                #             self.rooms.get_room(metadata.room_id).expires_at
-                #             - time.time()
-                #         )
-
-                #         expires_at_datetime = datetime.fromtimestamp(
-                #             self.rooms.get_room(metadata.room_id).expires_at
-                #         )
-                #         formatted_time = expires_at_datetime.strftime(
-                #             "%d %B %Y %H:%M:%S"
-                #         )
-                #         print(formatted_time)
-                #         print(
-                #             f"is expired: {self.rooms.get_room(metadata.room_id).is_expired()}"
-                #         )
-                #         self.rooms.remove_expired_rooms()
-                #         time.sleep(10)
-                #     except Exception as e:
-                #         print(f"Error: {e}")
-                #         break
-
-                return func(
-                    self,
-                    json_format.ParseDict(
-                        {"partial_request": True},
-                        service_pb2.StartServiceRequest(),
-                    ),
-                    context,
+                print(
+                    metadata.service_role,
+                    self.rooms.get_room(metadata.room_id).get_number_of_services(),
                 )
-                assert "a" == "b", "stop"
+
+                if is_validate:
+                    req = self.rooms.get_room(metadata.room_id).request.copy()
+                    request = json_format.ParseDict(
+                        req,
+                        service_pb2.StartServiceRequest(),
+                    )
+                    validate(request)
+                    print("validate")
+                    print(
+                        "services numbers",
+                        self.rooms.get_room(metadata.room_id).get_number_of_services(),
+                    )
+
+                    for message in func(self, request, context):
+                        if message is None:
+                            break
+                        yield message
+                print("over", metadata.service_role)
+                return None
 
                 # // 1. request_iterator loop to add request input in the room and send it to other services
                 # // 2. receive message from the room with the new inputs values
-                # 3. if owner is present and send instruction,then try to validate(merged_request) and then return func and disconnect all other members, and delete the room
+                # // 3. if owner is present and send instruction,then try to validate(merged_request) and then return func and disconnect all other members, and delete the room
                 # // 4. if all member disconnect and no services are left in the room, init a 2 minutes timer to delete the room
-
-            #     # Initialize room if not exists
-            #     with self.lock:
-            #         if service_name not in self.rooms:
-            #             self.rooms[service_name] = {
-            #                 "clients": 0,
-            #                 "data": None,
-            #                 "type": None,
-            #                 "last_update": time.time(),
-            #             }
-
-            #     self.rooms[service_name]["clients"] += 1
-            #     # Process incoming requests
-            #     for request in request_iterator:
-            #         with self.lock:
-            #             self.rooms[service_name]["type"] = type(request)
-            #             data_dict = (
-            #                 json_format.MessageToDict(
-            #                     self.rooms[service_name]["data"],
-            #                     preserving_proto_field_name=True,
-            #                 )
-            #                 if self.rooms[service_name]["data"]
-            #                 else {}
-            #             )
-            #             merge_dicts(
-            #                 data_dict,
-            #                 json_format.MessageToDict(
-            #                     request,
-            #                     preserving_proto_field_name=True,
-            #                 ),
-            #             )
-            #             self.rooms[service_name]["data"] = json_format.ParseDict(
-            #                 data_dict, type(request)()
-            #             )
-            #             self.rooms[service_name]["last_update"] = time.time()
-
-            #     # Decrease the number of clients when the stream ends
-            #     with self.lock:
-            #         self.rooms[service_name]["clients"] -= 1
-            #         if self.rooms[service_name]["clients"] <= 0:
-            #             self.condition.notify_all()
-
-            #     if self.rooms[service_name]["clients"] <= 0:
-            #         # Execute the merged request
-            #         with self.lock:
-            #             merged_request = self.rooms[service_name]["data"]
-            #             del self.rooms[service_name]
-            #             validate(merged_request)
-
-            #         return func(self, merged_request, context)
-
-            #     return func(
-            #         self,
-            #         json_format.ParseDict(
-            #             {"partial_request": True},
-            #             struct_pb2.Struct(),
-            #         ),
-            #         context,
-            #     )
 
             except ValidationFailed as e:
                 # Handle validation errors

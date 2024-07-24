@@ -13,7 +13,7 @@ class RequestType(Enum):
     Enum for command types
     """
 
-    SEND = "send"
-    EXIT = "exit"
-    VALIDATE = "validate"
-    DESTROY = "destroy"
+    SEND = "SEND"
+    EXIT = "EXIT"
+    VALIDATE = "VALIDATE"
+    DESTROY = "DESCTROY"

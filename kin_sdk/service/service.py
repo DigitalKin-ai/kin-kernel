@@ -3,14 +3,15 @@ TODO: sphinx docstring
 """
 
 import threading
-from typing import Any, Generator
+
+# from typing import Any, AsyncGenerator
 import grpc
 from opentelemetry import trace
 
 import proto.digitalkin.service.v1.service_pb2 as service_pb2
 import proto.digitalkin.service.v1.service_pb2_grpc as service_pb2_grpc
 from kin_sdk.service.base import BaseService
-from kin_sdk.common import Rooms, validate_stream_request, ValidatedRequest
+from kin_sdk.common import Rooms, validate_stream_request  # , ValidatedRequest
 
 
 class Service(service_pb2_grpc.ServiceServicer):
@@ -22,17 +23,18 @@ class Service(service_pb2_grpc.ServiceServicer):
 
     @validate_stream_request()
     def StartService(
-        self, validated_request: ValidatedRequest, context: grpc.ServicerContext
-    ) -> Generator[service_pb2.ServiceResponse, Any, Any]:
+        self, request: service_pb2.StartServiceRequest, context: grpc.ServicerContext
+    ):  # -> AsyncGenerator[service_pb2.ServiceResponse, Any, Any]:
         """
         https://medium.com/@iamdeepaksinghh/create-a-real-time-chat-service-using-grpc-in-python-fc63127d570c
         """
         try:
+            print("incoming request", request)
             # check if the request is valid
-            if not validated_request.success:
-                raise Exception(validated_request.details)
+            # if not validated_request.success:
+            #     raise Exception(validated_request.details)
 
-            request = validated_request.request
+            # request = validated_request.request
             print("Start service")
             print(request)
             yield service_pb2.ServiceResponse(
@@ -40,12 +42,16 @@ class Service(service_pb2_grpc.ServiceServicer):
                 message="Service started successfully",
                 service_id="service_id",
             )
-            return
+            return service_pb2.ServiceResponse(
+                success=True,
+                message="Service started successfully",
+                service_id="service_id",
+            )
         except Exception as e:
             print("Error:", e)
             context.set_code(grpc.StatusCode.INTERNAL)
             context.set_details(str(e))
-            yield service_pb2.ServiceResponse(
+            return service_pb2.ServiceResponse(
                 success=False, message="Failed to start service"
             )
 

@@ -185,7 +185,9 @@ class Room:
 
         self.__subscribers.pop(service_id)
 
-    def publish(self, service_id: str, request: dict, command: RequestType) -> None:
+    def publish(
+        self, service_id: str, request: dict, request_type: RequestType
+    ) -> None:
         """
         Publish to all subscribers
         """
@@ -194,7 +196,7 @@ class Room:
         print(f"Room: {self.id} \n\t- request: {self.__request}")
         for id, callback in self.__subscribers.items():
             print(f"\t- From room: {self.id} - to service_id: {id}")
-            callback(service_id, self.__request, command)
+            callback(service_id, self.__request, request_type)
 
 
 class Rooms:
@@ -274,13 +276,13 @@ class Rooms:
             raise Exception("Room not found")
 
     def publish_to_room(
-        self, room_id: UUID, service_id: str, request: dict, command: RequestType
+        self, room_id: UUID, service_id: str, request: dict, request_type: RequestType
     ) -> None:
         """
         Publish to a room
         """
         try:
-            self.__rooms.get(room_id, None).publish(service_id, request, command)
+            self.__rooms.get(room_id, None).publish(service_id, request, request_type)
         except KeyError:
             raise Exception("Room not found")
 
