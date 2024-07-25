@@ -105,7 +105,6 @@ class Service(service_pb2_grpc.ServiceServicer):
                 input_data, setup_id, service_ids, self.__start_job
             )
             for output in self.job_manager.get_outputs(job_id):
-                print(f"output {output}")
                 yield service_pb2.ServiceResponse(
                     success=True,
                     message=str(output),

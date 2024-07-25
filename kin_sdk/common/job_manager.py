@@ -1,19 +1,25 @@
 """
-TODO sphinx docstring
+Job Management System
+
+This module provides a job management system with support for asynchronous job execution,
+status tracking, and output streaming.
 """
 
 from queue import Queue
 import uuid
 import threading
 from enum import Enum
-
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Iterator
 from concurrent.futures import Future, ThreadPoolExecutor
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class JobStatus(Enum):
+    """
+    Enumeration of possible job statuses.
+    """
+
     STARTING = 0
     PROCESSING = 1
     CANCELED = 2
@@ -25,7 +31,15 @@ class JobStatus(Enum):
 
 class Job(BaseModel):
     """
-    Represents a job.
+    Represents a job with its associated data and methods.
+
+    :param input_data: The input data for the job.
+    :param setup_id: The setup ID associated with the job.
+    :param service_ids: List of service IDs associated with the job.
+    :param status: The current status of the job.
+    :param task: The Future object representing the job's task.
+    :param outputs: A queue to store job outputs.
+    :param stop_event: An event to signal job termination.
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -38,22 +52,26 @@ class Job(BaseModel):
     outputs: Queue = Field(default_factory=Queue)
     stop_event: threading.Event = Field(default_factory=threading.Event)
 
-    def add_to_outputs(self, item: Any):
+    def add_to_outputs(self, item: Any) -> None:
         """
-        Ajoute un élément à l'itérateur du job.
+        Adds an item to the job's output queue.
+
+        :param item: The item to be added to the outputs.
         """
         self.outputs.put(item)
 
-    def stop_outputs(self):
+    def stop_outputs(self) -> None:
         """
-        Signale l'arrêt de l'itérateur.
+        Signals the termination of the job's output stream.
         """
         self.stop_event.set()
         self.outputs.put(None)  # Sentinel value
 
-    def get_outputs(self):
+    def get_outputs(self) -> Iterator[Any]:
         """
-        Retourne un itérateur pour les éléments du job.
+        Returns an iterator for the job's output items.
+
+        :return: An iterator yielding output items.
         """
         while not self.stop_event.is_set():
             item = self.outputs.get()
@@ -64,7 +82,9 @@ class Job(BaseModel):
 
 class JobManager:
     """
-    Manages the lifecycle of jobs.
+    Manages the lifecycle of jobs, including creation, retrieval, and termination.
+
+    :param max_workers: The maximum number of worker threads for job execution.
     """
 
     def __init__(self, max_workers: int = 10):
@@ -77,15 +97,19 @@ class JobManager:
         input_data: BaseModel,
         setup_id: str,
         service_ids: List[str],
-        func: Callable,
-        *args,
-        **kwargs,
+        func: Callable[..., Any],
+        *args: Any,
+        **kwargs: Any,
     ) -> str:
         """
-        Creates a new job with the given setup and service IDs.
+        Creates and starts a new job with the given parameters.
 
-        :param setup: The setup configuration for the job.
+        :param input_data: The input data for the job.
+        :param setup_id: The setup ID for the job.
         :param service_ids: List of service IDs associated with the job.
+        :param func: The function to be executed as the job.
+        :param args: Positional arguments for the job function.
+        :param kwargs: Keyword arguments for the job function.
         :return: The ID of the newly created job.
         """
         job_id = f"jobs:{uuid.uuid4().hex}"
@@ -111,9 +135,13 @@ class JobManager:
         with self.lock:
             return self.jobs.get(job_id, None)
 
-    def get_outputs(self, job_id: str) -> Optional[Job]:
+    def get_outputs(self, job_id: str) -> Iterator[Any]:
         """
         Retrieves the outputs of a job by its ID.
+
+        :param job_id: The ID of the job.
+        :return: An iterator of job outputs.
+        :raises ValueError: If the job is not found.
         """
         with self.lock:
             if job_id in self.jobs:
@@ -121,9 +149,12 @@ class JobManager:
             else:
                 raise ValueError(f"Job with id {job_id} not found")
 
-    def stop_outputs(self, job_id: str) -> Optional[Job]:
+    def stop_outputs(self, job_id: str) -> None:
         """
-        Retrieves the outputs of a job by its ID.
+        Stops the output stream of a job by its ID.
+
+        :param job_id: The ID of the job.
+        :raises ValueError: If the job is not found.
         """
         with self.lock:
             if job_id in self.jobs:
@@ -140,8 +171,9 @@ class JobManager:
         :return: True if the job status was updated, False otherwise.
         """
         with self.lock:
-            if job_id in self.jobs:
-                self.jobs[job_id].status = status
+            job = self.jobs.get(job_id)
+            if job:
+                job.status = status
                 return True
             return False
 
@@ -157,12 +189,12 @@ class JobManager:
             if job is None:
                 return False
             if job.task.cancel() or job.task.done():
-                self.jobs.get(job_id).stop_outputs()
-                self.jobs.pop(job_id)
+                job.stop_outputs()
+                del self.jobs[job_id]
                 return True
             return False
 
-    def stop_all_jobs(self):
+    def stop_all_jobs(self) -> None:
         """
         Stops all running jobs.
         """
@@ -170,9 +202,11 @@ class JobManager:
             for job_id in list(self.jobs.keys()):
                 self.delete_job(job_id)
 
-    def shutdown(self, wait: bool = True):
+    def shutdown(self, wait: bool = True) -> None:
         """
         Shuts down the job manager.
+
+        :param wait: If True, wait for all jobs to complete before shutting down.
         """
         self.stop_all_jobs()
         self.executor.shutdown(wait=wait)
