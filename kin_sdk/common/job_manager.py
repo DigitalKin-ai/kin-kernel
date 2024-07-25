@@ -5,14 +5,57 @@ This module provides a job management system with support for asynchronous job e
 status tracking, and output streaming.
 """
 
-from queue import Queue
 import uuid
 import threading
+from collections import UserDict
+from queue import Queue
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Iterator
 from concurrent.futures import Future, ThreadPoolExecutor
 
 from pydantic import BaseModel, ConfigDict, Field
+
+
+class ConcurrentDict(UserDict):
+    def __init__(self, *args, **kwargs):
+        self.lock = threading.RLock()  # Using RLock instead of Lock
+        super().__init__(*args, **kwargs)
+
+    def __getitem__(self, key):
+        if self.lock.acquire(timeout=5):  # 5 seconds timeout
+            try:
+                return super().__getitem__(key)
+            finally:
+                self.lock.release()
+        else:
+            raise RuntimeError("Lock acquisition timed out in __getitem__")
+
+    def __setitem__(self, key, value):
+        if self.lock.acquire(timeout=5):  # 5 seconds timeout
+            try:
+                return super().__setitem__(key, value)
+            finally:
+                self.lock.release()
+        else:
+            raise RuntimeError("Lock acquisition timed out in __setitem__")
+
+    def __delitem__(self, key):
+        if self.lock.acquire(timeout=5):  # 5 seconds timeout
+            try:
+                return super().__delitem__(key)
+            finally:
+                self.lock.release()
+        else:
+            raise RuntimeError("Lock acquisition timed out in __delitem__")
+
+    def get(self, key, default=None):
+        if self.lock.acquire(timeout=5):  # 5 seconds timeout
+            try:
+                return super().get(key, default)
+            finally:
+                self.lock.release()
+        else:
+            raise RuntimeError("Lock acquisition timed out in get")
 
 
 class JobStatus(Enum):
@@ -88,7 +131,7 @@ class JobManager:
     """
 
     def __init__(self, max_workers: int = 10):
-        self.jobs: Dict[str, Job] = {}
+        self.jobs: Dict[str, Job] = ConcurrentDict()
         self.executor = ThreadPoolExecutor(max_workers=max_workers)
         self.lock = threading.Lock()
 
@@ -113,8 +156,8 @@ class JobManager:
         :return: The ID of the newly created job.
         """
         job_id = f"jobs:{uuid.uuid4().hex}"
-        with self.lock:
-            self.jobs[job_id] = Job(
+        try:
+            job = Job(
                 input_data=input_data,
                 setup_id=setup_id,
                 service_ids=service_ids,
@@ -123,7 +166,11 @@ class JobManager:
                 outputs=Queue(),
                 stop_event=threading.Event(),
             )
-        return job_id
+            # job.task.result()  # Raise exception if task failed
+            self.jobs[job_id] = job
+            return job_id
+        except Exception as e:
+            raise e
 
     def get_job(self, job_id: str) -> Optional[Job]:
         """
@@ -132,8 +179,7 @@ class JobManager:
         :param job_id: The ID of the job to retrieve.
         :return: The job data if found, None otherwise.
         """
-        with self.lock:
-            return self.jobs.get(job_id, None)
+        return self.jobs.get(job_id, None)
 
     def get_outputs(self, job_id: str) -> Iterator[Any]:
         """
@@ -143,11 +189,10 @@ class JobManager:
         :return: An iterator of job outputs.
         :raises ValueError: If the job is not found.
         """
-        with self.lock:
-            if job_id in self.jobs:
-                return self.jobs.get(job_id).get_outputs()
-            else:
-                raise ValueError(f"Job with id {job_id} not found")
+        if job_id in self.jobs:
+            return self.jobs.get(job_id).get_outputs()
+        else:
+            raise ValueError(f"Job with id {job_id} not found")
 
     def stop_outputs(self, job_id: str) -> None:
         """
@@ -156,11 +201,10 @@ class JobManager:
         :param job_id: The ID of the job.
         :raises ValueError: If the job is not found.
         """
-        with self.lock:
-            if job_id in self.jobs:
-                return self.jobs.get(job_id).stop_outputs()
-            else:
-                raise ValueError(f"Job with id {job_id} not found")
+        if job_id in self.jobs:
+            return self.jobs.get(job_id).stop_outputs()
+        else:
+            raise ValueError(f"Job with id {job_id} not found")
 
     def update_job_status(self, job_id: str, status: JobStatus) -> bool:
         """
@@ -170,12 +214,11 @@ class JobManager:
         :param status: The new status of the job.
         :return: True if the job status was updated, False otherwise.
         """
-        with self.lock:
-            job = self.jobs.get(job_id)
-            if job:
-                job.status = status
-                return True
-            return False
+        job = self.jobs.get(job_id)
+        if job:
+            job.status = status
+            return True
+        return False
 
     def delete_job(self, job_id: str) -> bool:
         """
@@ -184,23 +227,21 @@ class JobManager:
         :param job_id: The ID of the job to delete.
         :return: True if the job was deleted, False otherwise.
         """
-        with self.lock:
-            job = self.jobs.get(job_id, None)
-            if job is None:
-                return False
-            if job.task.cancel() or job.task.done():
-                job.stop_outputs()
-                del self.jobs[job_id]
-                return True
+        job = self.jobs.get(job_id, None)
+        if job is None:
             return False
+        if job.task.cancel() or job.task.done():
+            job.stop_outputs()
+            del self.jobs[job_id]
+            return True
+        return False
 
     def stop_all_jobs(self) -> None:
         """
         Stops all running jobs.
         """
-        with self.lock:
-            for job_id in list(self.jobs.keys()):
-                self.delete_job(job_id)
+        for job_id in list(self.jobs.keys()):
+            self.delete_job(job_id)
 
     def shutdown(self, wait: bool = True) -> None:
         """

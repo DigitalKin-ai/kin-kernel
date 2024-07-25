@@ -47,7 +47,7 @@ class CustomService(BaseService):
             # Implémentez la logique spécifique de l'outil ici
             callback(MultiplyOutput(**exec_result))
             counter += 1
-            time.sleep(1)
+            time.sleep(0.05)
 
 
 if __name__ == "__main__":
@@ -59,5 +59,6 @@ if __name__ == "__main__":
         service_type="tool",
         service_port=50052,
         registry_address="localhost:50051",
+        max_workers=20,
     )
     custom_service.serve()

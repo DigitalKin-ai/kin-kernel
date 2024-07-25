@@ -23,6 +23,8 @@ from kin_sdk.common import (
     logger,
 )
 
+COUNTER = 0
+
 
 class Service(service_pb2_grpc.ServiceServicer):
     def __init__(self, service: BaseService):
@@ -40,7 +42,6 @@ class Service(service_pb2_grpc.ServiceServicer):
         try:
             # Update job status to STARTING
             self.job_manager.update_job_status(job_id, JobStatus.STARTING)
-
             # Get job information
             current_job: Job = self.job_manager.get_job(job_id)
             input_data = current_job.input_data
@@ -75,6 +76,7 @@ class Service(service_pb2_grpc.ServiceServicer):
             self.service.stop()
             self.job_manager.update_job_status(job_id, JobStatus.STOPPED)
             self.job_manager.stop_outputs(job_id)
+            print("Job stopped")
         except Exception as e:
             logger.error("😵 Exception Error: %s", e)
             self.job_manager.update_job_status(job_id, JobStatus.FAILED)
@@ -94,7 +96,7 @@ class Service(service_pb2_grpc.ServiceServicer):
             )
             # Extract data from the request
             input = json_request.get("input", None)
-            service_ids = json_request.get("service_ids", None)
+            service_ids = json_request.get("service_ids", [])
             setup_id = json_request.get("setup_id", None)
 
             # Validate the input data
@@ -104,6 +106,7 @@ class Service(service_pb2_grpc.ServiceServicer):
             job_id = self.job_manager.start_job(
                 input_data, setup_id, service_ids, self.__start_job
             )
+
             for output in self.job_manager.get_outputs(job_id):
                 yield service_pb2.ServiceResponse(
                     success=True,
