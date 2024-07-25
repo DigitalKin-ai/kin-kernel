@@ -1,3 +1,4 @@
+from typing import Callable
 from pydantic import BaseModel
 
 from kin_sdk.service.base import BaseService
@@ -30,11 +31,16 @@ class CustomService(BaseService):
         print("Stopping the service")
         return super().stop()
 
-    def execute(self, input_data: MultiplyInput) -> MultiplyOutput:
+    def execute(
+        self,
+        input_data: MultiplyInput,
+        setup_id: str,
+        callback: Callable[[MultiplyOutput], None],
+    ) -> None:
         # Implémentez la logique spécifique de l'outil ici
         exec_result = {"result": input_data.number * input_data.factor}
         print(MultiplyOutput(**exec_result))
-        return MultiplyOutput(**exec_result)
+        callback(MultiplyOutput(**exec_result))
 
 
 if __name__ == "__main__":

@@ -13,7 +13,7 @@ from google.protobuf import json_format, struct_pb2
 
 import proto.digitalkin.service.v1.service_pb2 as service_pb2
 import proto.digitalkin.service.v1.service_pb2_grpc as service_pb2_grpc
-from kin_sdk.grpc_services import ServiceServer, ServiceModel
+from kin_sdk.grpc_services import ServiceServer
 from kin_sdk.common import ServiceType, logger
 
 InputModelT = TypeVar("InputModelT", bound=BaseModel)
@@ -195,7 +195,7 @@ class BaseService(Generic[InputModelT, OutputModelT, SetupModelT], ServiceServer
     def execute(
         self,
         input_data: InputModelT,
-        setup_data: SetupModelT,  # ? SetupModelT  or setup_id ?
+        setup_id: str,
         callback: Callable[[OutputModelT], None],
     ) -> None:
         """
@@ -240,7 +240,11 @@ class BaseService(Generic[InputModelT, OutputModelT, SetupModelT], ServiceServer
 
             # use service_ids to send the output to the right service
             for service_id in service_ids:
-                service: ServiceModel = self.search_service(service_id)
+                service = self.search_service(service_id)
+
+                if service is None:
+                    return None
+
                 logger.info(f"Service found: \n\t{service}")
 
                 # Send the result to the list of gRPC services

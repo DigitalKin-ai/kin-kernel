@@ -1,4 +1,4 @@
-from typing import Type, Literal, Optional
+from typing import Type, Optional
 
 import grpc
 from google.protobuf import json_format
