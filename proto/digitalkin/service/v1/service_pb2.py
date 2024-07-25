@@ -15,7 +15,7 @@ from google.protobuf import struct_pb2 as google_dot_protobuf_dot_struct__pb2
 from proto.validate import validate_pb2 as validate_dot_validate__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n#digitalkin/service/v1/service.proto\x12\x15\x64igitalkin.service.v1\x1a\x1cgoogle/protobuf/struct.proto\x1a\x17validate/validate.proto\"\x88\x02\n\x13StartServiceRequest\x12\x37\n\x05input\x18\x01 \x01(\x0b\x32\x17.google.protobuf.StructB\x08\xfa\x42\x05\xa2\x01\x02\x08\x01R\x05input\x12+\n\x08setup_id\x18\x02 \x01(\tB\x10\xfa\x42\rr\x0b\x10\x01:\x07setups:R\x07setupId\x12:\n\x0bservice_ids\x18\x03 \x03(\tB\x19\xfa\x42\x16\x92\x01\x13\x08\x01\"\x0fr\r\x10\x01:\tservices:R\nserviceIds\x12O\n\x0crequest_type\x18\x04 \x01(\x0e\x32\".digitalkin.service.v1.RequestTypeB\x08\xfa\x42\x05\x82\x01\x02\x10\x01R\x0brequestType\"G\n\x12StopServiceRequest\x12\x31\n\nservice_id\x18\x01 \x01(\tB\x12\xfa\x42\x0fr\r\x10\x01:\tservices:R\tserviceId\"L\n\x17GetServiceStatusRequest\x12\x31\n\nservice_id\x18\x01 \x01(\tB\x12\xfa\x42\x0fr\r\x10\x01:\tservices:R\tserviceId\"j\n\x16GetServiceInputRequest\x12\x31\n\nservice_id\x18\x01 \x01(\tB\x12\xfa\x42\x0fr\r\x10\x01:\tservices:R\tserviceId\x12\x1d\n\nllm_format\x18\x02 \x01(\x08R\tllmFormat\"k\n\x17GetServiceOutputRequest\x12\x31\n\nservice_id\x18\x01 \x01(\tB\x12\xfa\x42\x0fr\r\x10\x01:\tservices:R\tserviceId\x12\x1d\n\nllm_format\x18\x02 \x01(\x08R\tllmFormat\"\x93\x01\n\x0fServiceResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\x12!\n\x07message\x18\x02 \x01(\tB\x07\xfa\x42\x04r\x02\x10\x01R\x07message\x12\x34\n\nservice_id\x18\x03 \x01(\tB\x10\xfa\x42\rr\x0b:\tservices:H\x00R\tserviceId\x88\x01\x01\x42\r\n\x0b_service_id\"\xac\x01\n\x15ServiceStatusResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\x12\x46\n\x06status\x18\x02 \x01(\x0e\x32$.digitalkin.service.v1.ServiceStatusB\x08\xfa\x42\x05\x82\x01\x02\x10\x01R\x06status\x12\x31\n\nservice_id\x18\x03 \x01(\tB\x12\xfa\x42\x0fr\r\x10\x01:\tservices:R\tserviceId\"v\n\x14ServiceInputResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\x12\x44\n\x0cinput_schema\x18\x02 \x01(\x0b\x32\x17.google.protobuf.StructB\x08\xfa\x42\x05\xa2\x01\x02\x08\x01R\x0binputSchema\"y\n\x15ServiceOutputResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\x12\x46\n\routput_schema\x18\x02 \x01(\x0b\x32\x17.google.protobuf.StructB\x08\xfa\x42\x05\xa2\x01\x02\x08\x01R\x0coutputSchema*n\n\rServiceStatus\x12\x0c\n\x08STARTING\x10\x00\x12\x0e\n\nPROCESSING\x10\x01\x12\x0c\n\x08\x43\x41NCELED\x10\x02\x12\n\n\x06\x46\x41ILED\x10\x03\x12\x0b\n\x07\x45XPIRED\x10\x04\x12\x0b\n\x07SUCCESS\x10\x05\x12\x0b\n\x07STOPPED\x10\x06*<\n\x0bRequestType\x12\x08\n\x04SEND\x10\x00\x12\x08\n\x04\x45XIT\x10\x01\x12\x0c\n\x08VALIDATE\x10\x02\x12\x0b\n\x07\x44\x45STROY\x10\x03\x32\xa6\x04\n\x07Service\x12\x66\n\x0cStartService\x12*.digitalkin.service.v1.StartServiceRequest\x1a&.digitalkin.service.v1.ServiceResponse(\x01\x30\x01\x12`\n\x0bStopService\x12).digitalkin.service.v1.StopServiceRequest\x1a&.digitalkin.service.v1.ServiceResponse\x12p\n\x10GetServiceStatus\x12..digitalkin.service.v1.GetServiceStatusRequest\x1a,.digitalkin.service.v1.ServiceStatusResponse\x12m\n\x0fGetServiceInput\x12-.digitalkin.service.v1.GetServiceInputRequest\x1a+.digitalkin.service.v1.ServiceInputResponse\x12p\n\x10GetServiceOutput\x12..digitalkin.service.v1.GetServiceOutputRequest\x1a,.digitalkin.service.v1.ServiceOutputResponseB\xa1\x01\n\x19\x63om.digitalkin.service.v1B\x0cServiceProtoH\x02P\x01\xa2\x02\x03\x44SX\xaa\x02\x15\x44igitalkin.Service.V1\xca\x02\x15\x44igitalkin\\Service\\V1\xe2\x02!Digitalkin\\Service\\V1\\GPBMetadata\xea\x02\x17\x44igitalkin::Service::V1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n#digitalkin/service/v1/service.proto\x12\x15\x64igitalkin.service.v1\x1a\x1cgoogle/protobuf/struct.proto\x1a\x17validate/validate.proto\"\x88\x02\n\x13StartServiceRequest\x12\x37\n\x05input\x18\x01 \x01(\x0b\x32\x17.google.protobuf.StructB\x08\xfa\x42\x05\xa2\x01\x02\x08\x01R\x05input\x12+\n\x08setup_id\x18\x02 \x01(\tB\x10\xfa\x42\rr\x0b\x10\x01:\x07setups:R\x07setupId\x12:\n\x0bservice_ids\x18\x03 \x03(\tB\x19\xfa\x42\x16\x92\x01\x13\x08\x01\"\x0fr\r\x10\x01:\tservices:R\nserviceIds\x12O\n\x0crequest_type\x18\x04 \x01(\x0e\x32\".digitalkin.service.v1.RequestTypeB\x08\xfa\x42\x05\x82\x01\x02\x10\x01R\x0brequestType\"G\n\x12StopServiceRequest\x12\x31\n\nservice_id\x18\x01 \x01(\tB\x12\xfa\x42\x0fr\r\x10\x01:\tservices:R\tserviceId\"@\n\x17GetServiceStatusRequest\x12%\n\x06job_id\x18\x01 \x01(\tB\x0e\xfa\x42\x0br\t\x10\x01:\x05jobs:R\x05jobId\"j\n\x16GetServiceInputRequest\x12\x31\n\nservice_id\x18\x01 \x01(\tB\x12\xfa\x42\x0fr\r\x10\x01:\tservices:R\tserviceId\x12\x1d\n\nllm_format\x18\x02 \x01(\x08R\tllmFormat\"k\n\x17GetServiceOutputRequest\x12\x31\n\nservice_id\x18\x01 \x01(\tB\x12\xfa\x42\x0fr\r\x10\x01:\tservices:R\tserviceId\x12\x1d\n\nllm_format\x18\x02 \x01(\x08R\tllmFormat\"\x93\x01\n\x0fServiceResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\x12!\n\x07message\x18\x02 \x01(\tB\x07\xfa\x42\x04r\x02\x10\x01R\x07message\x12\x34\n\nservice_id\x18\x03 \x01(\tB\x10\xfa\x42\rr\x0b:\tservices:H\x00R\tserviceId\x88\x01\x01\x42\r\n\x0b_service_id\"\xa0\x01\n\x15ServiceStatusResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\x12\x46\n\x06status\x18\x02 \x01(\x0e\x32$.digitalkin.service.v1.ServiceStatusB\x08\xfa\x42\x05\x82\x01\x02\x10\x01R\x06status\x12%\n\x06job_id\x18\x03 \x01(\tB\x0e\xfa\x42\x0br\t\x10\x01:\x05jobs:R\x05jobId\"v\n\x14ServiceInputResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\x12\x44\n\x0cinput_schema\x18\x02 \x01(\x0b\x32\x17.google.protobuf.StructB\x08\xfa\x42\x05\xa2\x01\x02\x08\x01R\x0binputSchema\"y\n\x15ServiceOutputResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\x12\x46\n\routput_schema\x18\x02 \x01(\x0b\x32\x17.google.protobuf.StructB\x08\xfa\x42\x05\xa2\x01\x02\x08\x01R\x0coutputSchema*n\n\rServiceStatus\x12\x0c\n\x08STARTING\x10\x00\x12\x0e\n\nPROCESSING\x10\x01\x12\x0c\n\x08\x43\x41NCELED\x10\x02\x12\n\n\x06\x46\x41ILED\x10\x03\x12\x0b\n\x07\x45XPIRED\x10\x04\x12\x0b\n\x07SUCCESS\x10\x05\x12\x0b\n\x07STOPPED\x10\x06*<\n\x0bRequestType\x12\x08\n\x04SEND\x10\x00\x12\x08\n\x04\x45XIT\x10\x01\x12\x0c\n\x08VALIDATE\x10\x02\x12\x0b\n\x07\x44\x45STROY\x10\x03\x32\xa6\x04\n\x07Service\x12\x66\n\x0cStartService\x12*.digitalkin.service.v1.StartServiceRequest\x1a&.digitalkin.service.v1.ServiceResponse(\x01\x30\x01\x12`\n\x0bStopService\x12).digitalkin.service.v1.StopServiceRequest\x1a&.digitalkin.service.v1.ServiceResponse\x12p\n\x10GetServiceStatus\x12..digitalkin.service.v1.GetServiceStatusRequest\x1a,.digitalkin.service.v1.ServiceStatusResponse\x12m\n\x0fGetServiceInput\x12-.digitalkin.service.v1.GetServiceInputRequest\x1a+.digitalkin.service.v1.ServiceInputResponse\x12p\n\x10GetServiceOutput\x12..digitalkin.service.v1.GetServiceOutputRequest\x1a,.digitalkin.service.v1.ServiceOutputResponseB\xa1\x01\n\x19\x63om.digitalkin.service.v1B\x0cServiceProtoH\x02P\x01\xa2\x02\x03\x44SX\xaa\x02\x15\x44igitalkin.Service.V1\xca\x02\x15\x44igitalkin\\Service\\V1\xe2\x02!Digitalkin\\Service\\V1\\GPBMetadata\xea\x02\x17\x44igitalkin::Service::V1b\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'digitalkin.service.v1.service_pb2', globals())
@@ -33,8 +33,8 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _STARTSERVICEREQUEST.fields_by_name['request_type']._serialized_options = b'\372B\005\202\001\002\020\001'
   _STOPSERVICEREQUEST.fields_by_name['service_id']._options = None
   _STOPSERVICEREQUEST.fields_by_name['service_id']._serialized_options = b'\372B\017r\r\020\001:\tservices:'
-  _GETSERVICESTATUSREQUEST.fields_by_name['service_id']._options = None
-  _GETSERVICESTATUSREQUEST.fields_by_name['service_id']._serialized_options = b'\372B\017r\r\020\001:\tservices:'
+  _GETSERVICESTATUSREQUEST.fields_by_name['job_id']._options = None
+  _GETSERVICESTATUSREQUEST.fields_by_name['job_id']._serialized_options = b'\372B\013r\t\020\001:\005jobs:'
   _GETSERVICEINPUTREQUEST.fields_by_name['service_id']._options = None
   _GETSERVICEINPUTREQUEST.fields_by_name['service_id']._serialized_options = b'\372B\017r\r\020\001:\tservices:'
   _GETSERVICEOUTPUTREQUEST.fields_by_name['service_id']._options = None
@@ -45,34 +45,34 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _SERVICERESPONSE.fields_by_name['service_id']._serialized_options = b'\372B\rr\013:\tservices:'
   _SERVICESTATUSRESPONSE.fields_by_name['status']._options = None
   _SERVICESTATUSRESPONSE.fields_by_name['status']._serialized_options = b'\372B\005\202\001\002\020\001'
-  _SERVICESTATUSRESPONSE.fields_by_name['service_id']._options = None
-  _SERVICESTATUSRESPONSE.fields_by_name['service_id']._serialized_options = b'\372B\017r\r\020\001:\tservices:'
+  _SERVICESTATUSRESPONSE.fields_by_name['job_id']._options = None
+  _SERVICESTATUSRESPONSE.fields_by_name['job_id']._serialized_options = b'\372B\013r\t\020\001:\005jobs:'
   _SERVICEINPUTRESPONSE.fields_by_name['input_schema']._options = None
   _SERVICEINPUTRESPONSE.fields_by_name['input_schema']._serialized_options = b'\372B\005\242\001\002\010\001'
   _SERVICEOUTPUTRESPONSE.fields_by_name['output_schema']._options = None
   _SERVICEOUTPUTRESPONSE.fields_by_name['output_schema']._serialized_options = b'\372B\005\242\001\002\010\001'
-  _SERVICESTATUS._serialized_start=1320
-  _SERVICESTATUS._serialized_end=1430
-  _REQUESTTYPE._serialized_start=1432
-  _REQUESTTYPE._serialized_end=1492
+  _SERVICESTATUS._serialized_start=1296
+  _SERVICESTATUS._serialized_end=1406
+  _REQUESTTYPE._serialized_start=1408
+  _REQUESTTYPE._serialized_end=1468
   _STARTSERVICEREQUEST._serialized_start=118
   _STARTSERVICEREQUEST._serialized_end=382
   _STOPSERVICEREQUEST._serialized_start=384
   _STOPSERVICEREQUEST._serialized_end=455
   _GETSERVICESTATUSREQUEST._serialized_start=457
-  _GETSERVICESTATUSREQUEST._serialized_end=533
-  _GETSERVICEINPUTREQUEST._serialized_start=535
-  _GETSERVICEINPUTREQUEST._serialized_end=641
-  _GETSERVICEOUTPUTREQUEST._serialized_start=643
-  _GETSERVICEOUTPUTREQUEST._serialized_end=750
-  _SERVICERESPONSE._serialized_start=753
-  _SERVICERESPONSE._serialized_end=900
-  _SERVICESTATUSRESPONSE._serialized_start=903
-  _SERVICESTATUSRESPONSE._serialized_end=1075
-  _SERVICEINPUTRESPONSE._serialized_start=1077
-  _SERVICEINPUTRESPONSE._serialized_end=1195
-  _SERVICEOUTPUTRESPONSE._serialized_start=1197
-  _SERVICEOUTPUTRESPONSE._serialized_end=1318
-  _SERVICE._serialized_start=1495
-  _SERVICE._serialized_end=2045
+  _GETSERVICESTATUSREQUEST._serialized_end=521
+  _GETSERVICEINPUTREQUEST._serialized_start=523
+  _GETSERVICEINPUTREQUEST._serialized_end=629
+  _GETSERVICEOUTPUTREQUEST._serialized_start=631
+  _GETSERVICEOUTPUTREQUEST._serialized_end=738
+  _SERVICERESPONSE._serialized_start=741
+  _SERVICERESPONSE._serialized_end=888
+  _SERVICESTATUSRESPONSE._serialized_start=891
+  _SERVICESTATUSRESPONSE._serialized_end=1051
+  _SERVICEINPUTRESPONSE._serialized_start=1053
+  _SERVICEINPUTRESPONSE._serialized_end=1171
+  _SERVICEOUTPUTRESPONSE._serialized_start=1173
+  _SERVICEOUTPUTRESPONSE._serialized_end=1294
+  _SERVICE._serialized_start=1471
+  _SERVICE._serialized_end=2021
 # @@protoc_insertion_point(module_scope)

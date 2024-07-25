@@ -16,7 +16,7 @@ class MultiplySetup(BaseModel):
     result: float
 
 
-class CustomService(BaseService[MultiplyInput, MultiplyOutput, MultiplySetup]):
+class CustomService(BaseService):
     name = "Multiplier"
     description = "A simple multiplier tool"
     input_format = MultiplyInput
@@ -25,7 +25,6 @@ class CustomService(BaseService[MultiplyInput, MultiplyOutput, MultiplySetup]):
 
     def start(self) -> None:
         print("Starting the service")
-        return super().start()
 
     def stop(self) -> None:
         print("Stopping the service")

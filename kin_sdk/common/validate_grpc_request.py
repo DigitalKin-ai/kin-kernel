@@ -8,11 +8,12 @@ from functools import wraps
 from typing import Dict, Any, Iterator, Callable, Literal, Optional
 from queue import Queue
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, model_validator, ValidationError
 from google.protobuf import json_format, struct_pb2
 from protoc_gen_validate.validator import validate, ValidationFailed
 from pydantic_core import PydanticUndefinedType
 
+from kin_sdk.common.pydantic_validation_error import pydantic_validation_error
 import proto.digitalkin.service.v1.service_pb2 as service_pb2
 
 from kin_sdk.common.logger import logger
@@ -273,6 +274,16 @@ def get_metadata(context: grpc.ServicerContext) -> Metadata:
         raise e
 
 
+def pydantic_validation(request: Dict[str, Any], model: BaseModel) -> None:
+    input = request.get("input", None)
+
+    if input is None:
+        raise ValueError("Input data is missing.")
+
+    # Parse and validate the input JSON using the input_format Pydantic model
+    model.model_validate(input)
+
+
 def validate_stream_request():
     """
     Decorator to handle the communication between the client and the server.
@@ -491,6 +502,7 @@ def validate_stream_request():
                     )
                     # Try to validate the request it will raise an error if the request is not valid
                     validate(request)
+                    pydantic_validation(req, self.service.input_format)
                     # call func and yield the result to the client
                     for message in func(self, request, context):
                         if message is None:
@@ -502,7 +514,10 @@ def validate_stream_request():
                 context.set_code(grpc.StatusCode.OK)
                 context.set_details("Service completed successfully")
                 return  # This will stop the generator and close the gRPC connection
-
+            except ValidationError as e:
+                error_message = pydantic_validation_error(e, context)
+                logger.error(error_message)  # Validation Error
+                # Reconvert in gRPC Struct proto format the output data
             except ValidationFailed as e:
                 # Handle validation errors
                 logger.error("Validation Error: %s ", str(e))

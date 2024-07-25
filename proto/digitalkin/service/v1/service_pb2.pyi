@@ -36,10 +36,10 @@ class GetServiceOutputRequest(_message.Message):
     def __init__(self, service_id: _Optional[str] = ..., llm_format: bool = ...) -> None: ...
 
 class GetServiceStatusRequest(_message.Message):
-    __slots__ = ["service_id"]
-    SERVICE_ID_FIELD_NUMBER: _ClassVar[int]
-    service_id: str
-    def __init__(self, service_id: _Optional[str] = ...) -> None: ...
+    __slots__ = ["job_id"]
+    JOB_ID_FIELD_NUMBER: _ClassVar[int]
+    job_id: str
+    def __init__(self, job_id: _Optional[str] = ...) -> None: ...
 
 class ServiceInputResponse(_message.Message):
     __slots__ = ["input_schema", "success"]
@@ -68,14 +68,14 @@ class ServiceResponse(_message.Message):
     def __init__(self, success: bool = ..., message: _Optional[str] = ..., service_id: _Optional[str] = ...) -> None: ...
 
 class ServiceStatusResponse(_message.Message):
-    __slots__ = ["service_id", "status", "success"]
-    SERVICE_ID_FIELD_NUMBER: _ClassVar[int]
+    __slots__ = ["job_id", "status", "success"]
+    JOB_ID_FIELD_NUMBER: _ClassVar[int]
     STATUS_FIELD_NUMBER: _ClassVar[int]
     SUCCESS_FIELD_NUMBER: _ClassVar[int]
-    service_id: str
+    job_id: str
     status: ServiceStatus
     success: bool
-    def __init__(self, success: bool = ..., status: _Optional[_Union[ServiceStatus, str]] = ..., service_id: _Optional[str] = ...) -> None: ...
+    def __init__(self, success: bool = ..., status: _Optional[_Union[ServiceStatus, str]] = ..., job_id: _Optional[str] = ...) -> None: ...
 
 class StartServiceRequest(_message.Message):
     __slots__ = ["input", "request_type", "service_ids", "setup_id"]
