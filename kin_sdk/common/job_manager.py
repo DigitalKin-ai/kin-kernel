@@ -2,14 +2,15 @@
 TODO sphinx docstring
 """
 
+from queue import Queue
 import uuid
 import threading
 from enum import Enum
 
-from typing import Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 from concurrent.futures import Future, ThreadPoolExecutor
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class JobStatus(Enum):
@@ -34,6 +35,31 @@ class Job(BaseModel):
     service_ids: List[str]
     status: JobStatus
     task: Future
+    outputs: Queue = Field(default_factory=Queue)
+    stop_event: threading.Event = Field(default_factory=threading.Event)
+
+    def add_to_outputs(self, item: Any):
+        """
+        Ajoute un élément à l'itérateur du job.
+        """
+        self.outputs.put(item)
+
+    def stop_outputs(self):
+        """
+        Signale l'arrêt de l'itérateur.
+        """
+        self.stop_event.set()
+        self.outputs.put(None)  # Sentinel value
+
+    def get_outputs(self):
+        """
+        Retourne un itérateur pour les éléments du job.
+        """
+        while not self.stop_event.is_set():
+            item = self.outputs.get()
+            if item is None:  # Check for sentinel value
+                break
+            yield item
 
 
 class JobManager:
@@ -70,6 +96,8 @@ class JobManager:
                 service_ids=service_ids,
                 status=JobStatus.STARTING,
                 task=self.executor.submit(func, job_id, *args, **kwargs),
+                outputs=Queue(),
+                stop_event=threading.Event(),
             )
         return job_id
 
@@ -82,6 +110,26 @@ class JobManager:
         """
         with self.lock:
             return self.jobs.get(job_id, None)
+
+    def get_outputs(self, job_id: str) -> Optional[Job]:
+        """
+        Retrieves the outputs of a job by its ID.
+        """
+        with self.lock:
+            if job_id in self.jobs:
+                return self.jobs.get(job_id).get_outputs()
+            else:
+                raise ValueError(f"Job with id {job_id} not found")
+
+    def stop_outputs(self, job_id: str) -> Optional[Job]:
+        """
+        Retrieves the outputs of a job by its ID.
+        """
+        with self.lock:
+            if job_id in self.jobs:
+                return self.jobs.get(job_id).stop_outputs()
+            else:
+                raise ValueError(f"Job with id {job_id} not found")
 
     def update_job_status(self, job_id: str, status: JobStatus) -> bool:
         """
@@ -109,6 +157,7 @@ class JobManager:
             if job is None:
                 return False
             if job.task.cancel() or job.task.done():
+                self.jobs.get(job_id).stop_outputs()
                 self.jobs.pop(job_id)
                 return True
             return False

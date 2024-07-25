@@ -1,3 +1,4 @@
+import time
 from typing import Callable
 from pydantic import BaseModel
 
@@ -29,7 +30,6 @@ class CustomService(BaseService):
 
     def stop(self) -> None:
         print("Stopping the service")
-        return super().stop()
 
     def execute(
         self,
@@ -39,8 +39,15 @@ class CustomService(BaseService):
     ) -> None:
         # Implémentez la logique spécifique de l'outil ici
         exec_result = {"result": input_data.number * input_data.factor}
-        print(MultiplyOutput(**exec_result))
         callback(MultiplyOutput(**exec_result))
+
+        counter = 0
+
+        while counter < 10:
+            # Implémentez la logique spécifique de l'outil ici
+            callback(MultiplyOutput(**exec_result))
+            counter += 1
+            time.sleep(1)
 
 
 if __name__ == "__main__":

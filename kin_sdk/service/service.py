@@ -3,9 +3,9 @@ TODO: sphinx docstring
 """
 
 import threading
+import grpc
 
 from typing import Any, Generator
-import grpc
 from opentelemetry import trace
 from google.protobuf import json_format  # , struct_pb2
 from pydantic import BaseModel
@@ -55,6 +55,8 @@ class Service(service_pb2_grpc.ServiceServicer):
                 if not self.job_manager.update_job_status(job_id, JobStatus.PROCESSING):
                     raise ValueError(f"😵 Trigger {job_id} not found.")
                 self.service.send_output(output, service_ids)
+                print(output)
+                current_job.add_to_outputs(output)
 
             # Execute the service
             self.service.execute(
@@ -62,9 +64,17 @@ class Service(service_pb2_grpc.ServiceServicer):
                 setup_id,
                 callback,
             )
-            # if input_data.model_fields:
-            #     self.service.stop()
+            self.__stop_job(job_id)
 
+        except Exception as e:
+            logger.error("😵 Exception Error: %s", e)
+            self.job_manager.update_job_status(job_id, JobStatus.FAILED)
+
+    def __stop_job(self, job_id: str, *args, **kwargs) -> None:
+        try:
+            self.service.stop()
+            self.job_manager.update_job_status(job_id, JobStatus.STOPPED)
+            self.job_manager.stop_outputs(job_id)
         except Exception as e:
             logger.error("😵 Exception Error: %s", e)
             self.job_manager.update_job_status(job_id, JobStatus.FAILED)
@@ -94,12 +104,15 @@ class Service(service_pb2_grpc.ServiceServicer):
             job_id = self.job_manager.start_job(
                 input_data, setup_id, service_ids, self.__start_job
             )
-
-            yield service_pb2.ServiceResponse(
-                success=True,
-                message="Service started successfully",
-                service_id=job_id,
-            )
+            for output in self.job_manager.get_outputs(job_id):
+                print(f"output {output}")
+                yield service_pb2.ServiceResponse(
+                    success=True,
+                    message=str(output),
+                    service_id=job_id,
+                )
+            # Mark the job as completed
+            self.job_manager.update_job_status(job_id, JobStatus.SUCCESS)
             return
         except Exception as e:
             context.set_code(grpc.StatusCode.INTERNAL)

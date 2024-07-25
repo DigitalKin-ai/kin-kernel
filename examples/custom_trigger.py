@@ -31,7 +31,7 @@ class CustomTrigger(
     def execute(
         self,
         input_data: CronMultiplyInput,
-        setup_data: CronMultiplySetup,
+        setup_id: str,
         callback: Callable[[CronMultiplyOutput], None],
     ) -> None:
         counter = 0
@@ -41,7 +41,7 @@ class CustomTrigger(
 
         while counter < 10:
             # Implémentez la logique spécifique de l'outil ici
-            exec_result = {"numbers": setup_data.result, "factor": start + counter}
+            exec_result = {"numbers": 5, "factor": start + counter}
             callback(CronMultiplyOutput(**exec_result))
             counter += 1
             time.sleep(1)
