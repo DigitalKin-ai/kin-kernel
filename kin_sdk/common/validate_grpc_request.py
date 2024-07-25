@@ -1,13 +1,12 @@
 import time
 import grpc
 import uuid
-from threading import Lock, Event
+from threading import Lock, Thread
 
 # from datetime import datetime
 from functools import wraps
 from typing import Dict, Any, Iterator, Callable, Literal, Optional
 from queue import Queue
-from concurrent.futures import ThreadPoolExecutor
 
 from pydantic import BaseModel, Field, model_validator
 from google.protobuf import json_format, struct_pb2
@@ -325,7 +324,6 @@ def validate_stream_request():
             try:
                 metadata = get_metadata(context)
                 message_queue: Queue = Queue()
-                stop_event = Event()
 
                 # Create room if not exists
                 if not metadata.room_id:
@@ -367,15 +365,7 @@ def validate_stream_request():
                 def handle_incoming_messages() -> None:
                     """Handle incoming messages from the client and publish them to the room."""
                     try:
-                        # iterate over the incoming messages from the client stream
                         for request in request_iterator:
-                            print("ddhsdfhjjfhsdfsjdh")
-                            if stop_event.is_set():
-                                logger.info(
-                                    "Stopping handle_incoming_messages due to stop event"
-                                )
-                                break
-                            # Process incoming messages convert it to dict
                             request_dict = (
                                 json_format.MessageToDict(
                                     request, preserving_proto_field_name=True
@@ -384,11 +374,7 @@ def validate_stream_request():
                                 else {}
                             )
 
-                            # Publish request message to room
                             with self.lock:
-                                # Extract request_type from the request_dict we do not want to let it inside the request
-                                # also we want to set the default value to SEND and we want to make sure that the request_type is a RequestType
-                                # if the service is the owner of the room we want to take into account the request_type else we want to ignore it and set it to SEND
                                 request_type = (
                                     RequestType[
                                         request_dict.pop("request_type", "SEND")
@@ -397,7 +383,6 @@ def validate_stream_request():
                                     else RequestType.SEND
                                 )
 
-                                # Publish the request to the room
                                 self.rooms.publish_to_room(
                                     metadata.room_id,
                                     metadata.service_id,
@@ -405,128 +390,113 @@ def validate_stream_request():
                                     request_type,
                                 )
 
-                    except grpc.RpcError as e:
-                        # we do not want to raise an error if the client disconnects it is a normal behavior
-                        logger.info(f"Client disconnected with error: {e}")
-                    finally:
-                        message_queue.put(
-                            (metadata.service_id, None, RequestType.EXIT)
-                        )  # Sentinel to stop the message_sender
-
-                with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-                    # Start the incoming message handler in a separate thread
-                    # this is useful to do not block the main thread that is waiting for the room incoming messages
-                    incoming_future = executor.submit(handle_incoming_messages)
-
-                    # usefull to know if we want to try to validate the request
-                    is_validate: bool = False
-
-                    def message_sender() -> Iterator[service_pb2.ServiceResponse]:
-                        """
-                        Handle message that coming from the room and send it to the client
-                        """
-                        while True:
-
-                            try:
-                                # get the message from the message_queue
-                                sender_id, request, request_type = message_queue.get()
-                            except Queue.Empty:
-                                if stop_event.is_set():
-                                    logger.info(
-                                        "Stopping message_sender due to stop event"
-                                    )
-                                    break
-                                continue
-                            logger.debug(
-                                f"Received a request from {sender_id}: request: {request_type} \n {request}"
-                            )
-
-                            # exit condition, this will terminate the stream
-                            if request is None or request_type == RequestType.EXIT:
-                                logger.debug(
-                                    f"Service {metadata.service_id} disconnected"
-                                )
-                                break
-
-                            # if the service is the owner of the room and the request is a validate request
-                            # we want to try to validate the request and if it is valid we want to return the func and disconnect all other members
                             if (
-                                metadata.service_role == "owner"
-                                and metadata.service_id == sender_id
-                                and request_type == RequestType.VALIDATE
+                                request_type == RequestType.VALIDATE
+                                and metadata.service_role == "owner"
                             ):
-                                logger.debug(
-                                    f"Service: {metadata.service_id} want to validate the request"
-                                )
-                                yield (None, True)
                                 break
+                    except grpc.RpcError as e:
+                        logger.info(f"Client disconnected: {e}")
+                    except Exception as e:
+                        logger.error(f"Error handling incoming messages: {e}")
+                    finally:
+                        message_queue.put((metadata.service_id, None, RequestType.EXIT))
 
-                            # yield the message to the client
-                            yield (
-                                service_pb2.ServiceResponse(
-                                    success=True,
-                                    message=str(request),
-                                    service_id=self.service.service_id,
-                                ),
-                                False,
-                            )
+                # Start the incoming message handler in a separate thread
+                # this is useful to do not block the main thread that is waiting for the room incoming messages
+                incoming_thread = Thread(target=handle_incoming_messages)
+                incoming_thread.start()
+
+                # usefull to know if we want to try to validate the request
+                is_validate: bool = False
+
+                def message_sender() -> Iterator[service_pb2.ServiceResponse]:
+                    """
+                    Handle message that coming from the room and send it to the client
+                    """
+                    while True:
+                        sender_id, request, request_type = message_queue.get()
                         logger.debug(
-                            f"Message sender finished for service {metadata.service_id}"
+                            f"Received request from {sender_id}: {request_type} \n {request}"
                         )
 
-                    # Return the message sender generator to the client
-                    for item, need_validate in message_sender():
-                        # update the is_validate variable
-                        is_validate = need_validate
-                        # if the item is None we want to break the loop
-                        if item is None:
+                        if request is None or request_type == RequestType.EXIT:
+                            logger.info(f"Service {metadata.service_id} disconnected")
                             break
-                        # yield the item to the client
-                        yield item
-                    print("herer")
-                    # Signal to stop handle_incoming_messages
-                    stop_event.set()
 
-                    # if the service is the owner of the room and it is the last one in the room
-                    # we will eject all the members and delete the room
-                    if (
-                        metadata.service_role == "owner"
-                        and len(self.rooms.get_room(metadata.room_id).owners) <= 1
-                    ):
-                        # if the stream ends and the owner is the only one left in the room
-                        # eject all members
-                        self.rooms.publish_to_room(
-                            metadata.room_id, metadata.service_id, {}, RequestType.EXIT
-                        )
+                        # if the service is the owner of the room and the request is a validate request
+                        # we want to try to validate the request and if it is valid we want to return the func and disconnect all other members
+                        if (
+                            metadata.service_role == "owner"
+                            and metadata.service_id == sender_id
+                            and request_type == RequestType.VALIDATE
+                        ):
+                            logger.debug(
+                                f"Service: {metadata.service_id} want to validate the request"
+                            )
+                            yield (None, True)
+                            break
 
-                    # Leave the room
-                    with self.lock:
-                        self.rooms.remove_service_from_room(
-                            room_id=metadata.room_id,
-                            service_id=metadata.service_id,
-                            service_role=metadata.service_role,
+                        # yield the message to the client
+                        yield (
+                            service_pb2.ServiceResponse(
+                                success=True,
+                                message=str(request),
+                                service_id=self.service.service_id,
+                            ),
+                            False,
                         )
+                    logger.debug(
+                        f"Message sender finished for service {metadata.service_id}"
+                    )
 
-                    # if the service is the owner of the room and the request is a validate request
-                    # we want to try to validate the request and if it is valid we want to return the func
-                    if metadata.service_role == "owner" and is_validate:
-                        # get a copy of the final request from the room
-                        req = self.rooms.get_room(metadata.room_id).request.copy()
-                        # parse the request to the correct type
-                        request = json_format.ParseDict(
-                            req,
-                            service_pb2.StartServiceRequest(),
-                        )
-                        # Try to validate the request it will raise an error if the request is not valid
-                        validate(request)
-                        # call func and yield the result to the client
-                        for message in func(self, request, context):
-                            if message is None:
-                                break
-                            yield message
-                    print("over", metadata.service_role)
-                    # return None
-                    incoming_future.result()  # Wait for incoming message handler to complete
+                # Return the message sender generator to the client
+                for item, need_validate in message_sender():
+                    # update the is_validate variable
+                    is_validate = need_validate
+                    # if the item is None we want to break the loop
+                    if item is None:
+                        break
+                    # yield the item to the client
+                    yield item
+                # if the service is the owner of the room and it is the last one in the room
+                # we will eject all the members and delete the room
+                if (
+                    metadata.service_role == "owner"
+                    and len(self.rooms.get_room(metadata.room_id).owners) <= 1
+                ):
+                    # if the stream ends and the owner is the only one left in the room
+                    # eject all members
+                    self.rooms.publish_to_room(
+                        metadata.room_id, metadata.service_id, {}, RequestType.EXIT
+                    )
+
+                # Leave the room
+                with self.lock:
+                    self.rooms.remove_service_from_room(
+                        room_id=metadata.room_id,
+                        service_id=metadata.service_id,
+                        service_role=metadata.service_role,
+                    )
+
+                # if the service is the owner of the room and the request is a validate request
+                # we want to try to validate the request and if it is valid we want to return the func
+                if metadata.service_role == "owner" and is_validate:
+                    # get a copy of the final request from the room
+                    req = self.rooms.get_room(metadata.room_id).request.copy()
+                    # parse the request to the correct type
+                    request = json_format.ParseDict(
+                        req,
+                        service_pb2.StartServiceRequest(),
+                    )
+                    # Try to validate the request it will raise an error if the request is not valid
+                    validate(request)
+                    # call func and yield the result to the client
+                    for message in func(self, request, context):
+                        if message is None:
+                            break
+                        yield message
+
                 # Après incoming_future.result(), on arrête le service et ferme la connexion gRPC
                 logger.info(f"Stopping service for {metadata.service_id}")
                 context.set_code(grpc.StatusCode.OK)
@@ -555,7 +525,6 @@ def validate_stream_request():
             finally:
                 # Ensure that the service is always stopped and the connection is closed
                 logger.info(f"Finalizing service for {metadata.service_id}")
-                stop_event.set()  # Ensure the stop event is set
                 # You might want to add any cleanup code here
                 return  # This will stop the generator and close the gRPC connection if it hasn't been closed already
 

@@ -191,11 +191,8 @@ class Room:
         """
         Publish to all subscribers
         """
-        print(f"Service: {service_id} publish to all subscribers: {request}")
         self.__request = merge_dicts(self.__request, request)
-        print(f"Room: {self.id} \n\t- request: {self.__request}")
         for id, callback in self.__subscribers.items():
-            print(f"\t- From room: {self.id} - to service_id: {id}")
             callback(service_id, self.__request, request_type)
 
 
