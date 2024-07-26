@@ -1,7 +1,6 @@
 from typing import Callable, Tuple
 from pydantic import BaseModel, Field
 
-from google.protobuf import json_format, struct_pb2
 from kin_sdk.tool.base import BaseTool
 
 
@@ -57,15 +56,13 @@ class AdditionTool(BaseTool[AdditionInput, AdditionOutput, AdditionSetup]):
         print("Stopping the service")
 
 
-if __name__ == "__main__":
-    # ! First start the service registry server from the examples.server_registry.py file
-    test = {"input": {"last_numbers": [1, 2]}}
-    print(json_format.ParseDict(test, struct_pb2.Struct()))
-    # Create an instance of your custom tool
-    addition_tool = AdditionTool(
-        service_id="services:addition_tool",
-        service_address="localhost",
-        service_port=50053,
-        registry_address="localhost:50051",
-    )
-    addition_tool.serve()
+# if __name__ == "__main__":
+#     # ! First start the service registry server from the examples.server_registry.py file
+#     # Create an instance of your custom tool
+#     addition_tool = AdditionTool(
+#         service_id="services:addition_tool",
+#         service_address="localhost",
+#         service_port=50053,
+#         registry_address="localhost:50051",
+#     )
+#     addition_tool.serve()
