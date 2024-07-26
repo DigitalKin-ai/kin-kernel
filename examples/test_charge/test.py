@@ -29,39 +29,44 @@ def create_channel(server_address):
 
 
 def run_client(server_address, num_requests, results, event):
-    print(f"Client started, processing {num_requests} requests")
+    try:
+        print(f"Client started, processing {num_requests} requests")
 
-    with create_channel(server_address) as channel:
-        metadata = [("service_id", "test"), ("service_role", "owner")]
-        stub = ServiceStub(channel)
+        with create_channel(server_address) as channel:
+            metadata = [("service_id", "test"), ("service_role", "owner")]
+            stub = ServiceStub(channel)
 
-        start_time = time.time()
-        for i in range(num_requests):
-            print(f"{i + 1}/{num_requests}", end="\r")
-            try:
-                response_iterator = stub.StartService(
-                    iter([generate_request()]), metadata=metadata
-                )
+            start_time = time.time()
+            for i in range(num_requests):
+                print(f"{i + 1}/{num_requests}", end="\r")
+                try:
+                    response_iterator = stub.StartService(
+                        iter([generate_request()]), metadata=metadata
+                    )
 
-                timeout = time.time() + 5  # 5 seconds timeout
-                for response in response_iterator:
-                    if time.time() > timeout:
-                        print("Response timeout")
-                        break
-                    # Process response if needed
-            except grpc.RpcError as e:
-                results["errors"] += 1
-                print(f"RPC Error: {e}")
-            except Exception as e:
-                results["errors"] += 1
-                print(f"Unexpected error: {e}")
+                    timeout = time.time() + 5  # 5 seconds timeout
+                    for response in response_iterator:
+                        if time.time() > timeout:
+                            print("Response timeout")
+                            break
+                        # Process response if needed
+                except grpc.RpcError as e:
+                    results["errors"] += 1
+                    print(f"RPC Error: {e}")
+                except Exception as e:
+                    results["errors"] += 1
+                    print(f"Unexpected error: {e}")
 
-        end_time = time.time()
-        results["time"] = end_time - start_time
-        results["requests"] = num_requests
+            end_time = time.time()
+            results["time"] = end_time - start_time
+            results["requests"] = num_requests
 
-    print(f"Client finished, processed {num_requests} requests")
-    event.set()  # Signal that this client has finished
+        print(f"Client finished, processed {num_requests} requests")
+        event.set()  # Signal that this client has finished
+    except Exception as e:
+        print(f"Client error: {e}")
+    finally:
+        event.set()  # Assurez-vous que l'événement est toujours défini
 
 
 def run_load_test(server_address, num_clients, requests_per_client):
@@ -116,8 +121,8 @@ def timeout_handler(signum, frame):
 
 if __name__ == "__main__":
     server_address = "localhost:50052"  # Replace with your server address
-    num_clients = 20
-    requests_per_client = 10
+    num_clients = 124
+    requests_per_client = 64
 
     # Set a global timeout
     signal.signal(signal.SIGALRM, timeout_handler)

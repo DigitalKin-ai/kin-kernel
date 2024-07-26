@@ -7,7 +7,7 @@ import grpc
 
 from typing import Any, Generator
 from opentelemetry import trace
-from google.protobuf import json_format  # , struct_pb2
+from google.protobuf import json_format
 from pydantic import BaseModel
 
 from kin_sdk.common.validate_grpc_request import validate_grpc_request

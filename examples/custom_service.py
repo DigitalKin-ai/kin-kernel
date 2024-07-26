@@ -1,4 +1,3 @@
-import time
 from typing import Callable
 from pydantic import BaseModel
 
@@ -41,13 +40,13 @@ class CustomService(BaseService):
         exec_result = {"result": input_data.number * input_data.factor}
         callback(MultiplyOutput(**exec_result))
 
-        counter = 0
+        # counter = 0
 
-        while counter < 10:
-            # Implémentez la logique spécifique de l'outil ici
-            callback(MultiplyOutput(**exec_result))
-            counter += 1
-            time.sleep(0.05)
+        # while counter < 10:
+        #     # Implémentez la logique spécifique de l'outil ici
+        #     callback(MultiplyOutput(**exec_result))
+        #     counter += 1
+        #     time.sleep(0.05)
 
 
 if __name__ == "__main__":
@@ -59,6 +58,6 @@ if __name__ == "__main__":
         service_type="tool",
         service_port=50052,
         registry_address="localhost:50051",
-        max_workers=20,
+        max_workers=10,
     )
     custom_service.serve()

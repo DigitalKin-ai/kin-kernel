@@ -36,135 +36,21 @@ Usage:
     result = my_tool.execute(valid_input_data)
 """
 
-import json
-import inspect
-import threading
-from enum import Enum
 from abc import ABC, abstractmethod
-from typing import Type, TypeVar, Generic, Dict, Any, Union
+from typing import Callable, TypeVar
 
-from opentelemetry import trace
-from pydantic import BaseModel, ValidationError
-from google.protobuf import json_format, struct_pb2
+from pydantic import BaseModel
 
-import grpc
-import proto.digitalkin.service.v1.tool.tool_service_pb2 as tool_service_pb2
-import proto.digitalkin.service.v1.tool.tool_service_pb2_grpc as tool_service_pb2_grpc
+from kin_sdk.common.types import ServiceType
+from kin_sdk.service.base import BaseService
 
-from kin_sdk.common import (
-    validate_stream_grpc_request,
-    logger,
-    pydantic_validation_error,
-)
-from kin_sdk.grpc_services import ServiceServer
 
 InputModelT = TypeVar("InputModelT", bound=BaseModel)
 OutputModelT = TypeVar("OutputModelT", bound=BaseModel)
+SetupModelT = TypeVar("SetupModelT", bound=BaseModel)
 
 
-class ResponseType(str, Enum):
-    ERROR = "error"
-    SUCCESS = "success"
-
-
-class ResponseModel(BaseModel):
-    type: ResponseType
-    content: str
-
-
-class ToolService(tool_service_pb2_grpc.ToolServiceServicer):
-    def __init__(self, tool: "BaseTool"):
-        self.tool = tool
-        self.tracer = trace.get_tracer(self.tool.__class__.__name__)
-
-        self.rooms: Dict[str, Dict[str, Any]] = {}
-        self.lock = threading.Lock()
-        self.condition = threading.Condition(self.lock)
-
-    @validate_stream_grpc_request()
-    def ExecuteTool(
-        self,
-        request: Union[tool_service_pb2.ExecuteRequest, struct_pb2.Struct],
-        context: grpc.ServicerContext,
-    ):
-        with self.tracer.start_span("execute_tool"):
-            try:
-                # Extract service name from metadata
-                json_request = json_format.MessageToDict(
-                    request, preserving_proto_field_name=True
-                )
-                partial_request = json_request.get("partial_request", False)
-                if partial_request:
-                    # Send the response
-                    context.set_code(grpc.StatusCode.OK)
-                    context.set_details("Success")
-                    return tool_service_pb2.ExecuteResponse(
-                        success=True,
-                        output=json_format.ParseDict(
-                            {"message": "partial_request has been received."},
-                            struct_pb2.Struct(),
-                        ),
-                    )
-
-                input = json_request.get("input", None)
-                if input is None:
-                    raise ValueError("Input data is missing.")
-
-                # Parse and validate the input JSON using the input_format Pydantic model
-                input_data = self.tool.input_format.model_validate(input)
-
-                # Call the user-defined run method and get the output data
-                output_data = self.tool.execute(input_data)
-
-                # Validate and serialize the output using the output_format Pydantic model
-                output_data = self.tool.output_format(
-                    **output_data.model_dump()
-                ).model_dump()
-
-                # Reconvert in gRPC Struct proto format the output data
-                struct_response = json_format.ParseDict(
-                    output_data, struct_pb2.Struct()
-                )
-
-                # Send the response
-                context.set_code(grpc.StatusCode.OK)
-                context.set_details("Success")
-                return tool_service_pb2.ExecuteResponse(
-                    success=True, output=struct_response
-                )
-            except ValidationError as e:
-                error_message = pydantic_validation_error(e, context)
-                logger.error(error_message)  # Validation Error
-                # Reconvert in gRPC Struct proto format the output data
-                struct_response = json_format.ParseDict(
-                    {"message": error_message},
-                    struct_pb2.Struct(),
-                )
-                return tool_service_pb2.ExecuteResponse(
-                    success=False, output=struct_response
-                )
-            except Exception as e:
-                logger.error("Exception Error: %s", e)
-                context.set_code(grpc.StatusCode.INTERNAL)
-                context.set_details(str(e))
-
-                # Reconvert in gRPC Struct proto format the output data
-                struct_response = json_format.ParseDict(
-                    {"message": str(e)}, struct_pb2.Struct()
-                )
-                return tool_service_pb2.ExecuteResponse(
-                    success=False, output=struct_response
-                )
-
-    def add_to_server(self, server: grpc.Server) -> None:
-        tool_service_pb2_grpc.add_ToolServiceServicer_to_server(self, server)
-
-
-class BaseTool(Generic[InputModelT, OutputModelT], ServiceServer, ABC):
-    name: str
-    description: str
-    input_format: Type[InputModelT]
-    output_format: Type[OutputModelT]
+class BaseTool(BaseService[InputModelT, OutputModelT, SetupModelT], ABC):
 
     def __init__(
         self,
@@ -174,87 +60,50 @@ class BaseTool(Generic[InputModelT, OutputModelT], ServiceServer, ABC):
         registry_address: str,
         max_workers: int = 10,
     ):
-        self.registry_address = registry_address
-        self.max_workers = max_workers
+        """
+        Initializes the BaseTool.
+
+        :param service_id: The ID of the service.
+        :param service_address: The address of the service.
+        :param service_port: The port of the service.
+        :param registry_address: The address of the registry.
+        :param max_workers: The maximum number of worker threads.
+        """
         super().__init__(
             service_id=service_id,
             service_address=service_address,
             service_port=service_port,
-            service_type="tool",
-            servicer_class=ToolService,
-            servicer_kwargs=dict(tool=self),
+            service_type=ServiceType.TOOL,
             registry_address=registry_address,
             max_workers=max_workers,
         )
 
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        if not inspect.isabstract(cls):
-            required_attrs = ["name", "description", "input_format", "output_format"]
-            for attr in required_attrs:
-                if not hasattr(cls, attr) or getattr(cls, attr) is None:
-                    raise TypeError(
-                        f"Subclass '{cls.__name__}' must define a '{attr}' class variable."
-                    )
-
-    @classmethod
-    def get_name(cls) -> str:
+    @abstractmethod
+    def start(self) -> None:
         """
-        Get the name of the tool.
-
-        :return: The name of the tool.
-        :raises NotImplementedError: If the `name` is not defined.
+        Starts the tool.
         """
-        if cls.name is not None:
-            return cls.name
-        raise NotImplementedError(f"'{cls.__name__}' class does not define a 'role'.")
-
-    @classmethod
-    def get_description(cls) -> str:
-        """
-        Get the description of the cell.
-
-        :return: The description of the cell.
-        :raises NotImplementedError: If the `description` is not defined.
-        """
-        if cls.description is not None:
-            return cls.description
-        raise NotImplementedError(
-            f"'{cls.__name__}' class does not define a 'description'."
-        )
-
-    @classmethod
-    def get_input_format(cls) -> str:
-        """
-        Get the JSON schema of the input format model.
-
-        :return: The JSON schema of the input format as a string.
-        :raises NotImplementedError: If the `input_format` is not defined.
-        """
-        if cls.input_format is not None:
-            return json.dumps(cls.input_format.model_json_schema(), indent=2)
-        raise NotImplementedError(
-            f"'{cls.__name__}' class does not define an 'input_format'."
-        )
-
-    @classmethod
-    def get_output_format(cls) -> str:
-        """
-        Get the JSON schema of the output format model.
-
-        :return: The JSON schema of the output format as a string.
-        :raises NotImplementedError: If the `output_format` is not defined.
-        """
-        if cls.output_format is not None:
-            return json.dumps(cls.output_format.model_json_schema(), indent=2)
-        raise NotImplementedError(
-            f"'{cls.__name__}' class does not define an 'output_format'."
-        )
+        raise NotImplementedError("Tool must implement 'start' abstract method")
 
     @abstractmethod
-    def execute(self, input_data: InputModelT) -> OutputModelT:
+    def execute(
+        self,
+        input_data: InputModelT,
+        setup_id: str,
+        callback: Callable[[OutputModelT], None],
+    ) -> None:
         """
-        Process the input data and produce output.
-        This method must be implemented by all subclasses.
+        Executes the tool.
+
+        :param input_data: The input data for the tool.
+        :param setup_id: The ID of the setup for the tool.
+        :param callback: The callback to call with the output data.
         """
-        raise NotImplementedError("Subclasses must implement 'execute' abstract method")
+        raise NotImplementedError("Tool must implement 'execute' abstract method")
+
+    @abstractmethod
+    def stop(self) -> None:
+        """
+        Stops the tool.
+        """
+        raise NotImplementedError("Tool must implement 'stop' abstract method")
