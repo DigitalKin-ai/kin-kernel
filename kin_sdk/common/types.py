@@ -2,10 +2,21 @@
 TODO: sphinx docstring
 """
 
-from typing import Literal
+# from typing import Literal
 from enum import Enum
 
-ServiceType = Literal["trigger", "tool", "kin"]
+# ServiceType = Literal["trigger", "tool", "kin"]
+
+
+class ServiceType(Enum):
+    """
+    Enum for command types
+    """
+
+    UNKNOWN = "unknown"
+    TRIGGER = "trigger"
+    TOOL = "tool"
+    KIN = "kin"
 
 
 class RequestType(Enum):

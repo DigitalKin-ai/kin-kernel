@@ -1,6 +1,7 @@
 from typing import Callable
 from pydantic import BaseModel
 
+from kin_sdk.common.types import ServiceType
 from kin_sdk.service.base import BaseService
 
 
@@ -55,7 +56,7 @@ if __name__ == "__main__":
     custom_service = CustomService(
         service_id="multiplier1",
         service_address="localhost",
-        service_type="tool",
+        service_type=ServiceType.TOOL,
         service_port=50052,
         registry_address="localhost:50051",
         max_workers=10,

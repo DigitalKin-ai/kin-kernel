@@ -87,11 +87,15 @@ class Job(BaseModel):
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    input_data: BaseModel
-    setup_id: str
-    service_ids: List[str]
-    status: JobStatus
-    task: Future
+    input_data: BaseModel = Field(..., description="The input data for the job")
+    setup_id: str = Field(..., description="The setup ID for the job")
+    service_ids: List[str] = Field(
+        [], description="List of service IDs associated with the job"
+    )
+    status: JobStatus = Field(
+        JobStatus.STARTING, description="The current status of the job"
+    )
+    task: Future = Field(default_factory=Future)
     outputs: Queue = Field(default_factory=Queue)
     stop_event: threading.Event = Field(default_factory=threading.Event)
 
@@ -156,18 +160,24 @@ class JobManager:
         :return: The ID of the newly created job.
         """
         job_id = f"jobs:{uuid.uuid4().hex}"
+        start_event = threading.Event()
+
+        def wrapped_func():
+            start_event.wait()  # Attendre que le job soit stocké
+            return func(job_id, *args, **kwargs)
+
         try:
             job = Job(
                 input_data=input_data,
                 setup_id=setup_id,
                 service_ids=service_ids,
                 status=JobStatus.STARTING,
-                task=self.executor.submit(func, job_id, *args, **kwargs),
+                task=self.executor.submit(wrapped_func),
                 outputs=Queue(),
                 stop_event=threading.Event(),
             )
-            # job.task.result()  # Raise exception if task failed
             self.jobs[job_id] = job
+            start_event.set()  # Signaler que le job est stocké
             return job_id
         except Exception as e:
             raise e

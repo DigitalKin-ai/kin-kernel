@@ -42,7 +42,7 @@ class BaseKin(BaseService[InputModelT, OutputModelT, SetupModelT], ABC):
             service_id=service_id,
             service_address=service_address,
             service_port=service_port,
-            service_type=ServiceType.TRIGGER,
+            service_type=ServiceType.KIN,
             registry_address=registry_address,
             max_workers=max_workers,
         )

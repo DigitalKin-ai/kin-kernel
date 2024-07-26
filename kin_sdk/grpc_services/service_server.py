@@ -60,7 +60,7 @@ class ServiceServer(GRPCServerBase):
             stub = service_registry_pb2_grpc.ServiceRegistryStub(channel)
             request = service_registry_pb2.RegisterRequest(
                 service_id=self.service_id,
-                service_type=self.service_type,
+                service_type=self.service_type.value,
                 address=self.service_address,
                 port=self.port,
             )
@@ -88,7 +88,9 @@ class ServiceServer(GRPCServerBase):
                 )
                 service_model = {
                     "service_id": service_id,
-                    "service_type": json_response.get("service_type", None),
+                    "service_type": ServiceType[
+                        json_response.get("service_type", "unknown").upper()
+                    ],
                     "address": json_response.get("address", None),
                     "port": json_response.get("port", None),
                 }
