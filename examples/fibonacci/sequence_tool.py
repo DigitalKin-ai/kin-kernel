@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 from pydantic import BaseModel, Field
 
 from kin_sdk.tool.base import BaseTool
@@ -18,17 +18,33 @@ class SequenceOutput(BaseModel):
     fibonacci: List[int] = Field(..., description="The fibonacci sequence")
 
 
-class SequenceTool(BaseTool[SequenceInput, SequenceOutput]):
+class SequenceSetup(BaseModel):
+    pass
+
+
+class SequenceTool(BaseTool[SequenceInput, SequenceOutput, SequenceSetup]):
     name = "Sequence"
     description = "Buffer to save the fibonnaci sequence"
     input_format = SequenceInput
     output_format = SequenceOutput
+    setup_format = SequenceSetup
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fibonacci = None
 
-    def execute(self, input_data: SequenceInput) -> SequenceOutput:
+    def start(self) -> None:
+        """
+        Start the service
+        """
+        print("Starting the service")
+
+    def execute(
+        self,
+        input_data: SequenceInput,
+        setup_id: str,
+        callback: Callable[[SequenceSetup], None],
+    ) -> SequenceOutput:
         """
         Execute the addition tool
         """
@@ -36,6 +52,26 @@ class SequenceTool(BaseTool[SequenceInput, SequenceOutput]):
             self.fibonacci = list(input_data.initial_numbers)
         if input_data.new_numbers:
             self.fibonacci.append(input_data.new_numbers)
-        return SequenceOutput(
-            last_number=input_data.new_numbers, fibonacci=self.fibonacci
+
+        callback(
+            SequenceOutput(last_number=input_data.new_numbers, fibonacci=self.fibonacci)
         )
+
+    def stop(self) -> None:
+        """
+        Stop the service
+        """
+        print("Stopping the service")
+
+
+if __name__ == "__main__":
+    # ! First start the service registry server from the examples.server_registry.py file
+    test = {"input": {"last_numbers": [1, 2]}}
+    # Create an instance of your custom tool
+    sequence_tool = SequenceTool(
+        service_id="services:sequence_tool",
+        service_address="localhost",
+        service_port=50053,
+        registry_address="localhost:50051",
+    )
+    sequence_tool.serve()

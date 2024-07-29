@@ -55,7 +55,7 @@ if __name__ == "__main__":
     test = {"input": {"last_numbers": [1, 2]}}
     # Create an instance of your custom tool
     display_tool = DisplayTool(
-        service_id="services:addition_tool",
+        service_id="services:display_tool",
         service_address="localhost",
         service_port=50053,
         registry_address="localhost:50051",
