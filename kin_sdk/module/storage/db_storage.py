@@ -74,9 +74,9 @@ class DBStorage(BaseStorage):
         try:
             async with setup_surrealdb_connection() as db:
                 # Assign the variable on the connection
-                print(
-                    f"RETURN (SELECT * FROM type::table('setups') WHERE kin_id=type::thing('kins:{kin_id}') AND id=type::thing('setups:{setup_id}'))[0]"
-                )
+                # print(
+                #     f"RETURN (SELECT * FROM type::table('setups') WHERE kin_id=type::thing('kins:{kin_id}') AND id=type::thing('setups:{setup_id}'))[0]"
+                # )
                 result = await db.query(
                     "RETURN (SELECT * FROM type::table('setups') WHERE kin_id=type::thing($kid) AND id=type::thing($setup))[0]",
                     {

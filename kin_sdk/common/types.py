@@ -19,7 +19,7 @@ class ServiceType(Enum):
     VIEW = "view"
 
     @staticmethod
-    def get(value: str, default: Union["ServiceType" | None] = None) -> "ServiceType":
+    def get(value: str, default: Union["ServiceType", None] = None) -> "ServiceType":
         return (
             ServiceType(value)
             if value in ServiceType._value2member_map_
@@ -38,7 +38,7 @@ class RequestType(Enum):
     DESTROY = "DESCTROY"
 
     @staticmethod
-    def get(value: str, default: Union["RequestType" | None] = None) -> "RequestType":
+    def get(value: str, default: Union["RequestType", None] = None) -> "RequestType":
         return (
             RequestType(value)
             if value in RequestType._value2member_map_

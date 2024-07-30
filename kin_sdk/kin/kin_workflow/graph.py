@@ -9,7 +9,7 @@ import networkx as nx
 
 from kin_sdk.common.types import ServiceType
 from kin_sdk.kin.kin_workflow.edge import Edge
-from kin_sdk.kin.kin_workflow.node import Node
+from kin_sdk.kin.kin_workflow.node import InputData, Node
 
 
 class GraphExecutor:
@@ -41,25 +41,29 @@ class GraphExecutor:
         """
         Initializes the nodes in the graph.
         """
-        # format the setups data
-        formated_setups = {
-            data["service_id"]: data.get("content", {})
-            for data in setups.get("data", [])
-            if data.get("service_id", None) is not None
-        }
+        try:
+            # format the setups data
+            formated_setups = {
+                data["service_id"]: data.get("content", {})
+                for data in setups.get("data", [])
+                if data.get("service_id", None) is not None
+            }
 
-        return {
-            node["id"]: Node(
-                node_id=node["id"],
-                node_type=node["type"],
-                service_type=ServiceType.get(node["data"]["type"]),
-                service_id=node["data"]["id"],
-                inputs=node["data"]["targets"],
-                outputs=node["data"]["sources"],
-                setup=formated_setups.get(f"services:{node['data']['id']}", {}),
-            )
-            for node in nodes["nodes"]
-        }
+            return {
+                node["id"]: Node(
+                    node_id=node["id"],
+                    node_type=node["type"],
+                    service_type=ServiceType.get(node["data"]["type"]),
+                    service_id=node["data"]["id"],
+                    inputs=node["data"]["targets"],
+                    outputs=node["data"]["sources"],
+                    setup=formated_setups.get(f"services:{node['data']['id']}", {}),
+                )
+                for node in nodes
+            }
+        except Exception as e:
+            print(f"Error initializing nodes: {e}")
+            return {}
 
     def init_edges(self, edges: List[Dict[str, Any]]) -> None:
         """
@@ -68,31 +72,36 @@ class GraphExecutor:
         Args:
             edges (List[Dict[str, Any]]): The edges to add.
         """
-        for edge in edges:
-            source_handle = edge.get("source_handle", "").split(":::") + [
-                "",
-                "",
-            ]  # prevent error if source_handle is None
-            target_handle = edge.get("target_handle", "").split(":::") + [
-                "",
-                "",
-            ]  # prevent error if target_handle is None
+        try:
+            for edge in edges:
+                source_handle = edge.get("source_handle", "").split(":::") + [
+                    "",
+                    "",
+                ]  # prevent error if source_handle is None
+                target_handle = edge.get("target_handle", "").split(":::") + [
+                    "",
+                    "",
+                ]  # prevent error if target_handle is None
 
-            # Add the edge to the graph
-            self.graph.add_edge(
-                Edge(
-                    source=edge["source"],
-                    target=edge["target"],
-                    source_handle={
-                        "type": source_handle[0],
-                        "label": source_handle[1],
-                    },
-                    target_handle={
-                        "type": target_handle[0],
-                        "label": target_handle[1],
-                    },
+                # Add the edge to the graph
+                self.graph.add_edge(
+                    edge["source"],
+                    edge["target"],
+                    metadata=Edge(
+                        source=edge["source"],
+                        target=edge["target"],
+                        source_handle={
+                            "type": source_handle[0],
+                            "label": source_handle[1],
+                        },
+                        target_handle={
+                            "type": target_handle[0],
+                            "label": target_handle[1],
+                        },
+                    ),
                 )
-            )
+        except Exception as e:
+            print(f"Error initializing edges: {e}")
 
     def get_services_nodes(self, service_type: ServiceType) -> List[str]:
         """
@@ -133,7 +142,10 @@ class GraphExecutor:
             pass
 
     def update_successor_inputs(
-        self, successor_id: str, source_data: Dict[str, Any], edge_data_pred_succ: Edge
+        self,
+        successor_id: str,
+        source_data: Dict[str, Any],
+        edge_data_pred_succ: Union[Edge, None],
     ) -> None:
         """
         Updates the inputs/target of a successor node based on the output/source of a predecessor node.
@@ -143,19 +155,58 @@ class GraphExecutor:
             source_data (Dict[str, Any]): The output data from the predecessor node are edge sources data.
             edge_data_pred_suc (Edge): The edge data connecting the predecessor node with successor.
         """
-        successor: Union[Node | None] = self.nodes.get(successor_id, None)
+        if edge_data_pred_succ is None:
+            print("no edge data")
+            return
+        successor: Union[Node, None] = self.nodes.get(successor_id, None)
         source_label = edge_data_pred_succ.get_source_label()
         target_label = edge_data_pred_succ.get_target_label()
 
         if successor is None or source_label is None or target_label is None:
             return
 
-        print(f"source_label: {target_label}")
-
         for label in source_data:
             if label == source_label:
                 successor.update_input(target_label, source_data[label])
                 break
+
+    def verify_input_values(self, input_data: Dict[str, InputData]) -> bool:
+        """
+        Verifies if all inputs have values except for optional inputs.
+
+        Args:
+            input_data (Dict[str, Any]): The input data for the node.
+
+        Returns:
+            bool: True if all inputs have values except for optional inputs, False otherwise.
+        """
+        return all(
+            (input.value is not None or input.optional) for input in input_data.values()
+        )
+
+    def verify_update_values(
+        self,
+        input_data: Dict[str, InputData],
+        last_execution: Union[datetime.datetime, None],
+    ) -> bool:
+        """
+        Verifies if any nodes has been updated except for nodes that have never been executed.
+
+        Args:
+            input_data (Dict[str, Any]): The input data for the node.
+            last_execution (datetime.datetime): The timestamp of the last execution.
+
+        Returns:
+            bool: True if any nodes has been updated except for nodes that have never been executed, False otherwise.
+        """
+        return any(
+            (
+                input.updated_at is None
+                or last_execution is None
+                or input.updated_at > last_execution
+            )
+            for input in input_data.values()
+        )
 
     async def async_execute_node(
         self, node_id: str, service_callback: Callable
@@ -166,46 +217,41 @@ class GraphExecutor:
         Args:
             node_id (str): The ID of the node to execute.
         """
-        node = self.nodes[node_id]
+        node = self.nodes.get(node_id, None)
+        if node is None:
+            raise ValueError(f"Node {node_id} not found.")
         print(
             f"\n\n----\n{datetime.datetime.now()} - Executing node {node.service_type}:{node_id}."
         )
         # construct input data
         input_data = {
-            input["label"]: {
-                "value": input.get("value", None),
-                "updated_at": input.get("updated_at", None),
-                "optional": input.get("optional", False),
-            }
-            for input in node.inputs
-            if "label" in input
+            input.label: input for input in node.inputs if input.label is not None
         }
 
-        # Verify if all inputs have values except for optional inputs
-        verify_values = [
-            (values["value"] is not None or values.get("optional", False))
-            for values in input_data.values()
-        ]
-        # Verify if all nodes has been updated except for nodes that have never been executed
-        verify_update = [
-            values["updated_at"] is None
-            or node.last_execution is None  # ? pas sur
-            or values["updated_at"] > node.last_execution
-            for values in input_data.values()
-        ]
+        # True if all inputs have values except for optional inputs, False otherwise.
+        # verify validity of inputs
+        all_values_are_valide = self.verify_input_values(input_data)
+
+        # Verify if any nodes has been updated except for nodes that have never been executed
+        # verify if any change has occured in the input data
+        any_value_has_been_updated = self.verify_update_values(
+            input_data, node.last_execution
+        )
 
         # Verify if it is the initial trigger node
         initial_trigger = (
-            node.service_type == "trigger" and node.last_execution is None
+            node.service_type == ServiceType.TRIGGER and node.last_execution is None
         )  # TODO: improve that
 
         try:
             # Verify if it not the initial_trigger and if all inputs have values except for optional inputs
             # and if all nodes has been updated except for nodes that have never been executed
             # if not, skip the node
-            print(f"verify_values: {verify_values}")
-            print(f"verify_update: {verify_update}")
-            if not initial_trigger and not (all(verify_values) and any(verify_update)):
+            if not initial_trigger and (
+                not all_values_are_valide or not any_value_has_been_updated
+            ):
+                print(f"all_values_are_valide: {all_values_are_valide}")
+                print(f"any_value_has_been_updated: {any_value_has_been_updated}")
                 print(
                     f"{datetime.datetime.now()} - Skipping node {node_id} due to input conditions."
                 )
@@ -213,64 +259,64 @@ class GraphExecutor:
 
             with self.lock:
                 # Launch the node execution in a thread-safe manner and retrieve the output data
-                output_data = await node.execute(input_data, service_callback)
+                output_data = await node.execute(service_callback)  # TODO: here
 
                 # Propagate the output data to the successors
                 for successor in self.graph.successors(node_id):
-                    print(f"output_data: {output_data}")
-                    print(f"node_id: {node_id}")
+                    print(f"\t-> node_id: {node_id} has successor: {successor}")
                     self.update_successor_inputs(
                         successor,
                         output_data,
-                        self.graph.get_edge_data(node_id, successor),
+                        self.graph.get_edge_data(node_id, successor).get(
+                            "metadata", None
+                        ),
                     )
+                    # automatically adding all successors to the execution queue
+                    self.execution_queue.put(successor)  # ? sure about that ?
+                    print(f"\t\t- Adding successor {successor} to the execution queue.")
 
-                    # construct input data for successor
-                    successor_input_data = {
-                        input["label"]: {
-                            "value": input.get("value", None),
-                            "updated_at": input.get("updated_at", None),
-                            "optional": input.get("optional", False),
-                        }
-                        for input in self.nodes[successor].inputs
-                        if "label" in input
-                    }
+                    # # construct input data for successor
+                    # successor_input_data = {
+                    #     input.label: input
+                    #     for input in self.nodes[successor].inputs
+                    #     if input.label is not None
+                    # }
 
-                    # Verify if all inputs have values except for optional inputs
-                    verify_successor_values = [
-                        (values["value"] is not None or values.get("optional", False))
-                        for values in successor_input_data.values()
-                    ]
-                    # Verify if all nodes has been updated except for nodes that have never been executed
-                    print(f"node.last_execution: {node.last_execution}")
-                    verify_successor_update = [
-                        values["updated_at"] is None
-                        or node.last_execution is None  # ? pas sur
-                        or values["updated_at"] > node.last_execution
-                        for values in successor_input_data.values()
-                    ]
+                    # # Verify if all inputs have values except for optional inputs
+                    # verify_successor_values = [
+                    #     (values["value"] is not None or values.get("optional", False))
+                    #     for values in successor_input_data.values()
+                    # ]
+                    # # Verify if all nodes has been updated except for nodes that have never been executed
+                    # print(f"node.last_execution: {node.last_execution}")
+                    # verify_successor_update = [
+                    #     values["updated_at"] is None
+                    #     or node.last_execution is None  # ? pas sur
+                    #     or values["updated_at"] > node.last_execution
+                    #     for values in successor_input_data.values()
+                    # ]
 
-                    # Verify if all inputs have values except for optional inputs
-                    # and if all nodes has been updated except for nodes that have never been executed
-                    # if not, skip the successor else add it to the execution queue
+                    # # Verify if all inputs have values except for optional inputs
+                    # # and if all nodes has been updated except for nodes that have never been executed
+                    # # if not, skip the successor else add it to the execution queue
 
-                    print(f"verify_successor_values: {verify_successor_values}")
-                    print(f"verify_successor_update: {verify_successor_update}")
-                    print(f"Values: {successor_input_data}")
-                    if not (
-                        all(verify_successor_values) and any(verify_successor_update)
-                    ):
-                        print(
-                            f"{datetime.datetime.now()} - Skipping successor {successor} due to input conditions."
-                        )
-                        continue
-                    else:
-                        self.execution_queue.put(successor)
-                        print(
-                            f"{datetime.datetime.now()} - Adding node {successor} to execution queue."
-                        )
+                    # print(f"verify_successor_values: {verify_successor_values}")
+                    # print(f"verify_successor_update: {verify_successor_update}")
+                    # print(f"Values: {successor_input_data}")
+                    # if not (
+                    #     all(verify_successor_values) and any(verify_successor_update)
+                    # ):
+                    #     print(
+                    #         f"{datetime.datetime.now()} - Skipping successor {successor} due to input conditions."
+                    #     )
+                    #     continue
+                    # else:
+                    #     self.execution_queue.put(successor)
+                    #     print(
+                    #         f"{datetime.datetime.now()} - Adding node {successor} to execution queue."
+                    #     )
                 # Update the node execution count and timestamp
-                self.nodes[node_id].last_execution = datetime.datetime.now()
+                # self.nodes[node_id].last_execution = datetime.datetime.now()
         except Exception as e:
             print(f"{datetime.datetime.now()} - Error executing node {node_id}: {e}")
             self.error_occurred.set()
@@ -305,15 +351,17 @@ class GraphExecutor:
                     )
                 )
                 or futures
-            ):
+            ):  # ! This entire condition seem wrong
                 # Check if an error occurred during execution
                 if self.error_occurred.is_set():
                     break
 
                 # While the execution queue is not empty, submit nodes for execution
+                # Iterate over the node_id execution queue and store them inside futures
+                # in order to execute them in parallel
                 while not self.execution_queue.empty():
                     # Get the next node to execute
-                    node_id = self.execution_queue.get()
+                    node_id: Union[str, None] = self.execution_queue.get()
                     print(
                         f"{datetime.datetime.now()} - Getting node {node_id} from execution queue."
                     )

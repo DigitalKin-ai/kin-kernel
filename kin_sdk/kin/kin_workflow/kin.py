@@ -10,6 +10,7 @@ from pydantic import BaseModel, create_model, Field
 from kin_sdk.grpc_services.models import ServiceModel
 from kin_sdk.kin.base import BaseKin
 from kin_sdk.common import logger
+from kin_sdk.kin.kin_workflow.node import InputData
 from kin_sdk.module.storage import DBStorage
 from kin_sdk.kin.kin_workflow.graph import GraphExecutor
 
@@ -212,8 +213,11 @@ class KinWorkflow(BaseKin):
 
         sequence = [1, 1]
 
-        async def service_callback(service_id: str):
+        async def service_callback(
+            service_id: str, input_data: InputData
+        ) -> Dict[str, Any]:
             print(f"Service callback: {service_id}")
+            # print(f"Input data: {input_data}")
             if service_id == "fibonacci_trigger":
                 return {"initial_numbers": (1, 1)}
             elif service_id == "sequence_tool":
