@@ -123,7 +123,7 @@ class KinWorkflow(BaseKin):
                 )
 
             # If the data_type is different from the service_type, we raise an error
-            if data_type != service_model.service_type:
+            if data_type != service_model.service_type.value:
                 raise ValueError(
                     f"The {data_type}: {data_id} has been registred as a {service_model.service_type} in the service registry but as a {service_model.service_type} in the workflow.",
                 )
@@ -195,7 +195,7 @@ class KinWorkflow(BaseKin):
     def execute(
         self,
         input_data: WorkflowInput,
-        setup_data: WorkflowSetup,
+        setup_id: str,
         callback: Callable[[WorkflowOutput], None],
     ) -> None:
         """
@@ -205,13 +205,29 @@ class KinWorkflow(BaseKin):
         print("trigger_id: ", input_data.trigger_id)
         inputs_schema = self.get_kin_input()
         print(inputs_schema.get(input_data.trigger_id, {}))
+
         initial_node = self.graphs_executor.get_node_id_by_service_id(
             input_data.trigger_id
         )
 
+        sequence = [1, 1]
+
         async def service_callback(service_id: str):
             print(f"Service callback: {service_id}")
-            raise NotImplementedError
+            if service_id == "fibonacci_trigger":
+                return {"initial_numbers": (1, 1)}
+            elif service_id == "sequence_tool":
+                # inputs: initial_numbers / new_numbers
+                return {"last_number": sequence[-1], "fibonacci_list": sequence}
+            elif service_id == "addition_tool":
+                # inputs: last_numbers (tuple)
+                sequence.append(sequence[-1] + sequence[-2])
+                return {"next_number": sequence[-1]}
+            elif service_id == "display_tool":
+                # inputs: fibonacci_list / new_number
+                print(f"Sequence: {sequence}")
+                return {}
+            # raise NotImplementedError
 
         self.graphs_executor.execute(
             initial_node, service_callback

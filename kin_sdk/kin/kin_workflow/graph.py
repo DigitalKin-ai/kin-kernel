@@ -1,12 +1,14 @@
 import datetime
 import asyncio
 import threading
-from typing import Any, Dict, List, Literal, Callable
+from typing import Any, Dict, List, Callable, Union
 from queue import Queue
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import networkx as nx
 
+from kin_sdk.common.types import ServiceType
+from kin_sdk.kin.kin_workflow.edge import Edge
 from kin_sdk.kin.kin_workflow.node import Node
 
 
@@ -24,40 +26,81 @@ class GraphExecutor:
 
     def __init__(self, graph: Dict[str, Any], setups: Dict[str, Any]):
         self.graph = nx.DiGraph()
+
+        self.nodes = self.init_nodes(graph["nodes"], setups)
+        self.init_edges(graph["edges"])
+        self.setups = setups
+
+        self.error_occurred = threading.Event()
+        self.execution_queue = Queue()
+        self.lock = threading.Lock()
+
+    def init_nodes(
+        self, nodes: List[Dict[str, Any]], setups: Dict[str, Any]
+    ) -> Dict[str, Node]:
+        """
+        Initializes the nodes in the graph.
+        """
         # format the setups data
         formated_setups = {
             data["service_id"]: data.get("content", {})
             for data in setups.get("data", [])
             if data.get("service_id", None) is not None
         }
-        # create the nodes
-        self.nodes = {
+
+        return {
             node["id"]: Node(
                 node_id=node["id"],
                 node_type=node["type"],
-                service_type=node["data"]["type"],
+                service_type=ServiceType.get(node["data"]["type"]),
                 service_id=node["data"]["id"],
                 inputs=node["data"]["targets"],
                 outputs=node["data"]["sources"],
                 setup=formated_setups.get(f"services:{node['data']['id']}", {}),
             )
-            for node in graph["nodes"]
+            for node in nodes["nodes"]
         }
-        self.add_edges(graph["edges"])
-        self.error_occurred = threading.Event()
-        self.execution_queue = Queue()
-        self.lock = threading.Lock()
-        self.setups = setups
 
-    def get_services_nodes(
-        self, service_type: Literal["trigger", "tool", "kin", "view"]
-    ) -> List[str]:
+    def init_edges(self, edges: List[Dict[str, Any]]) -> None:
         """
-        Returns the trigger nodes in the graph.
+        Adds edges to the graph.
+
+        Args:
+            edges (List[Dict[str, Any]]): The edges to add.
+        """
+        for edge in edges:
+            source_handle = edge.get("source_handle", "").split(":::") + [
+                "",
+                "",
+            ]  # prevent error if source_handle is None
+            target_handle = edge.get("target_handle", "").split(":::") + [
+                "",
+                "",
+            ]  # prevent error if target_handle is None
+
+            # Add the edge to the graph
+            self.graph.add_edge(
+                Edge(
+                    source=edge["source"],
+                    target=edge["target"],
+                    source_handle={
+                        "type": source_handle[0],
+                        "label": source_handle[1],
+                    },
+                    target_handle={
+                        "type": target_handle[0],
+                        "label": target_handle[1],
+                    },
+                )
+            )
+
+    def get_services_nodes(self, service_type: ServiceType) -> List[str]:
+        """
+        Returns nodes from a specific type from the graph.
         :param service_type: The type of service to search for.
 
         Returns:
-            List[str]: The IDs of the trigger nodes.
+            List[str]: The IDs of the found nodes.
         """
         return [
             (node_id, node.service_id)
@@ -78,30 +121,6 @@ class GraphExecutor:
                 return node_id
         return ""
 
-    def add_edges(self, edges: List[Dict[str, Any]]) -> None:
-        """
-        Adds edges to the graph.
-
-        Args:
-            edges (List[Dict[str, Any]]): The edges to add.
-        """
-        for edge in edges:
-            source_handle = edge.get("sourceHandle", "").split(":::") + ["", ""]
-            target_handle = edge.get("targetHandle", "").split(":::") + ["", ""]
-
-            self.graph.add_edge(
-                edge["source"],
-                edge["target"],
-                source_handle={
-                    "type": source_handle[0],
-                    "label": source_handle[1],
-                },
-                target_handle={
-                    "type": target_handle[0],
-                    "label": target_handle[1],
-                },
-            )
-
     def check_for_cycles(self) -> None:
         """
         Checks the graph for cycles and raises an exception if any are found.
@@ -114,29 +133,28 @@ class GraphExecutor:
             pass
 
     def update_successor_inputs(
-        self, successor_id: str, source_data: Dict[str, Any], edge_data: Dict[str, Any]
+        self, successor_id: str, source_data: Dict[str, Any], edge_data_pred_succ: Edge
     ) -> None:
         """
-        Updates the inputs of a successor node based on the output of a predecessor node.
+        Updates the inputs/target of a successor node based on the output/source of a predecessor node.
 
         Args:
             successor_id (str): The ID of the successor node.
-            source_data (Dict[str, Any]): The output data from the predecessor node.
-            edge_data (Dict[str, Any]): The edge data connecting the nodes.
+            source_data (Dict[str, Any]): The output data from the predecessor node are edge sources data.
+            edge_data_pred_suc (Edge): The edge data connecting the predecessor node with successor.
         """
-        successor = self.nodes[successor_id]
-        source_label = edge_data.get("source_handle", {}).get("label", None)
-        target_label = edge_data.get("target_handle", {}).get("label", None)
+        successor: Union[Node | None] = self.nodes.get(successor_id, None)
+        source_label = edge_data_pred_succ.get_source_label()
+        target_label = edge_data_pred_succ.get_target_label()
 
-        if source_label is None or target_label is None:
+        if successor is None or source_label is None or target_label is None:
             return
+
+        print(f"source_label: {target_label}")
 
         for label in source_data:
             if label == source_label:
-                for input in successor.inputs:
-                    if input["label"] == target_label:
-                        input["value"] = source_data[label]
-                        input["updated_at"] = datetime.datetime.now()
+                successor.update_input(target_label, source_data[label])
                 break
 
     async def async_execute_node(
@@ -170,7 +188,9 @@ class GraphExecutor:
         ]
         # Verify if all nodes has been updated except for nodes that have never been executed
         verify_update = [
-            values["updated_at"] is None or values["updated_at"] > node.last_execution
+            values["updated_at"] is None
+            or node.last_execution is None  # ? pas sur
+            or values["updated_at"] > node.last_execution
             for values in input_data.values()
         ]
 
@@ -183,6 +203,8 @@ class GraphExecutor:
             # Verify if it not the initial_trigger and if all inputs have values except for optional inputs
             # and if all nodes has been updated except for nodes that have never been executed
             # if not, skip the node
+            print(f"verify_values: {verify_values}")
+            print(f"verify_update: {verify_update}")
             if not initial_trigger and not (all(verify_values) and any(verify_update)):
                 print(
                     f"{datetime.datetime.now()} - Skipping node {node_id} due to input conditions."
@@ -195,6 +217,8 @@ class GraphExecutor:
 
                 # Propagate the output data to the successors
                 for successor in self.graph.successors(node_id):
+                    print(f"output_data: {output_data}")
+                    print(f"node_id: {node_id}")
                     self.update_successor_inputs(
                         successor,
                         output_data,
@@ -218,8 +242,10 @@ class GraphExecutor:
                         for values in successor_input_data.values()
                     ]
                     # Verify if all nodes has been updated except for nodes that have never been executed
+                    print(f"node.last_execution: {node.last_execution}")
                     verify_successor_update = [
                         values["updated_at"] is None
+                        or node.last_execution is None  # ? pas sur
                         or values["updated_at"] > node.last_execution
                         for values in successor_input_data.values()
                     ]
@@ -227,13 +253,17 @@ class GraphExecutor:
                     # Verify if all inputs have values except for optional inputs
                     # and if all nodes has been updated except for nodes that have never been executed
                     # if not, skip the successor else add it to the execution queue
+
+                    print(f"verify_successor_values: {verify_successor_values}")
+                    print(f"verify_successor_update: {verify_successor_update}")
+                    print(f"Values: {successor_input_data}")
                     if not (
                         all(verify_successor_values) and any(verify_successor_update)
                     ):
                         print(
                             f"{datetime.datetime.now()} - Skipping successor {successor} due to input conditions."
                         )
-                        return
+                        continue
                     else:
                         self.execution_queue.put(successor)
                         print(
@@ -263,7 +293,7 @@ class GraphExecutor:
         )
 
         # Execute the nodes in parallel using a thread pool
-        with ThreadPoolExecutor(max_workers=10) as executor:
+        with ThreadPoolExecutor(max_workers=10) as executor:  # TODO thread number
             futures = {}
             # Keep executing nodes until the execution queue is empty and all nodes have completed and all futures have completed
             while (

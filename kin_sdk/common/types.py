@@ -4,8 +4,7 @@ TODO: sphinx docstring
 
 # from typing import Literal
 from enum import Enum
-
-# ServiceType = Literal["trigger", "tool", "kin"]
+from typing import Union
 
 
 class ServiceType(Enum):
@@ -17,6 +16,15 @@ class ServiceType(Enum):
     TRIGGER = "trigger"
     TOOL = "tool"
     KIN = "kin"
+    VIEW = "view"
+
+    @staticmethod
+    def get(value: str, default: Union["ServiceType" | None] = None) -> "ServiceType":
+        return (
+            ServiceType(value)
+            if value in ServiceType._value2member_map_
+            else default or ServiceType.UNKNOWN
+        )
 
 
 class RequestType(Enum):
@@ -28,3 +36,11 @@ class RequestType(Enum):
     EXIT = "EXIT"
     VALIDATE = "VALIDATE"
     DESTROY = "DESCTROY"
+
+    @staticmethod
+    def get(value: str, default: Union["RequestType" | None] = None) -> "RequestType":
+        return (
+            RequestType(value)
+            if value in RequestType._value2member_map_
+            else default or RequestType.SEND
+        )

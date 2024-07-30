@@ -15,7 +15,7 @@ class SequenceInput(BaseModel):
 
 class SequenceOutput(BaseModel):
     last_number: int = Field(..., description="The last number in fibonacci sequence")
-    fibonacci: List[int] = Field(..., description="The fibonacci sequence")
+    fibonacci_list: List[int] = Field(..., description="The fibonacci sequence")
 
 
 class SequenceSetup(BaseModel):

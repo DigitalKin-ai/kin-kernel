@@ -2,6 +2,8 @@ import datetime
 import time
 from typing import Any, Dict, List, Callable
 
+from kin_sdk.common.types import ServiceType
+
 
 class Node:
     """
@@ -22,7 +24,7 @@ class Node:
         self,
         node_id: str,
         node_type: str,
-        service_type: str,
+        service_type: ServiceType,
         service_id: str,
         inputs: List[Dict[str, Any]],
         outputs: List[Dict[str, Any]],
@@ -54,21 +56,26 @@ class Node:
         """
         self.status = "running"
         print(f"Executing node {self.service_type}:{self.node_id}")
-        await service_callback(self.service_id)
+        output_result = await service_callback(self.service_id)
+
         time.sleep(5)  # Simulate some work being done
         output_data = {
-            output["label"]: f"output_of_{output['label']}_{self.node_id}"
+            output["label"]: (
+                output_result.get(output["label"], None) if output_result else None
+            )
             for output in self.outputs
         }
-        print(output_data)
         self.outputs = [
             {
                 **output,
-                "value": f"output_of_{output['label']}_{self.node_id}",
+                "value": output_result.get(output["label"], None),
                 "updated_at": datetime.datetime.now(),
             }
             for output in self.outputs
         ]
+        print(output_data)
+        print(self.outputs)
+
         self.status = "completed"
         return output_data
 
@@ -86,3 +93,10 @@ class Node:
             "setup_id": setup_id,
             "setup_data": f"setup_data_{setup_id}",
         }
+
+    def update_input(self, label: str, value: Any) -> None:
+        for input in self.inputs:
+            print(f"input: {input}, label: {label}")
+            if input["label"] == label:
+                input["value"] = value
+                input["updated_at"] = datetime.datetime.now()

@@ -5,7 +5,7 @@ from kin_sdk.tool.base import BaseTool
 
 
 class DisplayInput(BaseModel):
-    fibonacci: List[int] = Field(..., description="The fibonacci sequence")
+    fibonacci_list: List[int] = Field(..., description="The fibonacci sequence")
     new_number: int = Field(..., description="The new number of fibonacci sequence")
 
 
