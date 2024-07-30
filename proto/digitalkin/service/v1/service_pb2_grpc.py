@@ -17,7 +17,7 @@ class ServiceStub(object):
         self.StartService = channel.stream_stream(
                 '/digitalkin.service.v1.Service/StartService',
                 request_serializer=digitalkin_dot_service_dot_v1_dot_service__pb2.StartServiceRequest.SerializeToString,
-                response_deserializer=digitalkin_dot_service_dot_v1_dot_service__pb2.ServiceResponse.FromString,
+                response_deserializer=digitalkin_dot_service_dot_v1_dot_service__pb2.StartServiceResponse.FromString,
                 )
         self.StopService = channel.unary_unary(
                 '/digitalkin.service.v1.Service/StopService',
@@ -69,7 +69,8 @@ class ServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def GetServiceOutput(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """rpc GetServiceSetup (GetServiceSetupRequest) returns (ServiceSetupResponse);
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -80,7 +81,7 @@ def add_ServiceServicer_to_server(servicer, server):
             'StartService': grpc.stream_stream_rpc_method_handler(
                     servicer.StartService,
                     request_deserializer=digitalkin_dot_service_dot_v1_dot_service__pb2.StartServiceRequest.FromString,
-                    response_serializer=digitalkin_dot_service_dot_v1_dot_service__pb2.ServiceResponse.SerializeToString,
+                    response_serializer=digitalkin_dot_service_dot_v1_dot_service__pb2.StartServiceResponse.SerializeToString,
             ),
             'StopService': grpc.unary_unary_rpc_method_handler(
                     servicer.StopService,
@@ -125,7 +126,7 @@ class Service(object):
             metadata=None):
         return grpc.experimental.stream_stream(request_iterator, target, '/digitalkin.service.v1.Service/StartService',
             digitalkin_dot_service_dot_v1_dot_service__pb2.StartServiceRequest.SerializeToString,
-            digitalkin_dot_service_dot_v1_dot_service__pb2.ServiceResponse.FromString,
+            digitalkin_dot_service_dot_v1_dot_service__pb2.StartServiceResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

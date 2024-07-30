@@ -62,6 +62,15 @@ class Node:
         self.last_execution = None
         self.setup = setup
 
+    @property
+    def values(self) -> Dict[str, Any]:
+        inputs = {}
+        for input in self.inputs:
+            print(f"\t\t- input: {input}")
+            if input.label is not None:
+                inputs[input.label] = input.value
+        return inputs
+
     async def execute(self, service_callback: Callable) -> Dict[str, OutputData]:
         """
         Executes the node with the given input data.
@@ -75,7 +84,7 @@ class Node:
         try:
             self.status = "running"
             print(f"Executing node {self.service_type}:{self.node_id}")
-            service_response = await service_callback(self.service_id, self.inputs)
+            service_response = await service_callback(self.service_id, self.values)
 
             time.sleep(1)  # Simulate some work being done
             print(f"\t - service_response: {service_response}")

@@ -1,3 +1,4 @@
+import json
 import time
 import grpc
 import uuid
@@ -367,9 +368,13 @@ def validate_stream_request():
                 )
 
                 # Send success message to client
-                yield service_pb2.ServiceResponse(
+                yield service_pb2.StartServiceResponse(
                     success=True,
-                    message=f"connected to the room {metadata.room_id}",
+                    response_type="CONNECTION",
+                    connection=service_pb2.ConnectionResponse(
+                        message=f"Connected to room {metadata.room_id}",
+                        room_id=str(metadata.room_id),
+                    ),
                     service_id=self.service.service_id,
                 )
 
@@ -448,11 +453,20 @@ def validate_stream_request():
                             yield (None, True)
                             break
 
+                        input = json_format.Parse(
+                            text=json.dumps(request.get("input", {})),
+                            message=struct_pb2.Struct(),
+                            ignore_unknown_fields=True,
+                        )
                         # yield the message to the client
                         yield (
-                            service_pb2.ServiceResponse(
+                            service_pb2.StartServiceResponse(
                                 success=True,
-                                message=str(request),
+                                response_type="INPUT",
+                                input_response=service_pb2.InputDataResponse(
+                                    message="New input data has been added in the room",
+                                    input=input,
+                                ),
                                 service_id=self.service.service_id,
                             ),
                             False,
@@ -523,6 +537,14 @@ def validate_stream_request():
                 logger.error("Validation Error: %s ", str(e))
                 context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
                 context.set_details(str(e))
+                yield service_pb2.StartServiceResponse(
+                    success=False,
+                    response_type="ERROR",
+                    error=service_pb2.ErrorResponse(
+                        message="An error occurred while starting the service",
+                        details=str(e),
+                    ),
+                )
                 return
             except grpc.RpcError as e:
                 if e.code() == grpc.StatusCode.ABORTED:
@@ -533,10 +555,26 @@ def validate_stream_request():
                     logger.error("Error during server communication: %s", e)
                     context.set_code(grpc.StatusCode.INTERNAL)
                     context.set_details(str(e))
+                yield service_pb2.StartServiceResponse(
+                    success=False,
+                    response_type="ERROR",
+                    error=service_pb2.ErrorResponse(
+                        message="An error occurred while starting the service",
+                        details=str(e),
+                    ),
+                )
             except Exception as e:
                 logger.exception("Unexpected error: %s", e)
                 context.set_code(grpc.StatusCode.INTERNAL)
                 context.set_details(str(e))
+                yield service_pb2.StartServiceResponse(
+                    success=False,
+                    response_type="ERROR",
+                    error=service_pb2.ErrorResponse(
+                        message="An error occurred while starting the service",
+                        details=str(e),
+                    ),
+                )
             finally:
                 # Ensure that the service is always stopped and the connection is closed
                 logger.info(f"Finalizing service for {metadata.service_id}")

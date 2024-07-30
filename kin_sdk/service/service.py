@@ -2,12 +2,13 @@
 TODO: sphinx docstring
 """
 
+import json
 import threading
 import grpc
 
 from typing import Any, Generator
 from opentelemetry import trace
-from google.protobuf import json_format
+from google.protobuf import json_format, struct_pb2
 from pydantic import BaseModel
 
 from kin_sdk.common.validate_grpc_request import validate_grpc_request
@@ -106,10 +107,21 @@ class Service(service_pb2_grpc.ServiceServicer):
                 input_data, setup_id, service_ids, self.__start_job
             )
             for output in self.job_manager.get_outputs(job_id):
-                yield service_pb2.ServiceResponse(
+                print(output)
+                output_struct = json_format.Parse(
+                    text=json.dumps(output.model_dump()),
+                    message=struct_pb2.Struct(),
+                    ignore_unknown_fields=True,
+                )
+                yield service_pb2.StartServiceResponse(
                     success=True,
-                    message=str(output),
-                    service_id=job_id,
+                    response_type="OUTPUT",
+                    output_response=service_pb2.OutputDataResponse(
+                        message="New output from the service",
+                        output=output_struct,
+                        job_id=job_id,
+                    ),
+                    service_id=self.service.service_id,
                 )
             # Mark the job as completed
             self.job_manager.update_job_status(job_id, JobStatus.SUCCESS)
@@ -117,9 +129,15 @@ class Service(service_pb2_grpc.ServiceServicer):
         except Exception as e:
             context.set_code(grpc.StatusCode.INTERNAL)
             context.set_details(str(e))
-            return service_pb2.ServiceResponse(
-                success=False, message="Failed to start service"
+            yield service_pb2.StartServiceResponse(
+                success=False,
+                response_type="ERROR",
+                error=service_pb2.ErrorResponse(
+                    message="An error occurred while starting the service",
+                    details=str(e),
+                ),
             )
+            return
 
     def StopService(
         self, request: service_pb2.StopServiceRequest, context: grpc.ServicerContext

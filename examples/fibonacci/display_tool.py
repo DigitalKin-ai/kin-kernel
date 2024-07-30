@@ -39,7 +39,7 @@ class DisplayTool(BaseTool[DisplayInput, DisplayOutput, DisplaySetup]):
         """
         Execute the addition tool
         """
-        print("Fibonacci sequence:", input_data.fibonacci)
+        print("Fibonacci sequence:", input_data.fibonacci_list)
         print("New number:", input_data.new_number)
         callback(DisplayOutput())
 

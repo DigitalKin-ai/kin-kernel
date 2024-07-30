@@ -10,7 +10,6 @@ from pydantic import BaseModel, create_model, Field
 from kin_sdk.grpc_services.models import ServiceModel
 from kin_sdk.kin.base import BaseKin
 from kin_sdk.common import logger
-from kin_sdk.kin.kin_workflow.node import InputData
 from kin_sdk.module.storage import DBStorage
 from kin_sdk.kin.kin_workflow.graph import GraphExecutor
 
@@ -204,8 +203,8 @@ class KinWorkflow(BaseKin):
         """
         # dynamic input model
         print("trigger_id: ", input_data.trigger_id)
-        inputs_schema = self.get_kin_input()
-        print(inputs_schema.get(input_data.trigger_id, {}))
+        # inputs_schema = self.get_kin_input()
+        # print(inputs_schema.get(input_data.trigger_id, {}))
 
         initial_node = self.graphs_executor.get_node_id_by_service_id(
             input_data.trigger_id
@@ -214,9 +213,25 @@ class KinWorkflow(BaseKin):
         sequence = [1, 1]
 
         async def service_callback(
-            service_id: str, input_data: InputData
+            service_id: str, input_data: Dict[str, Any]
         ) -> Dict[str, Any]:
-            print(f"Service callback: {service_id}")
+            # print(f"Service callback: {service_id}")
+            print(f"input_data: {input_data}")
+            response_iterator = self.start_service(
+                service_id, input_data, setup_id, request_type="VALIDATE"
+            )
+            result = {}
+            for response in response_iterator:  # TODO, continue here
+                response_type = response.get("response_type", None)
+                print("\n---\nresponse_type: ", response_type)
+                if response_type is not None and response_type == "OUTPUT":
+                    print(response)
+                    output_response = response.get("output_response", {})
+                    result = output_response.get("output", {})
+                    print(f"response: {output_response.get('message', 'no message')}")
+                    print(f"result: {result}")
+                    break
+                print(f"Response: {response}")
             # print(f"Input data: {input_data}")
             if service_id == "fibonacci_trigger":
                 return {"initial_numbers": (1, 1)}
@@ -231,6 +246,7 @@ class KinWorkflow(BaseKin):
                 # inputs: fibonacci_list / new_number
                 print(f"Sequence: {sequence}")
                 return {}
+            return result
             # raise NotImplementedError
 
         self.graphs_executor.execute(

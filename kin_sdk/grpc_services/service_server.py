@@ -1,8 +1,11 @@
-from typing import Type, Optional
+import json
+from typing import Any, Dict, Generator, List, Literal, Type, Optional, Union
 
 import grpc
-from google.protobuf import json_format
+from google.protobuf import json_format, struct_pb2
 
+import proto.digitalkin.service.v1.service_pb2 as service_pb2
+import proto.digitalkin.service.v1.service_pb2_grpc as service_pb2_grpc
 import proto.digitalkin.service.v1.registry.service_registry_pb2_grpc as service_registry_pb2_grpc
 import proto.digitalkin.service.v1.registry.service_registry_pb2 as service_registry_pb2
 import proto.digitalkin.service.v1.trigger.trigger_service_pb2_grpc as trigger_service_pb2_grpc
@@ -162,6 +165,64 @@ class ServiceServer(GRPCServerBase):
         except Exception as e:
             logger.error(f"Error retreaving inputs for service {service_id}: {e}")
             return None
+
+    def start_service(
+        self,
+        service_id: str,
+        input: Dict[str, Any],
+        setup_id: str,
+        service_ids: List[str] = [],
+        request_type: str = "SEND",
+        service_role: Literal["owner", "member"] = "owner",
+    ) -> Generator[None, None, Optional[dict]]:
+        """
+        Get the input of a service.
+
+        Args:
+            service_id (str): Unique identifier for the service.
+
+        Returns:
+            bool: True if the service is found, False otherwise.
+        """
+        try:
+            service_model: Union[ServiceModel, None] = self.search_service(service_id)
+            print(service_model)
+            if service_model is None:
+                raise ValueError(
+                    f"The service: {service_id} is not found in the service registry"
+                )
+
+            with grpc.insecure_channel(
+                f"{service_model.address}:{service_model.port}"
+            ) as channel:
+                stub = service_pb2_grpc.ServiceStub(channel)
+                request = service_pb2.StartServiceRequest(
+                    input=json_format.Parse(
+                        text=json.dumps(input),
+                        message=struct_pb2.Struct(),
+                        ignore_unknown_fields=True,
+                    ),
+                    setup_id=setup_id,
+                    service_ids=service_ids,
+                    request_type=request_type,
+                )
+                print(f"request: {request}")
+                metadata = [
+                    ("service_id", self.service_id),
+                    ("service_role", service_role),
+                ]
+                response_iterator = stub.StartService(
+                    iter([request]), metadata=metadata
+                )
+                for response in response_iterator:
+                    json_response = json_format.MessageToDict(
+                        response,
+                        preserving_proto_field_name=True,
+                    )
+                    yield json_response
+        except Exception as e:
+            logger.error(f"Error starting new service for service {service_id}: {e}")
+            yield None
 
     def serve(self) -> None:
         """

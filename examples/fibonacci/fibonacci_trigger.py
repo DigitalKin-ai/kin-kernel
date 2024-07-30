@@ -1,5 +1,5 @@
-import time
-import random
+# import time
+# import random
 from typing import Callable, Tuple
 from pydantic import BaseModel, Field
 
@@ -40,17 +40,19 @@ class CronTrigger(
         setup_id: str,
         callback: Callable[[CronFibonacciOutput], None],
     ) -> None:
-        counter = 0
 
         print("input_data", input_data)
+        exec_result = {"initials_numbers": [1, 1]}
+        callback(CronFibonacciOutput(**exec_result))
 
-        while counter < 10:
-            # Implémentez la logique spécifique de l'outil ici
-            exec_result = {"initials_numbers": [1, 1]}
-            callback(CronFibonacciOutput(**exec_result))
-            counter += 1
-            time.sleep(1)
-            print("here")
+        # counter = 0
+        # while counter < 10:
+        #     # Implémentez la logique spécifique de l'outil ici
+        #     exec_result = {"initials_numbers": [1, 1]}
+        #     callback(CronFibonacciOutput(**exec_result))
+        #     counter += 1
+        #     time.sleep(1)
+        #     print("here")
 
     def stop(self) -> None:
         print("Stopping cron job", self.name)

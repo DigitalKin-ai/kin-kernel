@@ -9,7 +9,7 @@ import networkx as nx
 
 from kin_sdk.common.types import ServiceType
 from kin_sdk.kin.kin_workflow.edge import Edge
-from kin_sdk.kin.kin_workflow.node import InputData, Node
+from kin_sdk.kin.kin_workflow.node import InputData, Node, OutputData
 
 
 class GraphExecutor:
@@ -144,7 +144,7 @@ class GraphExecutor:
     def update_successor_inputs(
         self,
         successor_id: str,
-        source_data: Dict[str, Any],
+        source_data: Dict[str, OutputData],
         edge_data_pred_succ: Union[Edge, None],
     ) -> None:
         """
@@ -167,7 +167,7 @@ class GraphExecutor:
 
         for label in source_data:
             if label == source_label:
-                successor.update_input(target_label, source_data[label])
+                successor.update_input(target_label, source_data[label].value)
                 break
 
     def verify_input_values(self, input_data: Dict[str, InputData]) -> bool:

@@ -8,13 +8,15 @@ class SequenceInput(BaseModel):
     initial_numbers: Tuple[int, int] = Field(
         ..., description="The first two numbers of fibonacci sequence"
     )
-    new_numbers: Optional[int] = Field(
+    next_number: Optional[int] = Field(
         ..., description="The next numbers of fibonacci sequence"
     )
 
 
 class SequenceOutput(BaseModel):
-    last_number: int = Field(..., description="The last number in fibonacci sequence")
+    last_numbers: Tuple[int, int] = Field(
+        ..., description="The last number in fibonacci sequence"
+    )
     fibonacci_list: List[int] = Field(..., description="The fibonacci sequence")
 
 
@@ -50,11 +52,14 @@ class SequenceTool(BaseTool[SequenceInput, SequenceOutput, SequenceSetup]):
         """
         if not self.fibonacci:
             self.fibonacci = list(input_data.initial_numbers)
-        if input_data.new_numbers:
-            self.fibonacci.append(input_data.new_numbers)
+        if input_data.next_number:
+            self.fibonacci.append(input_data.next_number)
 
         callback(
-            SequenceOutput(last_number=input_data.new_numbers, fibonacci=self.fibonacci)
+            SequenceOutput(
+                last_numbers=(self.fibonacci[-2], self.fibonacci[-1]),
+                fibonacci_list=self.fibonacci,
+            )
         )
 
     def stop(self) -> None:

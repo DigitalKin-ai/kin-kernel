@@ -6,7 +6,7 @@ TODO: sphinx docstring
 # from typing import Union
 import time
 from kin_sdk.kin.kin_workflow import KinWorkflow
-from kin_sdk.kin.kin_workflow.kin import WorkflowInput, WorkflowSetup, WorkflowOutput
+from kin_sdk.kin.kin_workflow.kin import WorkflowInput, WorkflowOutput
 
 
 # method to load json file from /examples/data/setup_example.json
@@ -35,9 +35,9 @@ def main():
     kin_workflow.start(kin_id="test")
     time.sleep(5)
     input_data = WorkflowInput(trigger_id="fibonacci_trigger")
-    setup_data = WorkflowSetup()
+    setup_id = "setups:fibonacci_setup"
 
-    kin_workflow.execute(input_data, setup_data, callback)
+    kin_workflow.execute(input_data, setup_id, callback)
 
 
 if __name__ == "__main__":
