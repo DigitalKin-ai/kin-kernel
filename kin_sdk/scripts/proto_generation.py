@@ -59,7 +59,11 @@ def main():
     buf_file = "buf.gen.py.yaml"
     output_dir = "proto/"
 
-    proto_paths: List[str] = [f"{proto_dir}/digitalkin/service", f"{proto_dir}/google"]
+    proto_paths: List[str] = [
+        f"{proto_dir}/digitalkin/module",
+        f"{proto_dir}/digitalkin/module_registry",
+        f"{proto_dir}/google",
+    ]
     paths_option = " ".join(f"--path {path}" for path in proto_paths)
     command = f"buf generate {proto_dir} --template {proto_dir}/{buf_file} --include-imports -o {output_dir} {paths_option}"
 

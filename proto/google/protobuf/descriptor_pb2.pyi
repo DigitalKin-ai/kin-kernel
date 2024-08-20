@@ -157,7 +157,7 @@ class FieldDescriptorProto(_message.Message):
     def __init__(self, name: _Optional[str] = ..., number: _Optional[int] = ..., label: _Optional[_Union[FieldDescriptorProto.Label, str]] = ..., type: _Optional[_Union[FieldDescriptorProto.Type, str]] = ..., type_name: _Optional[str] = ..., extendee: _Optional[str] = ..., default_value: _Optional[str] = ..., oneof_index: _Optional[int] = ..., json_name: _Optional[str] = ..., options: _Optional[_Union[FieldOptions, _Mapping]] = ..., proto3_optional: bool = ...) -> None: ...
 
 class FieldOptions(_message.Message):
-    __slots__ = ["ctype", "deprecated", "jstype", "lazy", "packed", "uninterpreted_option", "unverified_lazy", "weak"]
+    __slots__ = ["ctype", "deprecated", "jstype", "lazy", "packed", "uninterpreted_option", "weak"]
     class CType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
         __slots__ = []
     class JSType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
@@ -175,7 +175,6 @@ class FieldOptions(_message.Message):
     STRING: FieldOptions.CType
     STRING_PIECE: FieldOptions.CType
     UNINTERPRETED_OPTION_FIELD_NUMBER: _ClassVar[int]
-    UNVERIFIED_LAZY_FIELD_NUMBER: _ClassVar[int]
     WEAK_FIELD_NUMBER: _ClassVar[int]
     ctype: FieldOptions.CType
     deprecated: bool
@@ -183,14 +182,12 @@ class FieldOptions(_message.Message):
     lazy: bool
     packed: bool
     uninterpreted_option: _containers.RepeatedCompositeFieldContainer[UninterpretedOption]
-    unverified_lazy: bool
     weak: bool
-    def __init__(self, ctype: _Optional[_Union[FieldOptions.CType, str]] = ..., packed: bool = ..., jstype: _Optional[_Union[FieldOptions.JSType, str]] = ..., lazy: bool = ..., unverified_lazy: bool = ..., deprecated: bool = ..., weak: bool = ..., uninterpreted_option: _Optional[_Iterable[_Union[UninterpretedOption, _Mapping]]] = ...) -> None: ...
+    def __init__(self, ctype: _Optional[_Union[FieldOptions.CType, str]] = ..., packed: bool = ..., jstype: _Optional[_Union[FieldOptions.JSType, str]] = ..., lazy: bool = ..., deprecated: bool = ..., weak: bool = ..., uninterpreted_option: _Optional[_Iterable[_Union[UninterpretedOption, _Mapping]]] = ...) -> None: ...
 
 class FileDescriptorProto(_message.Message):
-    __slots__ = ["dependency", "edition", "enum_type", "extension", "message_type", "name", "options", "package", "public_dependency", "service", "source_code_info", "syntax", "weak_dependency"]
+    __slots__ = ["dependency", "enum_type", "extension", "message_type", "name", "options", "package", "public_dependency", "service", "source_code_info", "syntax", "weak_dependency"]
     DEPENDENCY_FIELD_NUMBER: _ClassVar[int]
-    EDITION_FIELD_NUMBER: _ClassVar[int]
     ENUM_TYPE_FIELD_NUMBER: _ClassVar[int]
     EXTENSION_FIELD_NUMBER: _ClassVar[int]
     MESSAGE_TYPE_FIELD_NUMBER: _ClassVar[int]
@@ -203,7 +200,6 @@ class FileDescriptorProto(_message.Message):
     SYNTAX_FIELD_NUMBER: _ClassVar[int]
     WEAK_DEPENDENCY_FIELD_NUMBER: _ClassVar[int]
     dependency: _containers.RepeatedScalarFieldContainer[str]
-    edition: str
     enum_type: _containers.RepeatedCompositeFieldContainer[EnumDescriptorProto]
     extension: _containers.RepeatedCompositeFieldContainer[FieldDescriptorProto]
     message_type: _containers.RepeatedCompositeFieldContainer[DescriptorProto]
@@ -215,7 +211,7 @@ class FileDescriptorProto(_message.Message):
     source_code_info: SourceCodeInfo
     syntax: str
     weak_dependency: _containers.RepeatedScalarFieldContainer[int]
-    def __init__(self, name: _Optional[str] = ..., package: _Optional[str] = ..., dependency: _Optional[_Iterable[str]] = ..., public_dependency: _Optional[_Iterable[int]] = ..., weak_dependency: _Optional[_Iterable[int]] = ..., message_type: _Optional[_Iterable[_Union[DescriptorProto, _Mapping]]] = ..., enum_type: _Optional[_Iterable[_Union[EnumDescriptorProto, _Mapping]]] = ..., service: _Optional[_Iterable[_Union[ServiceDescriptorProto, _Mapping]]] = ..., extension: _Optional[_Iterable[_Union[FieldDescriptorProto, _Mapping]]] = ..., options: _Optional[_Union[FileOptions, _Mapping]] = ..., source_code_info: _Optional[_Union[SourceCodeInfo, _Mapping]] = ..., syntax: _Optional[str] = ..., edition: _Optional[str] = ...) -> None: ...
+    def __init__(self, name: _Optional[str] = ..., package: _Optional[str] = ..., dependency: _Optional[_Iterable[str]] = ..., public_dependency: _Optional[_Iterable[int]] = ..., weak_dependency: _Optional[_Iterable[int]] = ..., message_type: _Optional[_Iterable[_Union[DescriptorProto, _Mapping]]] = ..., enum_type: _Optional[_Iterable[_Union[EnumDescriptorProto, _Mapping]]] = ..., service: _Optional[_Iterable[_Union[ServiceDescriptorProto, _Mapping]]] = ..., extension: _Optional[_Iterable[_Union[FieldDescriptorProto, _Mapping]]] = ..., options: _Optional[_Union[FileOptions, _Mapping]] = ..., source_code_info: _Optional[_Union[SourceCodeInfo, _Mapping]] = ..., syntax: _Optional[str] = ...) -> None: ...
 
 class FileDescriptorSet(_message.Message):
     __slots__ = ["file"]
@@ -278,23 +274,16 @@ class FileOptions(_message.Message):
 class GeneratedCodeInfo(_message.Message):
     __slots__ = ["annotation"]
     class Annotation(_message.Message):
-        __slots__ = ["begin", "end", "path", "semantic", "source_file"]
-        class Semantic(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
-            __slots__ = []
-        ALIAS: GeneratedCodeInfo.Annotation.Semantic
+        __slots__ = ["begin", "end", "path", "source_file"]
         BEGIN_FIELD_NUMBER: _ClassVar[int]
         END_FIELD_NUMBER: _ClassVar[int]
-        NONE: GeneratedCodeInfo.Annotation.Semantic
         PATH_FIELD_NUMBER: _ClassVar[int]
-        SEMANTIC_FIELD_NUMBER: _ClassVar[int]
-        SET: GeneratedCodeInfo.Annotation.Semantic
         SOURCE_FILE_FIELD_NUMBER: _ClassVar[int]
         begin: int
         end: int
         path: _containers.RepeatedScalarFieldContainer[int]
-        semantic: GeneratedCodeInfo.Annotation.Semantic
         source_file: str
-        def __init__(self, path: _Optional[_Iterable[int]] = ..., source_file: _Optional[str] = ..., begin: _Optional[int] = ..., end: _Optional[int] = ..., semantic: _Optional[_Union[GeneratedCodeInfo.Annotation.Semantic, str]] = ...) -> None: ...
+        def __init__(self, path: _Optional[_Iterable[int]] = ..., source_file: _Optional[str] = ..., begin: _Optional[int] = ..., end: _Optional[int] = ...) -> None: ...
     ANNOTATION_FIELD_NUMBER: _ClassVar[int]
     annotation: _containers.RepeatedCompositeFieldContainer[GeneratedCodeInfo.Annotation]
     def __init__(self, annotation: _Optional[_Iterable[_Union[GeneratedCodeInfo.Annotation, _Mapping]]] = ...) -> None: ...
