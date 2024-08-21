@@ -10,20 +10,22 @@ from typing import Type, TypeVar, Generic, List, Callable
 import grpc
 from pydantic import BaseModel
 from google.protobuf import json_format, struct_pb2
-
-import proto.digitalkin.service.v1.service_pb2 as service_pb2
-import proto.digitalkin.service.v1.service_pb2_grpc as service_pb2_grpc
-from kin_sdk.grpc_services import ServiceServer
-from kin_sdk.common import ServiceType, logger
+from proto.digitalkin.module.v1.module_service_pb2_grpc import (
+    ModuleServiceServicer,
+    ModuleServiceStub,
+)
+from proto.digitalkin.module.v1.lifecycle_pb2 import StartModuleRequest
+from kin_sdk.grpc_system import ModuleServer
+from kin_sdk.common import ModuleType, logger
 
 InputModelT = TypeVar("InputModelT", bound=BaseModel)
 OutputModelT = TypeVar("OutputModelT", bound=BaseModel)
 SetupModelT = TypeVar("SetupModelT", bound=BaseModel)
 
 
-class BaseService(Generic[InputModelT, OutputModelT, SetupModelT], ServiceServer, ABC):
+class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ModuleServer, ABC):
     """
-    Abstract base class for defining a service.
+    Abstract base class for defining a module.
     """
 
     name: str
@@ -34,46 +36,46 @@ class BaseService(Generic[InputModelT, OutputModelT, SetupModelT], ServiceServer
 
     def __init__(
         self,
-        service_id: str,
-        service_address: str,
-        service_port: int,
-        service_type: ServiceType,
+        module_id: str,
+        module_address: str,
+        module_port: int,
+        module_type: ModuleType,
         registry_address: str,
         max_workers: int = 10,
     ):
         """
-        Initializes the BaseService.
+        Initializes the BaseModule.
 
-        :param service_id: The ID of the service.
-        :param service_address: The address of the service.
-        :param service_port: The port of the service.
-        :param service_type: The type of the service.
+        :param module_id: The ID of the module.
+        :param module_address: The address of the module.
+        :param module_port: The port of the module.
+        :param module_type: The type of the module.
         :param registry_address: The address of the registry.
         :param max_workers: The maximum number of worker threads.
         """
         self.max_workers = max_workers
         super().__init__(
-            service_id=service_id,
-            service_address=service_address,
-            service_port=service_port,
-            service_type=service_type,
-            servicer_class=self.__get_service_class(),
+            module_id=module_id,
+            module_address=module_address,
+            module_port=module_port,
+            module_type=module_type,
+            servicer_class=self.__get_module_servicer(),
             servicer_kwargs=dict(
-                service=self,
+                module=self,
             ),
             registry_address=registry_address,
             max_workers=max_workers,
         )
 
-    def __get_service_class(self) -> Type[service_pb2_grpc.ServiceServicer]:
+    def __get_module_servicer(self) -> Type[ModuleServiceServicer]:
         """
-        Gets the service class.
+        Gets the ModuleServiceServicer class.
 
-        :return: The service class.
+        :return: The module servicer class.
         """
-        from kin_sdk.service.service import Service
+        from kin_sdk.agent_module._module.module_servicer import ModuleServicer
 
-        return Service
+        return ModuleServicer
 
     def __init_subclass__(cls, **kwargs):
         """
@@ -185,9 +187,9 @@ class BaseService(Generic[InputModelT, OutputModelT, SetupModelT], ServiceServer
         )
 
     @abstractmethod
-    def start(self) -> None:  # ? other params like service_id ?
+    def start(self) -> None:  # ? other params like module_id ?
         """
-        Starts the service.
+        Starts the module.
         """
         raise NotImplementedError("Subclasses must implement 'start' abstract method")
 
@@ -199,30 +201,30 @@ class BaseService(Generic[InputModelT, OutputModelT, SetupModelT], ServiceServer
         callback: Callable[[OutputModelT], None],
     ) -> None:
         """
-        Executes the service.
+        Executes the module.
 
-        :param input_data: The input data for the service.
-        :param setup_data: The setup data for the service.
+        :param input_data: The input data for the module.
+        :param setup_data: The setup data for the module.
         :param callback: The callback to call with the output data.
         """
         raise NotImplementedError("Subclasses must implement 'execute' abstract method")
 
     @abstractmethod
-    def stop(self) -> None:  # ? Other params like service_id ?
+    def stop(self) -> None:  # ? Other params like module_id ?
         """
-        Stops the service.
+        Stops the module.
         """
         raise NotImplementedError("Subclasses must implement 'stop' abstract method")
 
-    def send_output(self, output: OutputModelT, service_ids: List[str]) -> None:
+    def send_output(self, output: OutputModelT, module_ids: List[str]) -> None:
         """
-        Sends the output to the list of gRPC services.
+        Sends the output to the list of gRPC modules.
 
         :param output: The output data to send.
-        :param service_ids: The list of service IDs to send the output to.
+        :param module_ids: The list of module IDs to send the output to.
         """
-        # Check if service_ids is None or empty, in which case we don't send the output
-        if service_ids is None or len(service_ids) == 0:
+        # Check if module_ids is None or empty, in which case we don't send the output
+        if module_ids is None or len(module_ids) == 0:
             return
 
         try:
@@ -238,32 +240,32 @@ class BaseService(Generic[InputModelT, OutputModelT, SetupModelT], ServiceServer
             # Convert in gRPC Struct proto format the output data in order to send it as input of a block
             struct_input = json_format.ParseDict(output_data, struct_pb2.Struct())
 
-            # use service_ids to send the output to the right service
-            for service_id in service_ids:
-                service = self.search_service(service_id)
+            # use module_ids to send the output to the right module
+            for module_id in module_ids:
+                module = self.search_module(module_id)
 
-                if service is None:
+                if module is None:
                     return None
 
-                logger.info(f"Service found: \n\t{service}")
+                logger.info(f"Module found: \n\t{module}")
 
-                # Send the result to the list of gRPC services
+                # Send the result to the list of gRPC modules
                 with grpc.insecure_channel(
-                    f"{service.address}:{service.port}"
+                    f"{module.address}:{module.port}"
                 ) as channel:
-                    stub = service_pb2_grpc.ServiceStub(channel)
-                    request = service_pb2.StartServiceRequest(
+                    stub = ModuleServiceStub(channel)
+                    request = StartModuleRequest(
                         input=struct_input,
                         setup_id="I don't know what to put here",  # TODO: What to put here?
-                        service_ids=[],  # TODO: What to put here?
+                        module_ids=[],  # TODO: What to put here?
                     )
                     stub.ExecuteTool(request)
                     logger.info(
-                        f"📞 Output sent to Tool service {service_id} \n\t{service}"
+                        f"📞 Output sent to Tool module {module_id} \n\t{module}"
                     )
         except grpc.RpcError as e:
             # Handle gRPC exceptions
-            message = f"😵 Error sending output to {service.service_type} service {service_id}:\n\t"
+            message = f"😵 Error sending output to {module.module_type} module {module_id}:\n\t"
             if e.code() == grpc.StatusCode.UNAVAILABLE:
                 message += "- Server is unavailable"
             elif e.code() == grpc.StatusCode.DEADLINE_EXCEEDED:

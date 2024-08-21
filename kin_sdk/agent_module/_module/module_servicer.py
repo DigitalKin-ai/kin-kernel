@@ -10,11 +10,30 @@ from typing import Any, Generator
 from opentelemetry import trace
 from google.protobuf import json_format, struct_pb2
 from pydantic import BaseModel
-
+from proto.digitalkin.module.v1.module_service_pb2_grpc import (
+    ModuleServiceServicer,
+    add_ModuleServiceServicer_to_server,
+)
+from proto.digitalkin.module.v1.lifecycle_pb2 import (
+    StartModuleRequest,
+    StartModuleResponse,
+    OutputDataResponse,
+    ErrorResponse,
+    StopModuleRequest,
+    StopModuleResponse,
+)
+from proto.digitalkin.module.v1.monitoring_pb2 import (
+    GetModuleStatusRequest,
+    GetModuleStatusResponse,
+)
+from proto.digitalkin.module.v1.information_pb2 import (
+    GetModuleInputRequest,
+    GetModuleInputResponse,
+    GetModuleOutputRequest,
+    GetModuleOutputResponse,
+)
 from kin_sdk.common.validate_grpc_request import validate_grpc_request
-import proto.digitalkin.service.v1.service_pb2 as service_pb2
-import proto.digitalkin.service.v1.service_pb2_grpc as service_pb2_grpc
-from kin_sdk.service.base import BaseService
+from kin_sdk.agent_module._module.base import BaseModule
 from kin_sdk.common import (
     Rooms,
     validate_stream_request,
@@ -24,15 +43,13 @@ from kin_sdk.common import (
     logger,
 )
 
-COUNTER = 0
 
-
-class Service(service_pb2_grpc.ServiceServicer):
-    def __init__(self, service: BaseService):
-        self.service = service
-        self.job_manager = JobManager(self.service.max_workers)
+class ModuleServicer(ModuleServiceServicer):
+    def __init__(self, module: BaseModule):
+        self.module = module
+        self.job_manager = JobManager(self.module.max_workers)
         self.rooms: Rooms = Rooms()  # TODO: remove expired rooms
-        self.tracer = trace.get_tracer(self.service.__class__.__name__)
+        self.tracer = trace.get_tracer(self.module.__class__.__name__)
         self.lock = threading.Lock()
 
     def __start_job(self, job_id: str, *args, **kwargs) -> None:
@@ -48,21 +65,21 @@ class Service(service_pb2_grpc.ServiceServicer):
             current_job: Job = self.job_manager.get_job(job_id)
             input_data = current_job.input_data
             setup_id = current_job.setup_id
-            service_ids = current_job.service_ids
+            module_ids = current_job.module_ids
 
-            # Start the service
-            self.service.start()
+            # Start the module
+            self.module.start()
 
-            # Create a callback that captures the service_ids
+            # Create a callback that captures the module_ids
             def callback(output: BaseModel):
                 if not self.job_manager.update_job_status(job_id, JobStatus.PROCESSING):
                     raise ValueError(f"😵 Trigger {job_id} not found.")
-                self.service.send_output(output, service_ids)
+                self.module.send_output(output, module_ids)
                 print(output)
                 current_job.add_to_outputs(output)
 
-            # Execute the service
-            self.service.execute(
+            # Execute the module
+            self.module.execute(
                 input_data,
                 setup_id,
                 callback,
@@ -75,7 +92,7 @@ class Service(service_pb2_grpc.ServiceServicer):
 
     def __stop_job(self, job_id: str, *args, **kwargs) -> None:
         try:
-            self.service.stop()
+            self.module.stop()
             self.job_manager.update_job_status(job_id, JobStatus.STOPPED)
             self.job_manager.stop_outputs(job_id)
         except Exception as e:
@@ -83,9 +100,9 @@ class Service(service_pb2_grpc.ServiceServicer):
             self.job_manager.update_job_status(job_id, JobStatus.FAILED)
 
     @validate_stream_request()
-    def StartService(
-        self, request: service_pb2.StartServiceRequest, context: grpc.ServicerContext
-    ) -> Generator[service_pb2.ServiceResponse, Any, Any]:
+    def StartModule(
+        self, request: StartModuleRequest, context: grpc.ServicerContext
+    ) -> Generator[StartModuleResponse, Any, Any]:
         """
         https://medium.com/@iamdeepaksinghh/create-a-real-time-chat-service-using-grpc-in-python-fc63127d570c
         """
@@ -97,14 +114,14 @@ class Service(service_pb2_grpc.ServiceServicer):
             )
             # Extract data from the request
             input = json_request.get("input", None)
-            service_ids = json_request.get("service_ids", [])
+            module_ids = json_request.get("module_ids", [])
             setup_id = json_request.get("setup_id", None)
 
             # Validate the input data
-            input_data = self.service.input_format.model_validate(input)
+            input_data = self.module.input_format.model_validate(input)
             # Create and Start the job
             job_id = self.job_manager.start_job(
-                input_data, setup_id, service_ids, self.__start_job
+                input_data, setup_id, module_ids, self.__start_job
             )
             for output in self.job_manager.get_outputs(job_id):
                 print(output)
@@ -113,15 +130,15 @@ class Service(service_pb2_grpc.ServiceServicer):
                     message=struct_pb2.Struct(),
                     ignore_unknown_fields=True,
                 )
-                yield service_pb2.StartServiceResponse(
+                yield StartModuleResponse(
                     success=True,
                     response_type="OUTPUT",
-                    output_response=service_pb2.OutputDataResponse(
-                        message="New output from the service",
+                    output_response=OutputDataResponse(
+                        message="New output from the module",
                         output=output_struct,
                         job_id=job_id,
                     ),
-                    service_id=self.service.service_id,
+                    module_id=self.module.module_id,
                 )
             # Mark the job as completed
             self.job_manager.update_job_status(job_id, JobStatus.SUCCESS)
@@ -129,27 +146,27 @@ class Service(service_pb2_grpc.ServiceServicer):
         except Exception as e:
             context.set_code(grpc.StatusCode.INTERNAL)
             context.set_details(str(e))
-            yield service_pb2.StartServiceResponse(
+            yield StartModuleResponse(
                 success=False,
                 response_type="ERROR",
-                error=service_pb2.ErrorResponse(
-                    message="An error occurred while starting the service",
+                error=ErrorResponse(
+                    message="An error occurred while starting the module",
                     details=str(e),
                 ),
             )
             return
 
-    def StopService(
-        self, request: service_pb2.StopServiceRequest, context: grpc.ServicerContext
-    ) -> service_pb2.ServiceResponse:
-        print("Stop service")
+    def StopModule(
+        self, request: StopModuleRequest, context: grpc.ServicerContext
+    ) -> StopModuleResponse:
+        print("Stop module")
 
     @validate_grpc_request
-    def GetServiceStatus(
+    def GetModuleStatus(
         self,
-        request: service_pb2.GetServiceStatusRequest,
+        request: GetModuleStatusRequest,
         context: grpc.ServicerContext,
-    ) -> service_pb2.ServiceStatusResponse:
+    ) -> GetModuleStatusResponse:
         try:
             job_id = request.job_id
 
@@ -158,7 +175,7 @@ class Service(service_pb2_grpc.ServiceServicer):
 
             job = self.job_manager.get_job(job_id)
             if job is not None:
-                return service_pb2.ServiceStatusResponse(
+                return GetModuleStatusResponse(
                     success=True,
                     status=job.status.name,
                     job_id=job_id,
@@ -170,23 +187,23 @@ class Service(service_pb2_grpc.ServiceServicer):
             context.set_code(grpc.StatusCode.INTERNAL)
             context.set_details(str(e))
 
-            return service_pb2.ServiceStatusResponse(
+            return GetModuleStatusResponse(
                 success=False,
                 status=JobStatus.FAILED.name,
-                service_id=None,
+                job_id=None,
             )
 
-    def GetServiceInput(
-        self, request: service_pb2.GetServiceInputRequest, context: grpc.ServicerContext
-    ) -> service_pb2.ServiceInputResponse:
-        print("Get service input schema")
+    def GetModuleInput(
+        self, request: GetModuleInputRequest, context: grpc.ServicerContext
+    ) -> GetModuleInputResponse:
+        print("Get module input schema")
 
     def GetServiceOutput(
         self,
-        request: service_pb2.GetServiceOutputRequest,
+        request: GetModuleOutputRequest,
         context: grpc.ServicerContext,
-    ) -> service_pb2.ServiceOutputResponse:
-        print("Get service output schema")
+    ) -> GetModuleOutputResponse:
+        print("Get module output schema")
 
     def add_to_server(self, server: grpc.Server) -> None:
-        service_pb2_grpc.add_ServiceServicer_to_server(self, server)
+        add_ModuleServiceServicer_to_server(self, server)
