@@ -78,7 +78,7 @@ class Job(BaseModel):
 
     :param input_data: The input data for the job.
     :param setup_id: The setup ID associated with the job.
-    :param service_ids: List of service IDs associated with the job.
+    :param module_ids: List of module IDs associated with the job.
     :param status: The current status of the job.
     :param task: The Future object representing the job's task.
     :param outputs: A queue to store job outputs.
@@ -89,8 +89,8 @@ class Job(BaseModel):
 
     input_data: BaseModel = Field(..., description="The input data for the job")
     setup_id: str = Field(..., description="The setup ID for the job")
-    service_ids: List[str] = Field(
-        [], description="List of service IDs associated with the job"
+    module_ids: List[str] = Field(
+        [], description="List of module IDs associated with the job"
     )
     status: JobStatus = Field(
         JobStatus.STARTING, description="The current status of the job"
@@ -143,7 +143,7 @@ class JobManager:
         self,
         input_data: BaseModel,
         setup_id: str,
-        service_ids: List[str],
+        module_ids: List[str],
         func: Callable[..., Any],
         *args: Any,
         **kwargs: Any,
@@ -153,7 +153,7 @@ class JobManager:
 
         :param input_data: The input data for the job.
         :param setup_id: The setup ID for the job.
-        :param service_ids: List of service IDs associated with the job.
+        :param module_ids: List of module IDs associated with the job.
         :param func: The function to be executed as the job.
         :param args: Positional arguments for the job function.
         :param kwargs: Keyword arguments for the job function.
@@ -170,7 +170,7 @@ class JobManager:
             job = Job(
                 input_data=input_data,
                 setup_id=setup_id,
-                service_ids=service_ids,
+                module_ids=module_ids,
                 status=JobStatus.STARTING,
                 task=self.executor.submit(wrapped_func),
                 outputs=Queue(),

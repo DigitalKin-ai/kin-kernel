@@ -7,9 +7,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import networkx as nx
 
-from kin_sdk.common.types import ServiceType
-from kin_sdk.kin.kin_workflow.edge import Edge
-from kin_sdk.kin.kin_workflow.node import InputData, Node, OutputData
+from kin_sdk.common.types import ModuleType
+from kin_sdk.agent_module.kin.kin_workflow.edge import Edge
+from kin_sdk.agent_module.kin.kin_workflow.node import InputData, Node, OutputData
 
 
 class GraphExecutor:
@@ -44,20 +44,20 @@ class GraphExecutor:
         try:
             # format the setups data
             formated_setups = {
-                data["service_id"]: data.get("content", {})
+                data["module_id"]: data.get("content", {})
                 for data in setups.get("data", [])
-                if data.get("service_id", None) is not None
+                if data.get("module_id", None) is not None
             }
 
             return {
                 node["id"]: Node(
                     node_id=node["id"],
                     node_type=node["type"],
-                    service_type=ServiceType.get(node["data"]["type"]),
-                    service_id=node["data"]["id"],
+                    module_type=ModuleType.get(node["data"]["type"]),
+                    module_id=node["data"]["id"],
                     inputs=node["data"]["targets"],
                     outputs=node["data"]["sources"],
-                    setup=formated_setups.get(f"services:{node['data']['id']}", {}),
+                    setup=formated_setups.get(f"modules:{node['data']['id']}", {}),
                 )
                 for node in nodes
             }
@@ -103,30 +103,30 @@ class GraphExecutor:
         except Exception as e:
             print(f"Error initializing edges: {e}")
 
-    def get_services_nodes(self, service_type: ServiceType) -> List[str]:
+    def get_modules_nodes(self, module_type: ModuleType) -> List[str]:
         """
         Returns nodes from a specific type from the graph.
-        :param service_type: The type of service to search for.
+        :param module_type: The type of module to search for.
 
         Returns:
             List[str]: The IDs of the found nodes.
         """
         return [
-            (node_id, node.service_id)
+            (node_id, node.module_id)
             for node_id, node in self.nodes.items()
-            if node.service_type == service_type
+            if node.module_type == module_type
         ]
 
-    def get_node_id_by_service_id(self, service_id: str) -> str:
+    def get_node_id_by_module_id(self, module_id: str) -> str:
         """
-        Returns the node id by service id.
-        :param service_id: The service id to search for.
+        Returns the node id by module id.
+        :param module_id: The module id to search for.
 
         Returns:
             str: The ID of the node.
         """
         for node_id, node in self.nodes.items():
-            if node.service_id == service_id:
+            if node.module_id == module_id:
                 return node_id
         return ""
 
@@ -208,9 +208,7 @@ class GraphExecutor:
             for input in input_data.values()
         )
 
-    async def async_execute_node(
-        self, node_id: str, service_callback: Callable
-    ) -> None:
+    async def async_execute_node(self, node_id: str, module_callback: Callable) -> None:
         """
         Executes a single node and updates its successors.
 
@@ -221,7 +219,7 @@ class GraphExecutor:
         if node is None:
             raise ValueError(f"Node {node_id} not found.")
         print(
-            f"\n\n----\n{datetime.datetime.now()} - Executing node {node.service_type}:{node_id}."
+            f"\n\n----\n{datetime.datetime.now()} - Executing node {node.module_type}:{node_id}."
         )
         # construct input data
         input_data = {
@@ -240,7 +238,7 @@ class GraphExecutor:
 
         # Verify if it is the initial trigger node
         initial_trigger = (
-            node.service_type == ServiceType.TRIGGER and node.last_execution is None
+            node.module_type == ModuleType.TRIGGER and node.last_execution is None
         )  # TODO: improve that
 
         try:
@@ -259,7 +257,7 @@ class GraphExecutor:
 
             with self.lock:
                 # Launch the node execution in a thread-safe manner and retrieve the output data
-                output_data = await node.execute(service_callback)  # TODO: here
+                output_data = await node.execute(module_callback)  # TODO: here
 
                 # Propagate the output data to the successors
                 for successor in self.graph.successors(node_id):
@@ -324,7 +322,7 @@ class GraphExecutor:
     def execute_node(self, *args, **kwargs) -> None:
         asyncio.run(self.async_execute_node(*args, **kwargs))
 
-    def execute(self, initial_node: str, service_callback: Callable) -> None:
+    def execute(self, initial_node: str, module_callback: Callable) -> None:
         """
         Executes the graph starting from the initial node.
 
@@ -368,7 +366,7 @@ class GraphExecutor:
                     # Submit the node for execution
                     if node_id is not None:
                         future = executor.submit(
-                            self.execute_node, node_id, service_callback
+                            self.execute_node, node_id, module_callback
                         )
                         futures[future] = node_id
                     print(

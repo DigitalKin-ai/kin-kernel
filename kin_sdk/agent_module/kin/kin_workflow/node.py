@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Callable, Optional
 
 from pydantic import BaseModel, Field
 
-from kin_sdk.common.types import ServiceType
+from kin_sdk.common.types import ModuleType
 
 
 class InputData(BaseModel):
@@ -44,8 +44,8 @@ class Node:
         self,
         node_id: str,
         node_type: str,
-        service_type: ServiceType,
-        service_id: str,
+        module_type: ModuleType,
+        module_id: str,
         inputs: List[Dict[str, Any]],
         outputs: List[Dict[str, Any]],
         setup: Dict[str, Any],
@@ -53,8 +53,8 @@ class Node:
         # value
         self.node_id = node_id
         self.node_type = node_type
-        self.service_type = service_type
-        self.service_id = service_id
+        self.module_type = module_type
+        self.module_id = module_id
         self.inputs = [InputData(**input) for input in inputs]
         self.outputs = [OutputData(**output) for output in outputs]
         self.status = "pending"  # 'pending', 'running', 'completed', 'failed'
@@ -71,7 +71,7 @@ class Node:
                 inputs[input.label] = input.value
         return inputs
 
-    async def execute(self, service_callback: Callable) -> Dict[str, OutputData]:
+    async def execute(self, module_callback: Callable) -> Dict[str, OutputData]:
         """
         Executes the node with the given input data.
 
@@ -83,13 +83,13 @@ class Node:
         """
         try:
             self.status = "running"
-            print(f"Executing node {self.service_type}:{self.node_id}")
-            service_response = await service_callback(self.service_id, self.values)
+            print(f"Executing node {self.module_type}:{self.node_id}")
+            module_response = await module_callback(self.module_id, self.values)
 
             time.sleep(1)  # Simulate some work being done
-            print(f"\t - service_response: {service_response}")
-            for label in service_response:
-                self.update_output(label, service_response[label])
+            print(f"\t - module_response: {module_response}")
+            for label in module_response:
+                self.update_output(label, module_response[label])
 
             output_data = {
                 output.label: output
@@ -101,7 +101,7 @@ class Node:
             self.status = "completed"
             return output_data
         except Exception as e:
-            print(f"Error executing node {self.service_type}:{self.node_id}: {e}")
+            print(f"Error executing node {self.module_type}:{self.node_id}: {e}")
 
     async def get_setup(self, setup_id: str) -> Dict[str, Any]:
         """

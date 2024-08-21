@@ -5,8 +5,8 @@ TODO: sphinx docstring
 # import json
 # from typing import Union
 import time
-from kin_sdk.kin.kin_workflow import KinWorkflow
-from kin_sdk.kin.kin_workflow.kin import WorkflowInput, WorkflowOutput
+from kin_sdk.agent_module import KinWorkflow
+from kin_sdk.agent_module.kin.kin_workflow.kin import WorkflowInput, WorkflowOutput
 
 
 # method to load json file from /examples/data/setup_example.json
@@ -27,9 +27,9 @@ def main():
     kin_workflow = KinWorkflow(
         name="First Kin Workflow",
         description="This is the first Kin workflow.",
-        service_id="first kin workflow",
-        service_address="localhost",
-        service_port=50050,
+        module_id="first kin workflow",
+        module_address="localhost",
+        module_port=50050,
         registry_address="localhost:50051",
     )
     kin_workflow.start(kin_id="test")

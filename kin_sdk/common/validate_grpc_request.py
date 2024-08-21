@@ -15,7 +15,14 @@ from protoc_gen_validate.validator import validate, ValidationFailed
 from pydantic_core import PydanticUndefinedType
 
 from kin_sdk.common.pydantic_validation_error import pydantic_validation_error
-import proto.digitalkin.service.v1.service_pb2 as service_pb2
+
+from proto.digitalkin.module.v1.lifecycle_pb2 import (
+    StartModuleRequest,
+    StartModuleResponse,
+    ConnectionResponse,
+    ErrorResponse,
+)
+from proto.digitalkin.module.v1.information_pb2 import GetModuleInputResponse
 
 from kin_sdk.common.logger import logger
 from kin_sdk.common.types import RequestType
@@ -43,13 +50,13 @@ def validate_grpc_request(func):
     """
     A decorator to validate gRPC requests using protoc_gen_validate.
 
-    This decorator intercepts the execution of a gRPC service method to
+    This decorator intercepts the execution of a gRPC module method to
     perform validation on the incoming request. If the validation fails,
     it sets the appropriate gRPC status code and details. If the validation
-    passes, it proceeds with the actual service method.
+    passes, it proceeds with the actual module method.
 
     Parameters:
-        func (Callable): The gRPC service method to be decorated.
+        func (Callable): The gRPC module method to be decorated.
 
     Returns:
         Callable: A wrapper function that incorporates validation logic.
@@ -61,7 +68,7 @@ def validate_grpc_request(func):
         Wrapper function to execute validation and handle exceptions.
 
         Parameters:
-            self: The instance of the gRPC service class.
+            self: The instance of the gRPC module class.
             request: The request message for the gRPC method.
             context: The gRPC context.
 
@@ -94,13 +101,13 @@ def validate_stream_grpc_request():
     """
     A decorator to validate streaming gRPC requests using protoc_gen_validate.
 
-    This decorator intercepts the execution of a gRPC service method to
+    This decorator intercepts the execution of a gRPC module method to
     perform validation on the incoming request. If the validation fails,
     it sets the appropriate gRPC status code and details. If the validation
-    passes, it proceeds with the actual service method.
+    passes, it proceeds with the actual module method.
 
     Parameters:
-        func (Callable): The gRPC service method to be decorated.
+        func (Callable): The gRPC module method to be decorated.
 
     Returns:
         Callable: A wrapper function that incorporates validation logic.
@@ -113,31 +120,31 @@ def validate_stream_grpc_request():
             Todo: sphinx docstring
             """
             try:
-                # Extract service name from metadata
+                # Extract module name from metadata
                 metadata = dict(context.invocation_metadata())
-                service_name = metadata.get("name", "default_service")
+                module_name = metadata.get("name", "default_module")
 
                 # Initialize room if not exists
                 with self.lock:
-                    if service_name not in self.rooms:
-                        self.rooms[service_name] = {
+                    if module_name not in self.rooms:
+                        self.rooms[module_name] = {
                             "clients": 0,
                             "data": None,
                             "type": None,
                             "last_update": time.time(),
                         }
 
-                self.rooms[service_name]["clients"] += 1
+                self.rooms[module_name]["clients"] += 1
                 # Process incoming requests
                 for request in request_iterator:
                     with self.lock:
-                        self.rooms[service_name]["type"] = type(request)
+                        self.rooms[module_name]["type"] = type(request)
                         data_dict = (
                             json_format.MessageToDict(
-                                self.rooms[service_name]["data"],
+                                self.rooms[module_name]["data"],
                                 preserving_proto_field_name=True,
                             )
-                            if self.rooms[service_name]["data"]
+                            if self.rooms[module_name]["data"]
                             else {}
                         )
                         merge_dicts(
@@ -147,22 +154,22 @@ def validate_stream_grpc_request():
                                 preserving_proto_field_name=True,
                             ),
                         )
-                        self.rooms[service_name]["data"] = json_format.ParseDict(
+                        self.rooms[module_name]["data"] = json_format.ParseDict(
                             data_dict, type(request)()
                         )
-                        self.rooms[service_name]["last_update"] = time.time()
+                        self.rooms[module_name]["last_update"] = time.time()
 
                 # Decrease the number of clients when the stream ends
                 with self.lock:
-                    self.rooms[service_name]["clients"] -= 1
-                    if self.rooms[service_name]["clients"] <= 0:
+                    self.rooms[module_name]["clients"] -= 1
+                    if self.rooms[module_name]["clients"] <= 0:
                         self.condition.notify_all()
 
-                if self.rooms[service_name]["clients"] <= 0:
+                if self.rooms[module_name]["clients"] <= 0:
                     # Execute the merged request
                     with self.lock:
-                        merged_request = self.rooms[service_name]["data"]
-                        del self.rooms[service_name]
+                        merged_request = self.rooms[module_name]["data"]
+                        del self.rooms[module_name]
                         validate(merged_request)
 
                     return func(self, merged_request, context)
@@ -197,16 +204,16 @@ MAX_WORKERS = 10  # Adjust this value based on your system's capabilities
 
 class Metadata(BaseModel):
     """
-    Metadata model for gRPC service.
+    Metadata model for gRPC module.
 
-    :param service_id: The unique identifier of the service
-    :param service_role: The role of the service (owner or member)
+    :param module_id: The unique identifier of the module
+    :param module_role: The role of the module (owner or member)
     :param room_id: The unique identifier of the room
     """
 
-    service_id: str = Field(..., description="The unique identifier of the service")
-    service_role: Literal["owner", "member"] = Field(
-        default="member", description="The role of the service"
+    module_id: str = Field(..., description="The unique identifier of the module")
+    module_role: Literal["owner", "member"] = Field(
+        default="member", description="The role of the module"
     )
     room_id: Optional[uuid.UUID] = Field(
         None, description="The unique identifier of the room"
@@ -248,21 +255,21 @@ def get_metadata(context: grpc.ServicerContext) -> Metadata:
     """
     try:
         metadata = dict(context.invocation_metadata())
-        service_id = metadata.get("service_id", None)
-        service_role = metadata.get("service_role", None)
+        module_id = metadata.get("module_id", None)
+        module_role = metadata.get("module_role", None)
         room_id = metadata.get("room_id", None)
 
-        if not service_id:
-            raise ValueError("Service ID metadata is required.")
+        if not module_id:
+            raise ValueError("Module ID metadata is required.")
 
-        if (service_role is None or service_role == "member") and not room_id:
+        if (module_role is None or module_role == "member") and not room_id:
             raise ValueError(
-                "Service role metadata should be `owner` if there is no `room_id` or should be `member` with a `room_id`."
+                "Module role metadata should be `owner` if there is no `room_id` or should be `member` with a `room_id`."
             )
 
         return Metadata(
-            service_id=service_id,
-            service_role=service_role,
+            module_id=module_id,
+            module_role=module_role,
             room_id=uuid.UUID(room_id) if room_id else None,
         )
 
@@ -304,15 +311,15 @@ def validate_stream_request():
 
             :param self: The instance of the class containing the decorated method
             :param request_iterator: Iterator for incoming client requests
-            :param context: gRPC service context
-            :yield: service_pb2.ServiceResponse messages
+            :param context: gRPC module context
+            :yield: StartModuleResponse messages
             :raises AttributeError: If required attributes are missing
             :raises TypeError: If attributes are of incorrect type
             """
             # Check required attributes
-            if not all(hasattr(self, attr) for attr in ["rooms", "lock", "service"]):
+            if not all(hasattr(self, attr) for attr in ["rooms", "lock", "module"]):
                 raise AttributeError(
-                    f"{self.__class__.__name__} instance must have 'rooms', 'lock', and 'service' attributes."
+                    f"{self.__class__.__name__} instance must have 'rooms', 'lock', and 'module' attributes."
                 )
 
             if not isinstance(self.rooms, Rooms):
@@ -326,11 +333,11 @@ def validate_stream_request():
                 )
 
             # be cautious of circular imports
-            from kin_sdk.service.base import BaseService
+            from kin_sdk.agent_module._module.base import BaseModule
 
-            if not isinstance(self.service, BaseService):
+            if not isinstance(self.module, BaseModule):
                 raise TypeError(
-                    f"The 'service' attribute must be of type BaseService, got {type(self.service).__name__}."
+                    f"The 'module' attribute must be of type BaseModule, got {type(self.module).__name__}."
                 )
 
             try:
@@ -343,39 +350,39 @@ def validate_stream_request():
                     with self.lock:
                         self.rooms.create_room(metadata.room_id)
 
-                # Check if room exists before adding service and raising an error if it doesn't
+                # Check if room exists before adding module and raising an error if it doesn't
                 if not self.rooms.get_room(metadata.room_id):
                     raise ValueError(f"Room {metadata.room_id} does not exist.")
 
-                # Add service to room
+                # Add module to room
                 with self.lock:
-                    self.rooms.add_service_to_room(
+                    self.rooms.add_module_to_room(
                         room_id=metadata.room_id,
-                        service_id=metadata.service_id,
-                        service_role=metadata.service_role,
+                        module_id=metadata.module_id,
+                        module_role=metadata.module_role,
                     )
 
                 def callback(
-                    service_id: str, request: Dict[str, Any], request_type: RequestType
+                    module_id: str, request: Dict[str, Any], request_type: RequestType
                 ) -> None:
                     """Callback function to handle incoming messages from the room."""
-                    message_queue.put((service_id, request, request_type))
+                    message_queue.put((module_id, request, request_type))
 
-                # Subscribe to the room to receive messages from other services in the room
+                # Subscribe to the room to receive messages from other modules in the room
                 logger.debug(f"Subscribing to room {metadata.room_id}")
                 self.rooms.subscribe_to_room(
-                    metadata.room_id, metadata.service_id, callback
+                    metadata.room_id, metadata.module_id, callback
                 )
 
                 # Send success message to client
-                yield service_pb2.StartServiceResponse(
+                yield StartModuleResponse(
                     success=True,
                     response_type="CONNECTION",
-                    connection=service_pb2.ConnectionResponse(
+                    connection=ConnectionResponse(
                         message=f"Connected to room {metadata.room_id}",
                         room_id=str(metadata.room_id),
                     ),
-                    service_id=self.service.service_id,
+                    module_id=self.module.module_id,
                 )
 
                 def handle_incoming_messages() -> None:
@@ -395,20 +402,20 @@ def validate_stream_request():
                                     RequestType[
                                         request_dict.pop("request_type", "SEND")
                                     ]
-                                    if metadata.service_role == "owner"
+                                    if metadata.module_role == "owner"
                                     else RequestType.SEND
                                 )
 
                                 self.rooms.publish_to_room(
                                     metadata.room_id,
-                                    metadata.service_id,
+                                    metadata.module_id,
                                     request_dict,
                                     request_type,
                                 )
 
                             if (
                                 request_type == RequestType.VALIDATE
-                                and metadata.service_role == "owner"
+                                and metadata.module_role == "owner"
                             ):
                                 break
                     except grpc.RpcError as e:
@@ -416,7 +423,7 @@ def validate_stream_request():
                     except Exception as e:
                         logger.error(f"Error handling incoming messages: {e}")
                     finally:
-                        message_queue.put((metadata.service_id, None, RequestType.EXIT))
+                        message_queue.put((metadata.module_id, None, RequestType.EXIT))
 
                 # Start the incoming message handler in a separate thread
                 # this is useful to do not block the main thread that is waiting for the room incoming messages
@@ -426,7 +433,7 @@ def validate_stream_request():
                 # usefull to know if we want to try to validate the request
                 is_validate: bool = False
 
-                def message_sender() -> Iterator[service_pb2.ServiceResponse]:
+                def message_sender() -> Iterator[StartModuleResponse]:
                     """
                     Handle message that coming from the room and send it to the client
                     """
@@ -437,18 +444,18 @@ def validate_stream_request():
                         )
 
                         if request is None or request_type == RequestType.EXIT:
-                            logger.info(f"Service {metadata.service_id} disconnected")
+                            logger.info(f"Module {metadata.module_id} disconnected")
                             break
 
-                        # if the service is the owner of the room and the request is a validate request
+                        # if the module is the owner of the room and the request is a validate request
                         # we want to try to validate the request and if it is valid we want to return the func and disconnect all other members
                         if (
-                            metadata.service_role == "owner"
-                            and metadata.service_id == sender_id
+                            metadata.module_role == "owner"
+                            and metadata.module_id == sender_id
                             and request_type == RequestType.VALIDATE
                         ):
                             logger.debug(
-                                f"Service: {metadata.service_id} want to validate the request"
+                                f"Module: {metadata.module_id} want to validate the request"
                             )
                             yield (None, True)
                             break
@@ -460,19 +467,19 @@ def validate_stream_request():
                         )
                         # yield the message to the client
                         yield (
-                            service_pb2.StartServiceResponse(
+                            StartModuleResponse(
                                 success=True,
                                 response_type="INPUT",
-                                input_response=service_pb2.InputDataResponse(
+                                input_response=GetModuleInputResponse(
                                     message="New input data has been added in the room",
                                     input=input,
                                 ),
-                                service_id=self.service.service_id,
+                                module_id=self.module.module_id,
                             ),
                             False,
                         )
                     logger.debug(
-                        f"Message sender finished for service {metadata.service_id}"
+                        f"Message sender finished for module {metadata.module_id}"
                     )
 
                 # Return the message sender generator to the client
@@ -484,49 +491,49 @@ def validate_stream_request():
                         break
                     # yield the item to the client
                     yield item
-                # if the service is the owner of the room and it is the last one in the room
+                # if the module is the owner of the room and it is the last one in the room
                 # we will eject all the members and delete the room
                 if (
-                    metadata.service_role == "owner"
+                    metadata.module_role == "owner"
                     and len(self.rooms.get_room(metadata.room_id).owners) <= 1
                 ):
                     # if the stream ends and the owner is the only one left in the room
                     # eject all members
                     self.rooms.publish_to_room(
-                        metadata.room_id, metadata.service_id, {}, RequestType.EXIT
+                        metadata.room_id, metadata.module_id, {}, RequestType.EXIT
                     )
 
                 # Leave the room
                 with self.lock:
-                    self.rooms.remove_service_from_room(
+                    self.rooms.remove_module_from_room(
                         room_id=metadata.room_id,
-                        service_id=metadata.service_id,
-                        service_role=metadata.service_role,
+                        module_id=metadata.module_id,
+                        module_role=metadata.module_role,
                     )
 
-                # if the service is the owner of the room and the request is a validate request
+                # if the module is the owner of the room and the request is a validate request
                 # we want to try to validate the request and if it is valid we want to return the func
-                if metadata.service_role == "owner" and is_validate:
+                if metadata.module_role == "owner" and is_validate:
                     # get a copy of the final request from the room
                     req = self.rooms.get_room(metadata.room_id).request.copy()
                     # parse the request to the correct type
                     request = json_format.ParseDict(
                         req,
-                        service_pb2.StartServiceRequest(),
+                        StartModuleRequest(),
                     )
                     # Try to validate the request it will raise an error if the request is not valid
                     validate(request)
-                    pydantic_validation(req, self.service.input_format)
+                    pydantic_validation(req, self.module.input_format)
                     # call func and yield the result to the client
                     for message in func(self, request, context):
                         if message is None:
                             break
                         yield message
 
-                # Après incoming_future.result(), on arrête le service et ferme la connexion gRPC
-                logger.info(f"Stopping service for {metadata.service_id}")
+                # Après incoming_future.result(), on arrête le module et ferme la connexion gRPC
+                logger.info(f"Stopping module for {metadata.module_id}")
                 context.set_code(grpc.StatusCode.OK)
-                context.set_details("Service completed successfully")
+                context.set_details("Module completed successfully")
                 return  # This will stop the generator and close the gRPC connection
             except ValidationError as e:
                 error_message = pydantic_validation_error(e, context)
@@ -537,11 +544,11 @@ def validate_stream_request():
                 logger.error("Validation Error: %s ", str(e))
                 context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
                 context.set_details(str(e))
-                yield service_pb2.StartServiceResponse(
+                yield StartModuleResponse(
                     success=False,
                     response_type="ERROR",
-                    error=service_pb2.ErrorResponse(
-                        message="An error occurred while starting the service",
+                    error=ErrorResponse(
+                        message="An error occurred while starting the module",
                         details=str(e),
                     ),
                 )
@@ -555,11 +562,11 @@ def validate_stream_request():
                     logger.error("Error during server communication: %s", e)
                     context.set_code(grpc.StatusCode.INTERNAL)
                     context.set_details(str(e))
-                yield service_pb2.StartServiceResponse(
+                yield StartModuleResponse(
                     success=False,
                     response_type="ERROR",
-                    error=service_pb2.ErrorResponse(
-                        message="An error occurred while starting the service",
+                    error=ErrorResponse(
+                        message="An error occurred while starting the module",
                         details=str(e),
                     ),
                 )
@@ -567,17 +574,17 @@ def validate_stream_request():
                 logger.exception("Unexpected error: %s", e)
                 context.set_code(grpc.StatusCode.INTERNAL)
                 context.set_details(str(e))
-                yield service_pb2.StartServiceResponse(
+                yield StartModuleResponse(
                     success=False,
                     response_type="ERROR",
-                    error=service_pb2.ErrorResponse(
-                        message="An error occurred while starting the service",
+                    error=ErrorResponse(
+                        message="An error occurred while starting the module",
                         details=str(e),
                     ),
                 )
             finally:
-                # Ensure that the service is always stopped and the connection is closed
-                logger.info(f"Finalizing service for {metadata.service_id}")
+                # Ensure that the module is always stopped and the connection is closed
+                logger.info(f"Finalizing module for {metadata.module_id}")
                 # You might want to add any cleanup code here
                 return  # This will stop the generator and close the gRPC connection if it hasn't been closed already
 

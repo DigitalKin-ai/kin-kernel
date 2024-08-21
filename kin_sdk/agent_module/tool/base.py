@@ -51,7 +51,6 @@ SetupModelT = TypeVar("SetupModelT", bound=BaseModel)
 
 
 class BaseTool(BaseModule[InputModelT, OutputModelT, SetupModelT], ABC):
-
     def __init__(
         self,
         module_id: str,

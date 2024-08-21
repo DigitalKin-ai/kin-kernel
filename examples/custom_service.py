@@ -1,8 +1,8 @@
 from typing import Callable
 from pydantic import BaseModel
 
-from kin_sdk.common.types import ServiceType
-from kin_sdk.service.base import BaseService
+from kin_sdk.common.types import ModuleType
+from kin_sdk.agent_module._module import BaseModule
 
 
 class MultiplyInput(BaseModel):
@@ -18,7 +18,7 @@ class MultiplySetup(BaseModel):
     result: float
 
 
-class CustomService(BaseService):
+class CustomModule(BaseModule):
     name = "Multiplier"
     description = "A simple multiplier tool"
     input_format = MultiplyInput
@@ -26,10 +26,10 @@ class CustomService(BaseService):
     setup_format = MultiplySetup
 
     def start(self) -> None:
-        print("Starting the service")
+        print("Starting the module")
 
     def stop(self) -> None:
-        print("Stopping the service")
+        print("Stopping the module")
 
     def execute(
         self,
@@ -51,14 +51,14 @@ class CustomService(BaseService):
 
 
 if __name__ == "__main__":
-    # ! First start the service registry server from the examples.server_registry.py file
+    # ! First start the module registry server from the examples.server_registry.py file
     # Create an instance of your custom tool
-    custom_service = CustomService(
-        service_id="multiplier1",
-        service_address="localhost",
-        service_type=ServiceType.TOOL,
-        service_port=50052,
+    custom_module = CustomModule(
+        module_id="multiplier1",
+        module_address="localhost",
+        module_type=ModuleType.TOOL,
+        module_port=50052,
         registry_address="localhost:50051",
         max_workers=10,
     )
-    custom_service.serve()
+    custom_module.serve()

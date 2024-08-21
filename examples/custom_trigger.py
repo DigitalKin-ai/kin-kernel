@@ -3,7 +3,7 @@ import random
 from typing import Callable
 from pydantic import BaseModel
 
-from kin_sdk.trigger.base import BaseTrigger
+from kin_sdk.agent_module import BaseTrigger
 
 
 class CronMultiplyInput(BaseModel):
@@ -54,12 +54,12 @@ class CustomTrigger(
 
 
 if __name__ == "__main__":
-    # ! First start the service registry server from the examples.server_registry.py file
+    # ! First start the module registry server from the examples.server_registry.py file
     # Create an instance of your custom tool
     custom_trigger = CustomTrigger(
-        service_id="cron multiplier",
-        service_address="localhost",
-        service_port=50053,
+        module_id="cron multiplier",
+        module_address="localhost",
+        module_port=50053,
         registry_address="localhost:50051",
     )
     custom_trigger.serve()

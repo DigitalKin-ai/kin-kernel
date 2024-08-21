@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from kin_sdk.tool.base import BaseTool
+from kin_sdk.agent_module import BaseTool
 
 
 class MultiplyInput(BaseModel):
@@ -26,12 +26,12 @@ class CustomTool(BaseTool[MultiplyInput, MultiplyOutput]):
 
 
 if __name__ == "__main__":
-    # ! First start the service registry server from the examples.server_registry.py file
+    # ! First start the module registry server from the examples.server_registry.py file
     # Create an instance of your custom tool
     custom_tool = CustomTool(
-        service_id="multiplier1",
-        service_address="localhost",
-        service_port=50052,
+        module_id="multiplier1",
+        module_address="localhost",
+        module_port=50052,
         registry_address="localhost:50051",
     )
     custom_tool.serve()

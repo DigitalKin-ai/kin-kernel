@@ -1,7 +1,7 @@
 from typing import Callable, Tuple
 from pydantic import BaseModel, Field
 
-from kin_sdk.tool.base import BaseTool
+from kin_sdk.agent_module import BaseTool
 
 
 class AdditionInput(BaseModel):
@@ -29,9 +29,9 @@ class AdditionTool(BaseTool[AdditionInput, AdditionOutput, AdditionSetup]):
 
     def start(self) -> None:
         """
-        Start the service
+        Start the module
         """
-        print("Starting the service")
+        print("Starting the module")
 
     def execute(
         self,
@@ -42,7 +42,7 @@ class AdditionTool(BaseTool[AdditionInput, AdditionOutput, AdditionSetup]):
         """
         Execute the addition tool
         """
-        print(f"Execute the service with setup_id: {setup_id}")
+        print(f"Execute the module with setup_id: {setup_id}")
         callback(
             AdditionOutput(
                 next_number=input_data.last_numbers[0] + input_data.last_numbers[1]
@@ -51,18 +51,18 @@ class AdditionTool(BaseTool[AdditionInput, AdditionOutput, AdditionSetup]):
 
     def stop(self) -> None:
         """
-        Stop the service
+        Stop the module
         """
-        print("Stopping the service")
+        print("Stopping the module")
 
 
 # if __name__ == "__main__":
-#     # ! First start the service registry server from the examples.server_registry.py file
+#     # ! First start the module registry server from the examples.server_registry.py file
 #     # Create an instance of your custom tool
 #     addition_tool = AdditionTool(
-#         service_id="services:addition_tool",
-#         service_address="localhost",
-#         service_port=50053,
+#         module_id="modules:addition_tool",
+#         module_address="localhost",
+#         module_port=50053,
 #         registry_address="localhost:50051",
 #     )
 #     addition_tool.serve()

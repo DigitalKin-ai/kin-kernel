@@ -3,18 +3,18 @@ import time
 import threading
 import random
 from google.protobuf import json_format, struct_pb2
-from proto.digitalkin.service.v1.service_pb2 import StartServiceRequest
-from proto.digitalkin.service.v1.service_pb2_grpc import ServiceStub
+from proto.digitalkin.module.v1.lifecycle_pb2 import StartModuleRequest
+from proto.digitalkin.module.v1.module_service_pb2_grpc import ModuleServiceStub
 import signal
 import contextlib
 
 
 def generate_request():
     input_data = {"number": 4, "factor": random.randint(1, 10)}
-    return StartServiceRequest(
+    return StartModuleRequest(
         input=json_format.ParseDict(input_data, struct_pb2.Struct()),
         setup_id="setups:test",
-        service_ids=[],
+        module_ids=[],
         request_type=2,  # SEND
     )
 
@@ -33,14 +33,14 @@ def run_client(server_address, num_requests, results, event):
         print(f"Client started, processing {num_requests} requests")
 
         with create_channel(server_address) as channel:
-            metadata = [("service_id", "test"), ("service_role", "owner")]
-            stub = ServiceStub(channel)
+            metadata = [("module_id", "test"), ("module_role", "owner")]
+            stub = ModuleServiceStub(channel)
 
             start_time = time.time()
             for i in range(num_requests):
                 print(f"{i + 1}/{num_requests}", end="\r")
                 try:
-                    response_iterator = stub.StartService(
+                    response_iterator = stub.StartModule(
                         iter([generate_request()]), metadata=metadata
                     )
 

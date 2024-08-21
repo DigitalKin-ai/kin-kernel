@@ -6,7 +6,7 @@ from examples.fibonacci.addition_tool import AdditionTool
 from examples.fibonacci.fibonacci_trigger import CronTrigger
 from examples.fibonacci.sequence_tool import SequenceTool
 from examples.fibonacci.display_tool import DisplayTool
-from kin_sdk.grpc_services import GRPCServerBase, ServiceRegistryServer
+from kin_sdk.grpc_system import GRPCServerBase, ModuleRegistryServer
 
 
 class ServerManager:
@@ -15,8 +15,8 @@ class ServerManager:
         self.threads = []
         self._stop_event = threading.Event()
 
-    def add_server(self, service: GRPCServerBase, *args, **kwargs) -> None:
-        server = service(*args, **kwargs)
+    def add_server(self, module: GRPCServerBase, *args, **kwargs) -> None:
+        server = module(*args, **kwargs)
         self.servers.append(server)
 
     def _run_server(self, server: GRPCServerBase) -> None:
@@ -31,20 +31,20 @@ class ServerManager:
 
     def stop_all(self) -> None:
         self._stop_event.set()
-        service_registry_server = []
-        other_service_server = []
+        module_registry_server = []
+        other_module_server = []
 
-        # Stop the ServiceRegistryServer first
+        # Stop the ModuleRegistryServer first
         for server in self.servers:
-            if server.__class__.__name__ == "ServiceRegistryServer":
-                service_registry_server.append(server)
+            if server.__class__.__name__ == "ModuleRegistryServer":
+                module_registry_server.append(server)
             else:
-                other_service_server.append(server)
+                other_module_server.append(server)
 
-        for server in other_service_server:
+        for server in other_module_server:
             server.serve_stop()
 
-        for server in service_registry_server:
+        for server in module_registry_server:
             server.serve_stop()
 
         for thread in self.threads:
@@ -62,39 +62,39 @@ def signal_handler(sig, frame) -> None:
 if __name__ == "__main__":
     manager = ServerManager()
 
-    # Start the ServiceRegistryServer service registry
-    manager.add_server(ServiceRegistryServer, 50051)
+    # Start the moduleRegistryServer module registry
+    manager.add_server(ModuleRegistryServer, 50051)
 
-    # Start the AdditionTool service
+    # Start the AdditionTool module
     manager.add_server(
         AdditionTool,
-        service_id="addition_tool",
-        service_address="localhost",
-        service_port=50052,
+        module_id="addition_tool",
+        module_address="localhost",
+        module_port=50052,
         registry_address="localhost:50051",
     )
-    # Start the SequenceTool service
+    # Start the SequenceTool module
     manager.add_server(
         SequenceTool,
-        service_id="sequence_tool",
-        service_address="localhost",
-        service_port=50053,
+        module_id="sequence_tool",
+        module_address="localhost",
+        module_port=50053,
         registry_address="localhost:50051",
     )
-    # Start the DisplayTool service
+    # Start the DisplayTool module
     manager.add_server(
         DisplayTool,
-        service_id="display_tool",
-        service_address="localhost",
-        service_port=50054,
+        module_id="display_tool",
+        module_address="localhost",
+        module_port=50054,
         registry_address="localhost:50051",
     )
-    # Start the CronTrigger service
+    # Start the CronTrigger module
     manager.add_server(
         CronTrigger,
-        service_id="fibonacci_trigger",
-        service_address="localhost",
-        service_port=50055,
+        module_id="fibonacci_trigger",
+        module_address="localhost",
+        module_port=50055,
         registry_address="localhost:50051",
     )
 

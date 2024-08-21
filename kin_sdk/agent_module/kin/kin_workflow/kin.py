@@ -7,11 +7,11 @@ import asyncio
 from typing import Callable, Dict, List, Any, Type
 from pydantic import BaseModel, create_model, Field
 
-from kin_sdk.grpc_services.models import ServiceModel
-from kin_sdk.kin.base import BaseKin
+from kin_sdk.grpc_system.models import ModuleModel
+from kin_sdk.agent_module.kin.base import BaseKin
 from kin_sdk.common import logger
-from kin_sdk.module.storage import DBStorage
-from kin_sdk.kin.kin_workflow.graph import GraphExecutor
+from kin_sdk.agent_management import DBStorage
+from kin_sdk.agent_module.kin.kin_workflow.graph import GraphExecutor
 
 
 def update_model_with_fields(
@@ -64,8 +64,8 @@ class WorkflowSetup(BaseModel):
 class KinWorkflow(BaseKin):
     name: str = "Kin Workflow"
     description: str = "This is the Kin is in workflow mode."
-    triggers: Dict[str, ServiceModel] = {}
-    tools: Dict[str, ServiceModel] = {}
+    triggers: Dict[str, ModuleModel] = {}
+    tools: Dict[str, ModuleModel] = {}
     input_format = WorkflowInput
     output_format = WorkflowOutput
     setup_format = WorkflowSetup
@@ -74,18 +74,18 @@ class KinWorkflow(BaseKin):
         self,
         name: str,
         description: str,
-        service_id: str,
-        service_address: str,
-        service_port: int,
+        module_id: str,
+        module_address: str,
+        module_port: int,
         registry_address: str,
         max_workers: int = 10,
     ):
         self.name = name
         self.description = description
         super().__init__(
-            service_id=service_id,
-            service_address=service_address,
-            service_port=service_port,
+            module_id=module_id,
+            module_address=module_address,
+            module_port=module_port,
             registry_address=registry_address,
             max_workers=max_workers,
         )
@@ -93,9 +93,9 @@ class KinWorkflow(BaseKin):
         self.db_storage = DBStorage()
         self.graphs_executor = None  # TODO manage multi connections
 
-    def register_services(self, nodes: list[dict]) -> None:
+    def register_modules(self, nodes: list[dict]) -> None:
         """
-        Registers the services.
+        Registers the modules.
         """
         # add triggers and tools
         for x in nodes:
@@ -114,26 +114,26 @@ class KinWorkflow(BaseKin):
             if data_id is None:
                 raise ValueError(f"The {data_type}: id is missing")
 
-            # Contact the service registry in order to find a specific trigger or tool
-            service_model: ServiceModel = self.search_service(data_id)
+            # Contact the module registry in order to find a specific trigger or tool
+            module_model: ModuleModel = self.search_module(data_id)
 
-            if service_model is None:
+            if module_model is None:
                 raise ValueError(
-                    f"The {data_type}: {data_id} is not found in the service registry"
+                    f"The {data_type}: {data_id} is not found in the module registry"
                 )
 
-            # If the data_type is different from the service_type, we raise an error
-            if data_type != service_model.service_type.value:
+            # If the data_type is different from the module_type, we raise an error
+            if data_type != module_model.module_type.value:
                 raise ValueError(
-                    f"The {data_type}: {data_id} has been registred as a {service_model.service_type} in the service registry but as a {service_model.service_type} in the workflow.",
+                    f"The {data_type}: {data_id} has been registred as a {module_model.module_type} in the module registry but as a {module_model.module_type} in the workflow.",
                 )
 
             if data_type == "trigger":
-                self.triggers[data_id] = service_model
-                logger.info("🏎️ Adding trigger service: %s to the list", data_id)
+                self.triggers[data_id] = module_model
+                logger.info("🏎️ Adding trigger module: %s to the list", data_id)
             elif data_type == "tool":
-                self.tools[data_id] = service_model
-                logger.info("🧰 Adding tool service: %s to the list", data_id)
+                self.tools[data_id] = module_model
+                logger.info("🧰 Adding tool module: %s to the list", data_id)
 
     async def __load_workflow(self, kin_id: str) -> List[Dict[str, Any]] | None:
         """
@@ -150,8 +150,8 @@ class KinWorkflow(BaseKin):
 
     def get_kin_input(self) -> Dict[str, Any]:
         inputs_schema = {
-            trigger_id: self.get_service_input(service_id=trigger_id)
-            for _node_id, trigger_id in self.graphs_executor.get_services_nodes(
+            trigger_id: self.get_module_input(module_id=trigger_id)
+            for _node_id, trigger_id in self.graphs_executor.get_modules_nodes(
                 "trigger"
             )
         }
@@ -173,7 +173,7 @@ class KinWorkflow(BaseKin):
             workflow = asyncio.run(self.__load_workflow(kin_id=kin_id))
 
             # add triggers and tools
-            self.register_services(workflow["nodes"])
+            self.register_modules(workflow["nodes"])
 
             setups_id = "fibonacci_setup"  # TODO: get setup_id from params
 
@@ -206,19 +206,19 @@ class KinWorkflow(BaseKin):
         # inputs_schema = self.get_kin_input()
         # print(inputs_schema.get(input_data.trigger_id, {}))
 
-        initial_node = self.graphs_executor.get_node_id_by_service_id(
+        initial_node = self.graphs_executor.get_node_id_by_module_id(
             input_data.trigger_id
         )
 
         sequence = [1, 1]
 
-        async def service_callback(
-            service_id: str, input_data: Dict[str, Any]
+        async def module_callback(
+            module_id: str, input_data: Dict[str, Any]
         ) -> Dict[str, Any]:
-            # print(f"Service callback: {service_id}")
+            # print(f"Module callback: {module_id}")
             print(f"input_data: {input_data}")
-            response_iterator = self.start_service(
-                service_id, input_data, setup_id, request_type="VALIDATE"
+            response_iterator = self.start_module(
+                module_id, input_data, setup_id, request_type="VALIDATE"
             )
             result = {}
             for response in response_iterator:  # TODO, continue here
@@ -233,16 +233,16 @@ class KinWorkflow(BaseKin):
                     break
                 print(f"Response: {response}")
             # print(f"Input data: {input_data}")
-            if service_id == "fibonacci_trigger":
+            if module_id == "fibonacci_trigger":
                 return {"initial_numbers": (1, 1)}
-            elif service_id == "sequence_tool":
+            elif module_id == "sequence_tool":
                 # inputs: initial_numbers / new_numbers
                 return {"last_number": sequence[-1], "fibonacci_list": sequence}
-            elif service_id == "addition_tool":
+            elif module_id == "addition_tool":
                 # inputs: last_numbers (tuple)
                 sequence.append(sequence[-1] + sequence[-2])
                 return {"next_number": sequence[-1]}
-            elif service_id == "display_tool":
+            elif module_id == "display_tool":
                 # inputs: fibonacci_list / new_number
                 print(f"Sequence: {sequence}")
                 return {}
@@ -250,7 +250,7 @@ class KinWorkflow(BaseKin):
             # raise NotImplementedError
 
         self.graphs_executor.execute(
-            initial_node, service_callback
+            initial_node, module_callback
         )  # le noeud doit avoir des values
         # 2. declanchement du workflow avec les inputs du trigger
         print("Executing Kin Workflow...")

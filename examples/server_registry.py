@@ -1,5 +1,5 @@
-from kin_sdk.grpc_services import ServiceRegistryServer
+from kin_sdk.grpc_system import ModuleRegistryServer
 
 if __name__ == "__main__":
-    server = ServiceRegistryServer(50051)
+    server = ModuleRegistryServer(50051)
     server.serve()

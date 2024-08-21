@@ -1,7 +1,7 @@
 from typing import Callable, List, Optional, Tuple
 from pydantic import BaseModel, Field
 
-from kin_sdk.tool.base import BaseTool
+from kin_sdk.agent_module import BaseTool
 
 
 class SequenceInput(BaseModel):
@@ -37,9 +37,9 @@ class SequenceTool(BaseTool[SequenceInput, SequenceOutput, SequenceSetup]):
 
     def start(self) -> None:
         """
-        Start the service
+        Start the module
         """
-        print("Starting the service")
+        print("Starting the module")
 
     def execute(
         self,
@@ -64,19 +64,19 @@ class SequenceTool(BaseTool[SequenceInput, SequenceOutput, SequenceSetup]):
 
     def stop(self) -> None:
         """
-        Stop the service
+        Stop the module
         """
-        print("Stopping the service")
+        print("Stopping the module")
 
 
 if __name__ == "__main__":
-    # ! First start the service registry server from the examples.server_registry.py file
+    # ! First start the module registry server from the examples.server_registry.py file
     test = {"input": {"last_numbers": [1, 2]}}
     # Create an instance of your custom tool
     sequence_tool = SequenceTool(
-        service_id="services:sequence_tool",
-        service_address="localhost",
-        service_port=50053,
+        module_id="modules:sequence_tool",
+        module_address="localhost",
+        module_port=50053,
         registry_address="localhost:50051",
     )
     sequence_tool.serve()

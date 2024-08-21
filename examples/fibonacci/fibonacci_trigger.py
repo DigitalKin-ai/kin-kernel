@@ -3,7 +3,7 @@
 from typing import Callable, Tuple
 from pydantic import BaseModel, Field
 
-from kin_sdk.trigger.base import BaseTrigger
+from kin_sdk.agent_module import BaseTrigger
 
 
 class CronFibonacciInput(BaseModel):
@@ -59,13 +59,13 @@ class CronTrigger(
 
 
 if __name__ == "__main__":
-    # ! First start the service registry server from the examples.server_registry.py file
+    # ! First start the module registry server from the examples.server_registry.py file
     test = {"input": {"last_numbers": [1, 2]}}
     # Create an instance of your custom tool
     cron_trigger = CronTrigger(
-        service_id="services:fibonacci_triogger",
-        service_address="localhost",
-        service_port=50053,
+        module_id="modules:fibonacci_triogger",
+        module_address="localhost",
+        module_port=50053,
         registry_address="localhost:50051",
     )
     cron_trigger.serve()

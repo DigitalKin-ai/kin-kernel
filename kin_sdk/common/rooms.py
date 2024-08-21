@@ -1,5 +1,6 @@
 """
 TODO: sphinx docstring
+? Should go to _module I think
 """
 
 import time
@@ -62,43 +63,43 @@ class Room:
         """
         return self.__expires_at
 
-    def get_services(self, service_role: str) -> set:
+    def get_modules(self, module_role: str) -> set:
         """
-        Get the services in the room
+        Get the modules in the room
         """
-        if service_role == "owner":
+        if module_role == "owner":
             return self.owners
-        elif service_role == "member":
+        elif module_role == "member":
             return self.members
         else:
-            raise Exception("Invalid service role")
+            raise Exception("Invalid module role")
 
-    def get_number_of_services(self) -> int:
+    def get_number_of_modules(self) -> int:
         """
-        Get the number of services in the room
+        Get the number of modules in the room
         """
         return len(self.owners) + len(self.members)
 
     # Setters
-    def add_owner(self, service_id: str) -> None:
+    def add_owner(self, module_id: str) -> None:
         """
         Add an owner to the room and so reset the expiration time also raise an exception if the room is locked
         """
         if self.__lock:
             raise Exception("Room is locked")
 
-        self.__owners.add(service_id)
-        self.__subscribers[service_id] = None
+        self.__owners.add(module_id)
+        self.__subscribers[module_id] = None
         self.__expires_at = None
 
-    def remove_owner(self, service_id: str) -> None:
+    def remove_owner(self, module_id: str) -> None:
         """
-        Remove an owner from the room and set the expiration time if there is no more services in the room
+        Remove an owner from the room and set the expiration time if there is no more modules in the room
         """
-        self.__owners.remove(service_id)
-        self.unsubscribe(service_id)
-        if self.get_number_of_services() <= 0:
-            # if there is no more services in the room, set the expiration time in two minutes timestamp
+        self.__owners.remove(module_id)
+        self.unsubscribe(module_id)
+        if self.get_number_of_modules() <= 0:
+            # if there is no more modules in the room, set the expiration time in two minutes timestamp
             self.__expires_at = int(time.time()) + self.__expiration_time
             self.__lock = True
 
@@ -110,25 +111,25 @@ class Room:
             return int(time.time()) > self.__expires_at
         return False
 
-    def add_member(self, service_id: str) -> None:
+    def add_member(self, module_id: str) -> None:
         """
         Add a member to the room and so reset the expiration time also raise an exception if the room is locked
         """
         if self.__lock:
             raise Exception("Room is locked")
 
-        self.__members.add(service_id)
-        self.__subscribers[service_id] = None
+        self.__members.add(module_id)
+        self.__subscribers[module_id] = None
         self.__expires_at = None
 
-    def remove_member(self, service_id: str) -> None:
+    def remove_member(self, module_id: str) -> None:
         """
-        Remove a member from the room and set the expiration time if there is no more services in the room
+        Remove a member from the room and set the expiration time if there is no more modules in the room
         """
-        self.__members.remove(service_id)
-        self.unsubscribe(service_id)
-        if self.get_number_of_services() <= 0:
-            # if there is no more services in the room, set the expiration time in two minutes timestamp
+        self.__members.remove(module_id)
+        self.unsubscribe(module_id)
+        if self.get_number_of_modules() <= 0:
+            # if there is no more modules in the room, set the expiration time in two minutes timestamp
             self.__expires_at = int(time.time()) + self.__expiration_time
             self.__lock = True
 
@@ -144,56 +145,54 @@ class Room:
         """
         self.__expires_at = None
 
-    def add_service(self, service_id: str, service_role: str) -> None:
+    def add_module(self, module_id: str, module_role: str) -> None:
         """
-        Add a service to the room
+        Add a module to the room
         """
-        if service_role == "owner":
-            self.add_owner(service_id)
-        elif service_role == "member":
-            self.add_member(service_id)
+        if module_role == "owner":
+            self.add_owner(module_id)
+        elif module_role == "member":
+            self.add_member(module_id)
         else:
-            raise Exception("Invalid service role")
+            raise Exception("Invalid module role")
 
-    def remove_service(self, service_id: str, service_role: str) -> None:
+    def remove_module(self, module_id: str, module_role: str) -> None:
         """
-        Remove a service from the room
+        Remove a module from the room
         """
-        if service_role == "owner":
-            self.remove_owner(service_id)
-        elif service_role == "member":
-            self.remove_member(service_id)
+        if module_role == "owner":
+            self.remove_owner(module_id)
+        elif module_role == "member":
+            self.remove_member(module_id)
         else:
-            raise Exception("Invalid service role")
+            raise Exception("Invalid module role")
 
     # Methods
-    def subscribe(self, service_id: str, callback: Callable[[str], None]) -> None:
+    def subscribe(self, module_id: str, callback: Callable[[str], None]) -> None:
         """
-        Subscribe to a service
+        Subscribe to a module
         """
         try:
-            self.__subscribers[service_id] = callback
+            self.__subscribers[module_id] = callback
         except KeyError:
-            raise Exception("Service not found")
+            raise Exception("module not found")
 
-    def unsubscribe(self, service_id: str) -> None:
+    def unsubscribe(self, module_id: str) -> None:
         """
-        Unsubscribe to a service
+        Unsubscribe to a module
         """
-        if service_id not in self.__subscribers:
-            raise Exception("Service not found")
+        if module_id not in self.__subscribers:
+            raise Exception("Module not found")
 
-        self.__subscribers.pop(service_id)
+        self.__subscribers.pop(module_id)
 
-    def publish(
-        self, service_id: str, request: dict, request_type: RequestType
-    ) -> None:
+    def publish(self, module_id: str, request: dict, request_type: RequestType) -> None:
         """
         Publish to all subscribers
         """
         self.__request = merge_dicts(self.__request, request)
         for id, callback in self.__subscribers.items():
-            callback(service_id, self.__request, request_type)
+            callback(module_id, self.__request, request_type)
 
 
 class Rooms:
@@ -230,65 +229,65 @@ class Rooms:
 
         self.__rooms.pop(room_id)
 
-    def add_service_to_room(
-        self, room_id: UUID, service_id: str, service_role: str
+    def add_module_to_room(
+        self, room_id: UUID, module_id: str, module_role: str
     ) -> None:
         """
-        Add a service to a room
+        Add a module to a room
         """
         try:
-            self.__rooms.get(room_id, None).add_service(service_id, service_role)
+            self.__rooms.get(room_id, None).add_module(module_id, module_role)
         except KeyError:
             raise Exception("Room not found")
 
-    def remove_service_from_room(
-        self, room_id: UUID, service_id: str, service_role: str
+    def remove_module_from_room(
+        self, room_id: UUID, module_id: str, module_role: str
     ) -> None:
         """
-        Remove a service from a room
+        Remove a module from a room
         """
         try:
-            self.__rooms.get(room_id, None).remove_service(service_id, service_role)
+            self.__rooms.get(room_id, None).remove_module(module_id, module_role)
         except KeyError:
             raise Exception("Room not found")
 
     def subscribe_to_room(
-        self, room_id: UUID, service_id: str, callback: Callable[[str], None]
+        self, room_id: UUID, module_id: str, callback: Callable[[str], None]
     ) -> None:
         """
         Subscribe to a room
         """
         try:
-            self.__rooms.get(room_id, None).subscribe(service_id, callback)
+            self.__rooms.get(room_id, None).subscribe(module_id, callback)
         except KeyError:
             raise Exception("Room not found")
 
-    def unsubscribe_to_room(self, room_id: UUID, service_id: str) -> None:
+    def unsubscribe_to_room(self, room_id: UUID, module_id: str) -> None:
         """
         Unsubscribe to a room
         """
         try:
-            self.__rooms.get(room_id, None).unsubscribe(service_id)
+            self.__rooms.get(room_id, None).unsubscribe(module_id)
         except KeyError:
             raise Exception("Room not found")
 
     def publish_to_room(
-        self, room_id: UUID, service_id: str, request: dict, request_type: RequestType
+        self, room_id: UUID, module_id: str, request: dict, request_type: RequestType
     ) -> None:
         """
         Publish to a room
         """
         try:
-            self.__rooms.get(room_id, None).publish(service_id, request, request_type)
+            self.__rooms.get(room_id, None).publish(module_id, request, request_type)
         except KeyError:
             raise Exception("Room not found")
 
-    def get_services_in_room(self, room_id: UUID, service_role: str) -> set:
+    def get_modules_in_room(self, room_id: UUID, module_role: str) -> set:
         """
-        Get the services in a room
+        Get the modules in a room
         """
         try:
-            return self.__rooms.get(room_id, None).get_services(service_role)
+            return self.__rooms.get(room_id, None).get_modules(module_role)
         except KeyError:
             raise Exception("Room not found")
 

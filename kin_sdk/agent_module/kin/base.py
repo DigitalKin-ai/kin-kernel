@@ -7,42 +7,42 @@ from typing import TypeVar, List, Callable
 
 from pydantic import BaseModel
 
-from kin_sdk.common.types import ServiceType
-from kin_sdk.service.base import BaseService
-from kin_sdk.trigger.base import BaseTrigger
-from kin_sdk.tool.base import BaseTool
+from kin_sdk.common.types import ModuleType
+from kin_sdk.agent_module._module import BaseModule
+from kin_sdk.agent_module.trigger.base import BaseTrigger
+from kin_sdk.agent_module.tool.base import BaseTool
 
 InputModelT = TypeVar("InputModelT", bound=BaseModel)
 OutputModelT = TypeVar("OutputModelT", bound=BaseModel)
 SetupModelT = TypeVar("SetupModelT", bound=BaseModel)
 
 
-class BaseKin(BaseService[InputModelT, OutputModelT, SetupModelT], ABC):
+class BaseKin(BaseModule[InputModelT, OutputModelT, SetupModelT], ABC):
     triggers: List[BaseTrigger]
     tools: List[BaseTool]
 
     def __init__(
         self,
-        service_id: str,
-        service_address: str,
-        service_port: int,
+        module_id: str,
+        module_address: str,
+        module_port: int,
         registry_address: str,
         max_workers: int = 10,
     ):
         """
         Initializes the BaseKin.
 
-        :param service_id: The ID of the service.
-        :param service_address: The address of the service.
-        :param service_port: The port of the service.
+        :param module_id: The ID of the module.
+        :param module_address: The address of the module.
+        :param module_port: The port of the module.
         :param registry_address: The address of the registry.
         :param max_workers: The maximum number of worker threads.
         """
         super().__init__(
-            service_id=service_id,
-            service_address=service_address,
-            service_port=service_port,
-            service_type=ServiceType.KIN,
+            module_id=module_id,
+            module_address=module_address,
+            module_port=module_port,
+            module_type=ModuleType.KIN,
             registry_address=registry_address,
             max_workers=max_workers,
         )
