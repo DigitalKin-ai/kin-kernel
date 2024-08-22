@@ -1,6 +1,7 @@
 """
     setup.py
 """
+
 from typing import Dict, Any
 from setuptools import setup, find_packages
 
@@ -9,7 +10,7 @@ with open("kinkernel/_version.py", encoding="utf-8") as fp:
     exec(fp.read(), version)  # pylint: disable=w0122
 
 setup(
-    name="kin-kernel",
+    name="kin_sdk",
     version=version["__version__"],
     author="DigitalKin.ai",
     author_email="contact@digitalkin.ai",
@@ -25,6 +26,10 @@ setup(
         "loguru>=0.7.2",
         "opentelemetry-api>=1.21.0",
         "opentelemetry-sdk>=1.21.0",
+        "protoc-gen-validate==1.0.4",
+        "grpcio>=1.65.5",
+        "surrealdb>=0.3.2",
+        "networkx>=3.3",
     ],
     python_requires=">=3.10",
     classifiers=[
@@ -35,7 +40,7 @@ setup(
         "Topic :: Software Development :: Libraries",
         "Operating System :: OS Independent",
     ],
-    keywords="kin-kernel cells autonomous-agents IoA DigitalKin",
+    keywords="kin_sdk cells autonomous-agents IoA DigitalKin",
     include_package_data=True,
-    package_data={"kinkernel": ["py.typed"]},
+    package_data={"kin_sdk": ["py.typed"]},
 )
