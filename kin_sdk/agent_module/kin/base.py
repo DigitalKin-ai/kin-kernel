@@ -18,6 +18,8 @@ SetupModelT = TypeVar("SetupModelT", bound=BaseModel)
 
 
 class BaseKin(BaseModule[InputModelT, OutputModelT, SetupModelT], ABC):
+    """TODO: Sphinx docstring"""
+
     triggers: List[BaseTrigger]
     tools: List[BaseTool]
 

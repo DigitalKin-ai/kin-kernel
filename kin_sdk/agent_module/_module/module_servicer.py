@@ -4,9 +4,10 @@ TODO: sphinx docstring
 
 import json
 import threading
+from typing import Any, Generator
+
 import grpc
 
-from typing import Any, Generator
 from opentelemetry import trace
 from google.protobuf import json_format, struct_pb2
 from pydantic import BaseModel
@@ -45,14 +46,18 @@ from kin_sdk.common import (
 
 
 class ModuleServicer(ModuleServiceServicer):
+    """TODO: Sphinx docstring"""
+
     def __init__(self, module: BaseModule):
         self.module = module
         self.job_manager = JobManager(self.module.max_workers)
-        self.rooms: Rooms = Rooms()  # TODO: remove expired rooms
+        self.rooms: Rooms = Rooms()  # ! TODO: remove expired rooms
         self.tracer = trace.get_tracer(self.module.__class__.__name__)
         self.lock = threading.Lock()
 
-    def __start_job(self, job_id: str, *args, **kwargs) -> None:
+    def __start_job(
+        self, job_id: str, *args, **kwargs  # pylint: disable=unused-argument
+    ) -> None:
         """
         Starts the job in a separate thread.
         """
@@ -86,21 +91,23 @@ class ModuleServicer(ModuleServiceServicer):
             )
             self.__stop_job(job_id)
 
-        except Exception as e:
+        except ValueError as e:
             logger.error("😵 Exception Error: %s", e)
             self.job_manager.update_job_status(job_id, JobStatus.FAILED)
 
-    def __stop_job(self, job_id: str, *args, **kwargs) -> None:
+    def __stop_job(
+        self, job_id: str, *args, **kwargs  # pylint: disable=unused-argument
+    ) -> None:
         try:
             self.module.stop()
             self.job_manager.update_job_status(job_id, JobStatus.STOPPED)
             self.job_manager.stop_outputs(job_id)
-        except Exception as e:
+        except ValueError as e:
             logger.error("😵 Exception Error: %s", e)
             self.job_manager.update_job_status(job_id, JobStatus.FAILED)
 
     @validate_stream_request()
-    def StartModule(
+    def StartModule(  # pylint: disable=arguments-renamed
         self, request: StartModuleRequest, context: grpc.ServicerContext
     ) -> Generator[StartModuleResponse, Any, Any]:
         """
@@ -113,12 +120,12 @@ class ModuleServicer(ModuleServiceServicer):
                 preserving_proto_field_name=True,
             )
             # Extract data from the request
-            input = json_request.get("input", None)
+            input_param = json_request.get("input", None)
             module_ids = json_request.get("module_ids", [])
             setup_id = json_request.get("setup_id", None)
 
-            # Validate the input data
-            input_data = self.module.input_format.model_validate(input)
+            # Validate the input_param data
+            input_data = self.module.input_format.model_validate(input_param)
             # Create and Start the job
             job_id = self.job_manager.start_job(
                 input_data, setup_id, module_ids, self.__start_job
@@ -127,7 +134,7 @@ class ModuleServicer(ModuleServiceServicer):
                 print(output)
                 output_struct = json_format.Parse(
                     text=json.dumps(output.model_dump()),
-                    message=struct_pb2.Struct(),
+                    message=struct_pb2.Struct(),  # pylint: disable=no-member
                     ignore_unknown_fields=True,
                 )
                 yield StartModuleResponse(
@@ -143,7 +150,7 @@ class ModuleServicer(ModuleServiceServicer):
             # Mark the job as completed
             self.job_manager.update_job_status(job_id, JobStatus.SUCCESS)
             return
-        except Exception as e:
+        except ValueError as e:
             context.set_code(grpc.StatusCode.INTERNAL)
             context.set_details(str(e))
             yield StartModuleResponse(
@@ -182,7 +189,7 @@ class ModuleServicer(ModuleServiceServicer):
                 )
             raise ValueError(f"😵 Job ID {job_id} is not found.")
 
-        except Exception as e:
+        except ValueError as e:
             logger.error("Exception Error: %s", e)
             context.set_code(grpc.StatusCode.INTERNAL)
             context.set_details(str(e))
@@ -198,12 +205,14 @@ class ModuleServicer(ModuleServiceServicer):
     ) -> GetModuleInputResponse:
         print("Get module input schema")
 
-    def GetServiceOutput(
+    def GetModuleOutput(
         self,
-        request: GetModuleOutputRequest,
-        context: grpc.ServicerContext,
+        _request: GetModuleOutputRequest,
+        _context: grpc.ServicerContext,
     ) -> GetModuleOutputResponse:
+        """TODO: Sphinx docstring"""
         print("Get module output schema")
 
     def add_to_server(self, server: grpc.Server) -> None:
+        """TODO: Sphinx docstring"""
         add_ModuleServiceServicer_to_server(self, server)

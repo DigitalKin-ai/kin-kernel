@@ -10,13 +10,20 @@ from typing import Callable, DefaultDict, Union
 
 from kin_sdk.common.merge_dicts import merge_dicts
 from kin_sdk.common.types import RequestType
+from kin_sdk.exception import (
+    RoomLockedException,
+    InvalidModuleRoleException,
+    ModuleInRoomNotFoundException,
+)
 
 EXPIRATION_TIME = 10
 
 
 class Room:
-    def __init__(self, id: UUID, expiration_time: int = EXPIRATION_TIME):
-        self.__id = id
+    """TODO: sphinx docstring"""
+
+    def __init__(self, room_id: UUID, expiration_time: int = EXPIRATION_TIME):
+        self.__id = room_id
         self.__owners = set()
         self.__members = set()
         self.__request = {}
@@ -72,7 +79,7 @@ class Room:
         elif module_role == "member":
             return self.members
         else:
-            raise Exception("Invalid module role")
+            raise InvalidModuleRoleException("Invalid module role")
 
     def get_number_of_modules(self) -> int:
         """
@@ -86,7 +93,7 @@ class Room:
         Add an owner to the room and so reset the expiration time also raise an exception if the room is locked
         """
         if self.__lock:
-            raise Exception("Room is locked")
+            raise RoomLockedException("Room is locked")
 
         self.__owners.add(module_id)
         self.__subscribers[module_id] = None
@@ -116,7 +123,7 @@ class Room:
         Add a member to the room and so reset the expiration time also raise an exception if the room is locked
         """
         if self.__lock:
-            raise Exception("Room is locked")
+            raise RoomLockedException("Room is locked")
 
         self.__members.add(module_id)
         self.__subscribers[module_id] = None
@@ -154,7 +161,7 @@ class Room:
         elif module_role == "member":
             self.add_member(module_id)
         else:
-            raise Exception("Invalid module role")
+            raise InvalidModuleRoleException("Invalid module role")
 
     def remove_module(self, module_id: str, module_role: str) -> None:
         """
@@ -165,7 +172,7 @@ class Room:
         elif module_role == "member":
             self.remove_member(module_id)
         else:
-            raise Exception("Invalid module role")
+            raise InvalidModuleRoleException("Invalid module role")
 
     # Methods
     def subscribe(self, module_id: str, callback: Callable[[str], None]) -> None:
@@ -174,15 +181,15 @@ class Room:
         """
         try:
             self.__subscribers[module_id] = callback
-        except KeyError:
-            raise Exception("module not found")
+        except KeyError as exc:
+            raise ModuleInRoomNotFoundException("module not found") from exc
 
     def unsubscribe(self, module_id: str) -> None:
         """
         Unsubscribe to a module
         """
         if module_id not in self.__subscribers:
-            raise Exception("Module not found")
+            raise ModuleInRoomNotFoundException("Module not found")
 
         self.__subscribers.pop(module_id)
 
@@ -191,16 +198,19 @@ class Room:
         Publish to all subscribers
         """
         self.__request = merge_dicts(self.__request, request)
-        for id, callback in self.__subscribers.items():
+        for _id, callback in self.__subscribers.items():
             callback(module_id, self.__request, request_type)
 
 
 class Rooms:
+    """TODO: sphinx docstring"""
+
     def __init__(self):
         self.__rooms: DefaultDict[UUID, Room] = defaultdict(Room)
 
     @property
     def rooms(self) -> DefaultDict[UUID, Room]:
+        """TODO: sphinx docstring"""
         return self.__rooms
 
     def create_room(self, room_id: UUID) -> None:
@@ -209,7 +219,7 @@ class Rooms:
         """
         # check if room does not exist
         if room_id in self.__rooms:
-            raise Exception("Room already exists")
+            raise KeyError("Room already exists")
 
         self.__rooms[room_id] = Room(room_id)
 
@@ -225,7 +235,7 @@ class Rooms:
         """
         # check if room exists
         if room_id not in self.__rooms:
-            raise Exception("Room not found")
+            raise KeyError("Room not found")
 
         self.__rooms.pop(room_id)
 
@@ -237,8 +247,8 @@ class Rooms:
         """
         try:
             self.__rooms.get(room_id, None).add_module(module_id, module_role)
-        except KeyError:
-            raise Exception("Room not found")
+        except KeyError as exc:
+            raise KeyError("Room not found") from exc
 
     def remove_module_from_room(
         self, room_id: UUID, module_id: str, module_role: str
@@ -248,8 +258,8 @@ class Rooms:
         """
         try:
             self.__rooms.get(room_id, None).remove_module(module_id, module_role)
-        except KeyError:
-            raise Exception("Room not found")
+        except KeyError as exc:
+            raise KeyError("Room not found") from exc
 
     def subscribe_to_room(
         self, room_id: UUID, module_id: str, callback: Callable[[str], None]
@@ -259,8 +269,8 @@ class Rooms:
         """
         try:
             self.__rooms.get(room_id, None).subscribe(module_id, callback)
-        except KeyError:
-            raise Exception("Room not found")
+        except KeyError as exc:
+            raise KeyError("Room not found") from exc
 
     def unsubscribe_to_room(self, room_id: UUID, module_id: str) -> None:
         """
@@ -268,8 +278,8 @@ class Rooms:
         """
         try:
             self.__rooms.get(room_id, None).unsubscribe(module_id)
-        except KeyError:
-            raise Exception("Room not found")
+        except KeyError as exc:
+            raise KeyError("Room not found") from exc
 
     def publish_to_room(
         self, room_id: UUID, module_id: str, request: dict, request_type: RequestType
@@ -279,8 +289,8 @@ class Rooms:
         """
         try:
             self.__rooms.get(room_id, None).publish(module_id, request, request_type)
-        except KeyError:
-            raise Exception("Room not found")
+        except KeyError as exc:
+            raise KeyError("Room not found") from exc
 
     def get_modules_in_room(self, room_id: UUID, module_role: str) -> set:
         """
@@ -288,10 +298,12 @@ class Rooms:
         """
         try:
             return self.__rooms.get(room_id, None).get_modules(module_role)
-        except KeyError:
-            raise Exception("Room not found")
+        except KeyError as exc:
+            raise KeyError("Room not found") from exc
 
-    def remove_expired_rooms(self) -> None:  # TODO : do not forget to call this method
+    def remove_expired_rooms(
+        self,
+    ) -> None:  # ! TODO : do not forget to call this method
         """
         Remove expired rooms
         """

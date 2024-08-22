@@ -17,6 +17,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class ConcurrentDict(UserDict):
+    """TODO: sphinx docstring"""
+
     def __init__(self, *args, **kwargs):
         self.lock = threading.RLock()  # Using RLock instead of Lock
         super().__init__(*args, **kwargs)
@@ -105,14 +107,14 @@ class Job(BaseModel):
 
         :param item: The item to be added to the outputs.
         """
-        self.outputs.put(item)
+        self.outputs.put(item)  # pylint: disable=no-member
 
     def stop_outputs(self) -> None:
         """
         Signals the termination of the job's output stream.
         """
-        self.stop_event.set()
-        self.outputs.put(None)  # Sentinel value
+        self.stop_event.set()  # pylint: disable=no-member
+        self.outputs.put(None)  # pylint: disable=no-member # Sentinel value
 
     def get_outputs(self) -> Iterator[Any]:
         """
@@ -120,8 +122,8 @@ class Job(BaseModel):
 
         :return: An iterator yielding output items.
         """
-        while not self.stop_event.is_set():
-            item = self.outputs.get()
+        while not self.stop_event.is_set():  # pylint: disable=no-member
+            item = self.outputs.get()  # pylint: disable=no-member
             if item is None:  # Check for sentinel value
                 break
             yield item

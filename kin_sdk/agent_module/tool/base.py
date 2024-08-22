@@ -51,6 +51,8 @@ SetupModelT = TypeVar("SetupModelT", bound=BaseModel)
 
 
 class BaseTool(BaseModule[InputModelT, OutputModelT, SetupModelT], ABC):
+    """TODO: Sphinx docstring"""
+
     def __init__(
         self,
         module_id: str,

@@ -17,7 +17,7 @@ class ModuleRegistry(module_registry_pb2_grpc.ModuleRegistryServiceServicer):
         """
         Initializes the ModuleRegistry with an empty dictionary to store modules.
         """
-        # TODO replace by a bridge pattern to store services in a database
+        # ! TODO replace by a bridge pattern to store services in a database
         self.modules: Dict[str, Dict[str, Any]] = {}
 
     @validate_grpc_request

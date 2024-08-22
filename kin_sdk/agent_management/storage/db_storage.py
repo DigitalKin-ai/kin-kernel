@@ -4,11 +4,11 @@ TODO: externalise the database connection details
 """
 
 import os
-from surrealdb import Surreal
 from contextlib import asynccontextmanager
-
-from kin_sdk.module.storage.base import BaseStorage
+from surrealdb import Surreal
+from kin_sdk.agent_management.storage.base import BaseStorage
 from kin_sdk.common import logger
+from kin_sdk.exception import LoadingDatabaseException
 
 
 @asynccontextmanager
@@ -39,11 +39,13 @@ async def setup_surrealdb_connection():
 
 
 class DBStorage(BaseStorage):
-    def __init__(self):
-        pass
+    """TODO: sphinx docstring"""
+
+    # def __init__(self):
+    #     pass
 
     def storage_save(self, kin_id, content):
-        pass
+        """TODO: sphinx docstring"""
 
     async def storage_load(self, kin_id: str, table: str):
         """
@@ -61,10 +63,9 @@ class DBStorage(BaseStorage):
                     },
                 )
                 result = result[0].get("result", None)
-        except Exception as e:
-            logger.error(f"Error loading data from the database: {e}")
-        finally:
-            return result
+        except LoadingDatabaseException as e:
+            logger.error("Error loading data from the database: %s", e)
+        return result
 
     async def storage_load_setup(self, kin_id: str, setup_id: str):
         """
@@ -85,10 +86,9 @@ class DBStorage(BaseStorage):
                     },
                 )
                 result = result[0].get("result", None)
-        except Exception as e:
-            logger.error(f"Error loading data from the database: {e}")
-        finally:
-            return result
+        except LoadingDatabaseException as e:
+            logger.error("Error loading data from the database: %s", e)
+        return result
 
     def storage_alloc(self, kin_id):
         pass

@@ -9,7 +9,7 @@ from google.protobuf import struct_pb2
 
 def pydantic_validation_error(
     e: ValidationError, context: grpc.ServicerContext = None
-) -> struct_pb2.Struct:
+) -> struct_pb2.Struct:  # pylint: disable=no-member
     """
     TODO: sphinx docstring
     """

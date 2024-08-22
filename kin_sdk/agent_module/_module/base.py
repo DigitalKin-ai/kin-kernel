@@ -15,6 +15,7 @@ from proto.digitalkin.module.v1.module_service_pb2_grpc import (
     ModuleServiceStub,
 )
 from proto.digitalkin.module.v1.lifecycle_pb2 import StartModuleRequest
+from kin_sdk.grpc_system.models import ModuleModel
 from kin_sdk.grpc_system import ModuleServer
 from kin_sdk.common import ModuleType, logger
 
@@ -238,7 +239,9 @@ class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ModuleServer, 
             ).model_dump()
 
             # Convert in gRPC Struct proto format the output data in order to send it as input of a block
-            struct_input = json_format.ParseDict(output_data, struct_pb2.Struct())
+            struct_input = json_format.ParseDict(
+                output_data, struct_pb2.Struct()  # pylint: disable=no-member
+            )
 
             # use module_ids to send the output to the right module
             for module_id in module_ids:
@@ -247,7 +250,7 @@ class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ModuleServer, 
                 if module is None:
                     return None
 
-                logger.info(f"Module found: \n\t{module}")
+                logger.info("Module found: \n\t%s", module)
 
                 # Send the result to the list of gRPC modules
                 with grpc.insecure_channel(
@@ -256,16 +259,19 @@ class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ModuleServer, 
                     stub = ModuleServiceStub(channel)
                     request = StartModuleRequest(
                         input=struct_input,
-                        setup_id="I don't know what to put here",  # TODO: What to put here?
-                        module_ids=[],  # TODO: What to put here?
+                        setup_id="I don't know what to put here",  # ! TODO: What to put here?
+                        module_ids=[],  # ! TODO: What to put here?
                     )
-                    stub.ExecuteTool(request)
+                    stub.StartModule(request)
                     logger.info(
-                        f"📞 Output sent to Tool module {module_id} \n\t{module}"
+                        "📞 Output sent to Tool module %s \n\t%s", module_id, module
                     )
         except grpc.RpcError as e:
-            # Handle gRPC exceptions
-            message = f"😵 Error sending output to {module.module_type} module {module_id}:\n\t"
+            if not isinstance(module, ModuleModel):
+                message = "😵 Error sending output to none existing module:\n\t"
+            else:
+                # Handle gRPC exceptions
+                message = f"😵 Error sending output to {module.module_type} module {module_id}:\n\t"
             if e.code() == grpc.StatusCode.UNAVAILABLE:
                 message += "- Server is unavailable"
             elif e.code() == grpc.StatusCode.DEADLINE_EXCEEDED:
@@ -277,4 +283,4 @@ class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ModuleServer, 
             logger.error(message)
         except Exception as e:
             logger.error("Exception during send_output: %s", e)
-            raise Exception(str(e))
+            raise RuntimeError(str(e)) from e

@@ -1,29 +1,31 @@
+"""TODO: Add a description here."""
+
 import json
 import time
-import grpc
 import uuid
 from threading import Lock, Thread
+from functools import wraps
 
 # from datetime import datetime
-from functools import wraps
 from typing import Dict, Any, Iterator, Callable, Literal, Optional
 from queue import Queue
 
+import grpc
 from pydantic import BaseModel, Field, model_validator, ValidationError
 from google.protobuf import json_format, struct_pb2
 from protoc_gen_validate.validator import validate, ValidationFailed
 from pydantic_core import PydanticUndefinedType
-
-from kin_sdk.common.pydantic_validation_error import pydantic_validation_error
 
 from proto.digitalkin.module.v1.lifecycle_pb2 import (
     StartModuleRequest,
     StartModuleResponse,
     ConnectionResponse,
     ErrorResponse,
+    InputDataResponse,
 )
-from proto.digitalkin.module.v1.information_pb2 import GetModuleInputResponse
 
+from kin_sdk.exception import ValidateGrpcRequestException
+from kin_sdk.common.pydantic_validation_error import pydantic_validation_error
 from kin_sdk.common.logger import logger
 from kin_sdk.common.types import RequestType
 from kin_sdk.common.rooms import Rooms
@@ -88,7 +90,7 @@ def validate_grpc_request(func):
             logger.error("Validation Error: %s", e)
             context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
             context.set_details(str(e))
-        except Exception as e:
+        except ValidateGrpcRequestException as e:
             # Handle other exceptions that may occur
             logger.error("Validate Exception Error: %s", e)
             context.set_code(grpc.StatusCode.INTERNAL)
@@ -178,7 +180,7 @@ def validate_stream_grpc_request():
                     self,
                     json_format.ParseDict(
                         {"partial_request": True},
-                        struct_pb2.Struct(),
+                        struct_pb2.Struct(),  # pylint: disable=no-member
                     ),
                     context,
                 )
@@ -188,7 +190,7 @@ def validate_stream_grpc_request():
                 logger.error("Validation Error: %s", e)
                 context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
                 context.set_details(str(e))
-            except Exception as e:
+            except ValidateGrpcRequestException as e:
                 # Handle other exceptions that may occur
                 logger.error("Validate Exception Error: %s", e)
                 context.set_code(grpc.StatusCode.INTERNAL)
@@ -283,13 +285,14 @@ def get_metadata(context: grpc.ServicerContext) -> Metadata:
 
 
 def pydantic_validation(request: Dict[str, Any], model: BaseModel) -> None:
-    input = request.get("input", None)
+    """TODO: sphinx docstring"""
+    input_data = request.get("input", None)
 
-    if input is None:
+    if input_data is None:
         raise ValueError("Input data is missing.")
 
     # Parse and validate the input JSON using the input_format Pydantic model
-    model.model_validate(input)
+    model.model_validate(input_data)
 
 
 def validate_stream_request():
@@ -369,7 +372,7 @@ def validate_stream_request():
                     message_queue.put((module_id, request, request_type))
 
                 # Subscribe to the room to receive messages from other modules in the room
-                logger.debug(f"Subscribing to room {metadata.room_id}")
+                logger.debug("Subscribing to room %s", metadata.room_id)
                 self.rooms.subscribe_to_room(
                     metadata.room_id, metadata.module_id, callback
                 )
@@ -419,9 +422,9 @@ def validate_stream_request():
                             ):
                                 break
                     except grpc.RpcError as e:
-                        logger.info(f"Client disconnected: {e}")
-                    except Exception as e:
-                        logger.error(f"Error handling incoming messages: {e}")
+                        logger.info("Client disconnected: %s", e)
+                    except ValidateGrpcRequestException as e:
+                        logger.error("Error handling incoming messages: %s", e)
                     finally:
                         message_queue.put((metadata.module_id, None, RequestType.EXIT))
 
@@ -440,11 +443,14 @@ def validate_stream_request():
                     while True:
                         sender_id, request, request_type = message_queue.get()
                         logger.debug(
-                            f"Received request from {sender_id}: {request_type} \n {request}"
+                            "Received request from %s: %s \n %s",
+                            sender_id,
+                            request_type,
+                            request,
                         )
 
                         if request is None or request_type == RequestType.EXIT:
-                            logger.info(f"Module {metadata.module_id} disconnected")
+                            logger.info("Module %s disconnected", metadata.module_id)
                             break
 
                         # if the module is the owner of the room and the request is a validate request
@@ -455,14 +461,15 @@ def validate_stream_request():
                             and request_type == RequestType.VALIDATE
                         ):
                             logger.debug(
-                                f"Module: {metadata.module_id} want to validate the request"
+                                "Module: %s want to validate the request",
+                                metadata.module_id,
                             )
                             yield (None, True)
                             break
 
-                        input = json_format.Parse(
+                        input_data = json_format.Parse(
                             text=json.dumps(request.get("input", {})),
-                            message=struct_pb2.Struct(),
+                            message=struct_pb2.Struct(),  # pylint: disable=no-member
                             ignore_unknown_fields=True,
                         )
                         # yield the message to the client
@@ -470,16 +477,16 @@ def validate_stream_request():
                             StartModuleResponse(
                                 success=True,
                                 response_type="INPUT",
-                                input_response=GetModuleInputResponse(
+                                input_response=InputDataResponse(
                                     message="New input data has been added in the room",
-                                    input=input,
+                                    input=input_data,
                                 ),
                                 module_id=self.module.module_id,
                             ),
                             False,
                         )
                     logger.debug(
-                        f"Message sender finished for module {metadata.module_id}"
+                        "Message sender finished for module %s", metadata.module_id
                     )
 
                 # Return the message sender generator to the client
@@ -531,7 +538,7 @@ def validate_stream_request():
                         yield message
 
                 # Après incoming_future.result(), on arrête le module et ferme la connexion gRPC
-                logger.info(f"Stopping module for {metadata.module_id}")
+                logger.info("Stopping module for %s", metadata.module_id)
                 context.set_code(grpc.StatusCode.OK)
                 context.set_details("Module completed successfully")
                 return  # This will stop the generator and close the gRPC connection
@@ -570,7 +577,7 @@ def validate_stream_request():
                         details=str(e),
                     ),
                 )
-            except Exception as e:
+            except ValidateGrpcRequestException as e:
                 logger.exception("Unexpected error: %s", e)
                 context.set_code(grpc.StatusCode.INTERNAL)
                 context.set_details(str(e))
@@ -584,9 +591,11 @@ def validate_stream_request():
                 )
             finally:
                 # Ensure that the module is always stopped and the connection is closed
-                logger.info(f"Finalizing module for {metadata.module_id}")
+                logger.info("Finalizing module for %s", metadata.module_id)
                 # You might want to add any cleanup code here
-                return  # This will stop the generator and close the gRPC connection if it hasn't been closed already
+
+            # Stop the generator and close the gRPC connection if it hasn't been closed already
+            return
 
         return wrapper
 
