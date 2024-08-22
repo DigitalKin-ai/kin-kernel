@@ -224,7 +224,10 @@ class KinWorkflow(BaseKin):
             for response in response_iterator:  # TODO, continue here
                 response_type = response.get("response_type", None)
                 print("\n---\nresponse_type: ", response_type)
-                if response_type is not None and response_type == "OUTPUT":
+                if (
+                    response_type is not None
+                    and response_type == "START_RESPONSE_TYPE_OUTPUT"
+                ):
                     print(response)
                     output_response = response.get("output_response", {})
                     result = output_response.get("output", {})

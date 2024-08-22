@@ -380,7 +380,7 @@ def validate_stream_request():
                 # Send success message to client
                 yield StartModuleResponse(
                     success=True,
-                    response_type="CONNECTION",
+                    response_type="START_RESPONSE_TYPE_CONNECTION",
                     connection=ConnectionResponse(
                         message=f"Connected to room {metadata.room_id}",
                         room_id=str(metadata.room_id),
@@ -403,10 +403,12 @@ def validate_stream_request():
                             with self.lock:
                                 request_type = (
                                     RequestType[
-                                        request_dict.pop("request_type", "SEND")
+                                        request_dict.pop(
+                                            "request_type", "REQUEST_TYPE_SEND"
+                                        )
                                     ]
                                     if metadata.module_role == "owner"
-                                    else RequestType.SEND
+                                    else RequestType.REQUEST_TYPE_SEND
                                 )
 
                                 self.rooms.publish_to_room(
@@ -417,7 +419,7 @@ def validate_stream_request():
                                 )
 
                             if (
-                                request_type == RequestType.VALIDATE
+                                request_type == RequestType.REQUEST_TYPE_VALIDATE
                                 and metadata.module_role == "owner"
                             ):
                                 break
@@ -426,7 +428,9 @@ def validate_stream_request():
                     except ValidateGrpcRequestException as e:
                         logger.error("Error handling incoming messages: %s", e)
                     finally:
-                        message_queue.put((metadata.module_id, None, RequestType.EXIT))
+                        message_queue.put(
+                            (metadata.module_id, None, RequestType.REQUEST_TYPE_EXIT)
+                        )
 
                 # Start the incoming message handler in a separate thread
                 # this is useful to do not block the main thread that is waiting for the room incoming messages
@@ -449,7 +453,10 @@ def validate_stream_request():
                             request,
                         )
 
-                        if request is None or request_type == RequestType.EXIT:
+                        if (
+                            request is None
+                            or request_type == RequestType.REQUEST_TYPE_EXIT
+                        ):
                             logger.info("Module %s disconnected", metadata.module_id)
                             break
 
@@ -458,7 +465,7 @@ def validate_stream_request():
                         if (
                             metadata.module_role == "owner"
                             and metadata.module_id == sender_id
-                            and request_type == RequestType.VALIDATE
+                            and request_type == RequestType.REQUEST_TYPE_VALIDATE
                         ):
                             logger.debug(
                                 "Module: %s want to validate the request",
@@ -476,7 +483,7 @@ def validate_stream_request():
                         yield (
                             StartModuleResponse(
                                 success=True,
-                                response_type="INPUT",
+                                response_type="START_RESPONSE_TYPE_INPUT",
                                 input_response=InputDataResponse(
                                     message="New input data has been added in the room",
                                     input=input_data,
@@ -507,7 +514,10 @@ def validate_stream_request():
                     # if the stream ends and the owner is the only one left in the room
                     # eject all members
                     self.rooms.publish_to_room(
-                        metadata.room_id, metadata.module_id, {}, RequestType.EXIT
+                        metadata.room_id,
+                        metadata.module_id,
+                        {},
+                        RequestType.REQUEST_TYPE_EXIT,
                     )
 
                 # Leave the room
@@ -553,7 +563,7 @@ def validate_stream_request():
                 context.set_details(str(e))
                 yield StartModuleResponse(
                     success=False,
-                    response_type="ERROR",
+                    response_type="START_RESPONSE_TYPE_ERROR",
                     error=ErrorResponse(
                         message="An error occurred while starting the module",
                         details=str(e),
@@ -571,7 +581,7 @@ def validate_stream_request():
                     context.set_details(str(e))
                 yield StartModuleResponse(
                     success=False,
-                    response_type="ERROR",
+                    response_type="START_RESPONSE_TYPE_ERROR",
                     error=ErrorResponse(
                         message="An error occurred while starting the module",
                         details=str(e),
@@ -583,7 +593,7 @@ def validate_stream_request():
                 context.set_details(str(e))
                 yield StartModuleResponse(
                     success=False,
-                    response_type="ERROR",
+                    response_type="START_RESPONSE_TYPE_ERROR",
                     error=ErrorResponse(
                         message="An error occurred while starting the module",
                         details=str(e),

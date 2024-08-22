@@ -7,6 +7,11 @@ from kin_sdk.exception.room import (
 )
 from kin_sdk.exception.validate_grpc_request import ValidateGrpcRequestException
 from kin_sdk.exception.db_storage import LoadingDatabaseException
+from kin_sdk.exception.module_server import (
+    ModuleNotFoundException,
+    ModuleDeregistrationException,
+    ModuleRegistrationException,
+)
 
 __all__ = [
     "RoomLockedException",
@@ -14,4 +19,7 @@ __all__ = [
     "ModuleInRoomNotFoundException",
     "ValidateGrpcRequestException",
     "LoadingDatabaseException",
+    "ModuleNotFoundException",
+    "ModuleDeregistrationException",
+    "ModuleRegistrationException",
 ]

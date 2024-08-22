@@ -139,7 +139,7 @@ class ModuleServicer(ModuleServiceServicer):
                 )
                 yield StartModuleResponse(
                     success=True,
-                    response_type="OUTPUT",
+                    response_type="START_RESPONSE_TYPE_OUTPUT",
                     output_response=OutputDataResponse(
                         message="New output from the module",
                         output=output_struct,
@@ -155,7 +155,7 @@ class ModuleServicer(ModuleServiceServicer):
             context.set_details(str(e))
             yield StartModuleResponse(
                 success=False,
-                response_type="ERROR",
+                response_type="START_RESPONSE_TYPE_ERROR",
                 error=ErrorResponse(
                     message="An error occurred while starting the module",
                     details=str(e),

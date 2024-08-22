@@ -33,10 +33,11 @@ class RequestType(Enum):
     Enum for command types
     """
 
-    SEND = "SEND"
-    EXIT = "EXIT"
-    VALIDATE = "VALIDATE"
-    DESTROY = "DESCTROY"
+    REQUEST_TYPE_UNKNOWN = "REQUEST_TYPE_UNKNOWN"
+    REQUEST_TYPE_SEND = "REQUEST_TYPE_SEND"
+    REQUEST_TYPE_EXIT = "REQUEST_TYPE_EXIT"
+    REQUEST_TYPE_VALIDATE = "REQUEST_TYPE_VALIDATE"
+    REQUEST_TYPE_DESTROY = "REQUEST_TYPE_DESTROY"
 
     @staticmethod
     def get(value: str, default: Union["RequestType", None] = None) -> "RequestType":
@@ -44,5 +45,5 @@ class RequestType(Enum):
         return (
             RequestType(value)
             if value in RequestType._value2member_map_
-            else default or RequestType.SEND
+            else default or RequestType.REQUEST_TYPE_SEND
         )

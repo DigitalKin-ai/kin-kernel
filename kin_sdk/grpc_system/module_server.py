@@ -1,3 +1,5 @@
+"""TODO Module docstring."""
+
 import json
 from typing import Any, Dict, Generator, List, Literal, Type, Optional, Union
 
@@ -18,6 +20,11 @@ from proto.digitalkin.module_registry.v1.registration_pb2 import (
 from proto.digitalkin.module.v1.information_pb2 import GetModuleInputRequest
 from proto.digitalkin.module.v1.lifecycle_pb2 import StartModuleRequest
 
+from kin_sdk.exception import (
+    ModuleNotFoundException,
+    ModuleDeregistrationException,
+    ModuleRegistrationException,
+)
 from kin_sdk.grpc_system.models import ModuleModel
 from kin_sdk.grpc_system.grpc_server_base import GRPCServerBase
 from kin_sdk.common import logger, ModuleType
@@ -105,8 +112,8 @@ class ModuleServer(GRPCServerBase):
                     "port": json_response.get("port", None),
                 }
                 return ModuleModel.model_validate(module_model)
-        except Exception as e:
-            logger.error(f"Error searching for module: {e}")
+        except ModuleNotFoundException as e:
+            logger.error("Error searching for module: %s", e)
             return None
 
     def deregister_module(self) -> bool:
@@ -122,11 +129,12 @@ class ModuleServer(GRPCServerBase):
                 request = DeregisterRequest(module_id=self.module_id)
                 response: DeregisterResponse = stub.DeregisterModule(request)
                 return response.success
-        except Exception:
+        except ModuleDeregistrationException:
             logger.error("Error deregistering module: %s", self.module_port)
             return False
 
     def execute_module(self, module_id: str, input_data: dict) -> Optional[dict]:
+        """TODO: Implement this method."""
         raise NotImplementedError
 
     def get_module_input(
@@ -154,7 +162,7 @@ class ModuleServer(GRPCServerBase):
             ) as channel:
                 stub = ModuleServiceStub(channel)
                 request = GetModuleInputRequest(
-                    trigger_id=module_model.module_id,
+                    module_id=module_model.module_id,
                     llm_format=llm_format,
                 )
                 print(module_model)
@@ -164,8 +172,8 @@ class ModuleServer(GRPCServerBase):
                     preserving_proto_field_name=True,
                 )
                 return json_response
-        except Exception as e:
-            logger.error(f"Error retreaving inputs for module {module_id}: {e}")
+        except ModuleNotFoundException as e:
+            logger.error("Error retreaving inputs for module %s: %s", module_id, e)
             return None
 
     def start_module(
@@ -201,7 +209,7 @@ class ModuleServer(GRPCServerBase):
                 request = StartModuleRequest(
                     input=json_format.Parse(
                         text=json.dumps(input),
-                        message=struct_pb2.Struct(),
+                        message=struct_pb2.Struct(),  # pylint: disable=no-member
                         ignore_unknown_fields=True,
                     ),
                     setup_id=setup_id,
@@ -220,8 +228,8 @@ class ModuleServer(GRPCServerBase):
                         preserving_proto_field_name=True,
                     )
                     yield json_response
-        except Exception as e:
-            logger.error(f"Error starting new module for module {module_id}: {e}")
+        except ModuleNotFoundException as e:
+            logger.error("Error starting new module for module %s: %s", module_id, e)
             yield None
 
     def serve(self) -> None:
@@ -234,7 +242,7 @@ class ModuleServer(GRPCServerBase):
             if self.register_module():
                 super().serve()
             else:
-                raise Exception("Module registration failed.")
+                raise ModuleRegistrationException("Module registration failed.")
         finally:
             self.deregister_module()
             print("Module deregistered.")
