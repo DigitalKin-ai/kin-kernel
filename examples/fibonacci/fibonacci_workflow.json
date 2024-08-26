@@ -26,15 +26,15 @@
     },
     {
       "source": "n_2",
-      "source_handle": "int:::last_number",
+      "source_handle": "[int,int]:::last_numbers",
       "target": "n_3",
-      "target_handle": "int:::last_number",
+      "target_handle": "[int,int]:::last_numbers",
       "type": "custom",
       "data": {
         "color": "#000",
         "running": true
       },
-      "id": "xy-edge__n_2int:::last_number-n_3int:::last_number"
+      "id": "xy-edge__n_2[int,int]:::last_numbers-n_3[int,int]:::last_numbers"
     },
     {
       "source": "n_3",
@@ -70,7 +70,7 @@
         "y": 98.5
       },
       "data": {
-        "id": "1",
+        "id": "fibonacci_trigger",
         "name": "fibonacci_trigger",
         "type": "trigger",
         "color": "#686",
@@ -97,18 +97,20 @@
         "y": 158
       },
       "data": {
-        "id": "1",
+        "id": "sequence_tool",
         "name": "sequence_tool",
         "type": "trigger",
         "color": "#866",
         "targets": [
           {
             "label": "initial_numbers",
-            "type": "[int,int]"
+            "type": "[int,int]",
+            "optional": false
           },
           {
             "label": "next_number",
-            "type": "int"
+            "type": "int",
+            "optional": true
           }
         ],
         "sources": [
@@ -117,8 +119,8 @@
             "type": "[int]"
           },
           {
-            "label": "last_number",
-            "type": "int"
+            "label": "last_numbers",
+            "type": "[int,int]"
           }
         ]
       },
@@ -137,14 +139,15 @@
         "y": 302.5
       },
       "data": {
-        "id": "1",
+        "id": "addition_tool",
         "name": "addition_tool",
         "type": "trigger",
         "color": "#866",
         "targets": [
           {
-            "label": "last_number",
-            "type": "int"
+            "label": "last_numbers",
+            "type": "[int, int]",
+            "optional": false
           }
         ],
         "sources": [
@@ -169,18 +172,20 @@
         "y": 179.5
       },
       "data": {
-        "id": "1",
+        "id": "display_tool",
         "name": "display_tool",
         "type": "view",
         "color": "#886",
         "targets": [
           {
             "label": "fibonacci_list",
-            "type": "[int]"
+            "type": "[int]",
+            "optional": false
           },
           {
             "label": "next_number",
-            "type": "int"
+            "type": "int",
+            "optional": false
           }
         ],
         "sources": []

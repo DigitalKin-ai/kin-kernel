@@ -20,10 +20,12 @@ from kin_sdk.agent_module.kin.kin_workflow.kin import WorkflowInput, WorkflowOut
 
 
 def callback(output: WorkflowOutput):
+    """TODO sphinx docstring"""
     print("callback: ", output)
 
 
 def main():
+    """TODO sphinx docstring"""
     kin_workflow = KinWorkflow(
         name="First Kin Workflow",
         description="This is the first Kin workflow.",
@@ -32,7 +34,7 @@ def main():
         module_port=50050,
         registry_address="localhost:50051",
     )
-    kin_workflow.start(kin_id="test")
+    kin_workflow.start(kin_id="fibonacci")
     time.sleep(5)
     input_data = WorkflowInput(trigger_id="fibonacci_trigger")
     setup_id = "setups:fibonacci_setup"

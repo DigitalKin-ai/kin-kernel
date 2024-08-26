@@ -12,6 +12,13 @@ from kin_sdk.exception.module_server import (
     ModuleDeregistrationException,
     ModuleRegistrationException,
 )
+from kin_sdk.exception.kin_workflow_kin import LoadingWorkflowException
+from kin_sdk.exception.kin_workflow_node import NodeExecutionException
+from kin_sdk.exception.kin_workflow_graph import (
+    NodeInitializationException,
+    EdgeInitializationException,
+    NodeExecutionException as GraphNodeExecutionException,
+)
 
 __all__ = [
     "RoomLockedException",
@@ -22,4 +29,9 @@ __all__ = [
     "ModuleNotFoundException",
     "ModuleDeregistrationException",
     "ModuleRegistrationException",
+    "NodeExecutionException",
+    "NodeInitializationException",
+    "EdgeInitializationException",
+    "GraphNodeExecutionException",
+    "LoadingWorkflowException",
 ]

@@ -115,6 +115,9 @@ class ModuleServer(GRPCServerBase):
         except ModuleNotFoundException as e:
             logger.error("Error searching for module: %s", e)
             return None
+        except Exception as e:  # pylint: disable=broad-except
+            logger.error("Error searching for module: %s", e)
+            return None
 
     def deregister_module(self) -> bool:
         """

@@ -6,7 +6,7 @@ from kin_sdk.agent_module import BaseTool
 
 class DisplayInput(BaseModel):
     fibonacci_list: List[int] = Field(..., description="The fibonacci sequence")
-    new_number: int = Field(..., description="The new number of fibonacci sequence")
+    next_number: int = Field(..., description="The new number of fibonacci sequence")
 
 
 class DisplayOutput(BaseModel):
@@ -40,7 +40,7 @@ class DisplayTool(BaseTool[DisplayInput, DisplayOutput, DisplaySetup]):
         Execute the addition tool
         """
         print("Fibonacci sequence:", input_data.fibonacci_list)
-        print("New number:", input_data.new_number)
+        print("New number:", input_data.next_number)
         callback(DisplayOutput())
 
     def stop(self) -> None:

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "5676d29236d843f625881a6c834d61d1663d32b7aed025de357269ee67b3a727"
+            "sha256": "42e592e2813ae3cb891b44c4696eea5d104087d969c2c5edec40467b61db0aff"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -239,6 +239,15 @@
             ],
             "markers": "python_version >= '3.7'",
             "version": "==2.1.5"
+        },
+        "networkx": {
+            "hashes": [
+                "sha256:0c127d8b2f4865f59ae9cb8aafcd60b5c70f3241ebd66f7defad7c4ab90126c9",
+                "sha256:28575580c6ebdaf4505b22c6256a2b9de86b316dc63ba9e93abde3d78dfdbcf2"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3.10'",
+            "version": "==3.3"
         },
         "opentelemetry-api": {
             "hashes": [
@@ -1413,15 +1422,6 @@
             "markers": "python_version >= '3.5'",
             "version": "==1.0.0"
         },
-        "networkx": {
-            "hashes": [
-                "sha256:0c127d8b2f4865f59ae9cb8aafcd60b5c70f3241ebd66f7defad7c4ab90126c9",
-                "sha256:28575580c6ebdaf4505b22c6256a2b9de86b316dc63ba9e93abde3d78dfdbcf2"
-            ],
-            "index": "pypi",
-            "markers": "python_version >= '3.10'",
-            "version": "==3.3"
-        },
         "nh3": {
             "hashes": [
                 "sha256:0411beb0589eacb6734f28d5497ca2ed379eafab8ad8c84b31bb5c34072b7164",
@@ -1676,14 +1676,6 @@
             "index": "pypi",
             "markers": "python_full_version >= '3.8.0'",
             "version": "==3.2.6"
-        },
-        "pylint-protobuf": {
-            "hashes": [
-                "sha256:d6c5823ca55fb0141b862569aff18e9abc287409a105a9061c1327d425999f09",
-                "sha256:fd569200698cf30cb85f13cc5cfff40c49285599bc972b455e932c1805216a11"
-            ],
-            "index": "pypi",
-            "version": "==0.22.0"
         },
         "pyparsing": {
             "hashes": [

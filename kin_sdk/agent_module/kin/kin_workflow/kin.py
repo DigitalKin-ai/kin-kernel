@@ -4,7 +4,7 @@ TODO: add await async every where
 """
 
 import asyncio
-from typing import Callable, Dict, List, Any, Type
+from typing import Callable, Dict, List, Any, Type, Union
 from pydantic import BaseModel, create_model, Field
 
 from kin_sdk.grpc_system.models import ModuleModel
@@ -49,19 +49,25 @@ def update_model_with_fields(
 
 
 class WorkflowInput(BaseModel):
+    """TODO : sphinx docstring"""
+
     trigger_id: str = Field(..., description="trigger id of the class")
 
 
 class WorkflowOutput(BaseModel):
+    """TODO : sphinx docstring"""
+
     numbers: float
     factor: float = 2.0  # Default factor is 2
 
 
 class WorkflowSetup(BaseModel):
-    pass
+    """TODO : sphinx docstring"""
 
 
 class KinWorkflow(BaseKin):
+    """TODO : sphinx docstring"""
+
     name: str = "Kin Workflow"
     description: str = "This is the Kin is in workflow mode."
     triggers: Dict[str, ModuleModel] = {}
@@ -91,7 +97,7 @@ class KinWorkflow(BaseKin):
         )
 
         self.db_storage = DBStorage()
-        self.graphs_executor = None  # TODO manage multi connections
+        self.graphs_executor = None  # ! TODO manage multi connections
 
     def register_modules(self, nodes: list[dict]) -> None:
         """
@@ -115,7 +121,7 @@ class KinWorkflow(BaseKin):
                 raise ValueError(f"The {data_type}: id is missing")
 
             # Contact the module registry in order to find a specific trigger or tool
-            module_model: ModuleModel = self.search_module(data_id)
+            module_model: Union[ModuleModel, None] = self.search_module(data_id)
 
             if module_model is None:
                 raise ValueError(
@@ -125,7 +131,7 @@ class KinWorkflow(BaseKin):
             # If the data_type is different from the module_type, we raise an error
             if data_type != module_model.module_type.value:
                 raise ValueError(
-                    f"The {data_type}: {data_id} has been registred as a {module_model.module_type} in the module registry but as a {module_model.module_type} in the workflow.",
+                    f"The {data_type}: {data_id} has been registred as a {module_model.module_type.value} in the module registry but as a {data_type} in the workflow.",
                 )
 
             if data_type == "trigger":
@@ -149,6 +155,7 @@ class KinWorkflow(BaseKin):
         return workflows[0]
 
     def get_kin_input(self) -> Dict[str, Any]:
+        """TODO : sphinx docstring"""
         inputs_schema = {
             trigger_id: self.get_module_input(module_id=trigger_id)
             for _node_id, trigger_id in self.graphs_executor.get_modules_nodes(
@@ -158,6 +165,7 @@ class KinWorkflow(BaseKin):
         return inputs_schema
 
     async def get_kin_setup(self, kin_id, setup_id) -> Dict[str, Any]:
+        """TODO : sphinx docstring"""
         setups = await self.db_storage.storage_load_setup(
             kin_id=kin_id, setup_id=setup_id
         )
@@ -175,7 +183,7 @@ class KinWorkflow(BaseKin):
             # add triggers and tools
             self.register_modules(workflow["nodes"])
 
-            setups_id = "fibonacci_setup"  # TODO: get setup_id from params
+            setups_id = "fibonacci_setup"  # ! TODO: get setup_id from params
 
             # load setups from db
             setups = asyncio.run(self.get_kin_setup(kin_id, setups_id))
@@ -187,8 +195,8 @@ class KinWorkflow(BaseKin):
             )
 
             logger.info("🚀 Workflow has been started...")
-        except Exception as e:
-            logger.error(f"Error loading workflow: {e}")
+        except Exception as e:  # pylint: disable=broad-except
+            logger.error("Error loading workflow: %s", e)
 
         return None
 
@@ -218,7 +226,7 @@ class KinWorkflow(BaseKin):
             # print(f"Module callback: {module_id}")
             print(f"input_data: {input_data}")
             response_iterator = self.start_module(
-                module_id, input_data, setup_id, request_type="VALIDATE"
+                module_id, input_data, setup_id, request_type="REQUEST_TYPE_VALIDATE"
             )
             result = {}
             for response in response_iterator:  # TODO, continue here

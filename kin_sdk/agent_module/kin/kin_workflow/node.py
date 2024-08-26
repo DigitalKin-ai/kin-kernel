@@ -1,3 +1,5 @@
+"""TODO Sphinx docstring."""
+
 import datetime
 import time
 from typing import Any, Dict, List, Callable, Optional
@@ -5,24 +7,29 @@ from typing import Any, Dict, List, Callable, Optional
 from pydantic import BaseModel, Field
 
 from kin_sdk.common.types import ModuleType
+from kin_sdk.exception import NodeExecutionException
 
 
 class InputData(BaseModel):
-    label: Optional[str] = Field(None, description="input label")
-    value: Optional[Any] = Field(None, description="input value")
+    """TODO Sphinx docstring."""
+
+    label: Optional[str] = Field(None, description="label of the input parameter")
+    value: Optional[Any] = Field(None, description="value of the input parameter")
     updated_at: Optional[datetime.datetime] = Field(
-        None, description="input updated at"
+        None, description="updated time of the input parameter or None if not updated"
     )
-    optional: bool = Field(False, description="input optional")
+    optional: bool = Field(False, description="checking if the value is optional")
 
 
 class OutputData(BaseModel):
-    label: Optional[str] = Field(None, description="output label")
-    value: Optional[Any] = Field(None, description="output value")
+    """TODO Sphinx docstring."""
+
+    label: Optional[str] = Field(None, description="label of the output parameter")
+    value: Optional[Any] = Field(None, description="value of the output parameter")
     updated_at: Optional[datetime.datetime] = Field(
-        None, description="output updated at"
+        None, description="updated time of the output parameter or None if not updated"
     )
-    optional: bool = Field(False, description="output optional")
+    optional: bool = Field(False, description="checking if the value is optional")
 
 
 class Node:
@@ -64,11 +71,12 @@ class Node:
 
     @property
     def values(self) -> Dict[str, Any]:
+        """TODO Sphinx docstring."""
         inputs = {}
-        for input in self.inputs:
-            print(f"\t\t- input: {input}")
-            if input.label is not None:
-                inputs[input.label] = input.value
+        for input_data in self.inputs:
+            print(f"\t\t- input: {input_data}")
+            if input_data.label is not None:
+                inputs[input_data.label] = input_data.value
         return inputs
 
     async def execute(self, module_callback: Callable) -> Dict[str, OutputData]:
@@ -100,7 +108,7 @@ class Node:
             self.last_execution = datetime.datetime.now()
             self.status = "completed"
             return output_data
-        except Exception as e:
+        except NodeExecutionException as e:
             print(f"Error executing node {self.module_type}:{self.node_id}: {e}")
 
     async def get_setup(self, setup_id: str) -> Dict[str, Any]:
@@ -119,17 +127,19 @@ class Node:
         }
 
     def update_input(self, label: str, value: Any) -> None:
-        for input in self.inputs:
+        """TODO Sphinx docstring."""
+        for input_data in self.inputs:
             # print(f"\t\t- input: {input}, label: {label}")
-            if input.label == label:
-                input.value = value
-                input.updated_at = datetime.datetime.now()
+            if input_data.label == label:
+                input_data.value = value
+                input_data.updated_at = datetime.datetime.now()
                 break
 
     def update_output(self, label: str, value: Any) -> None:
-        for output in self.outputs:
+        """TODO Sphinx docstring."""
+        for output_data in self.outputs:
             # print(f"\t\t- outputs: {output}, label: {label}")
-            if output.label == label:
-                output.value = value
-                output.updated_at = datetime.datetime.now()
+            if output_data.label == label:
+                output_data.value = value
+                output_data.updated_at = datetime.datetime.now()
                 break

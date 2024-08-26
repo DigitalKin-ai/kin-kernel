@@ -1,0 +1,203 @@
+{
+    "edges": [
+        {
+            "data": {
+                "color": "#000",
+                "running": true
+            },
+            "id": "xy-edge__n_1[int,int]:::initial_numbers-n_2[int,int]:::initial_numbers",
+            "source": "n_1",
+            "source_handle": "[int,int]:::initial_numbers",
+            "target": "n_2",
+            "target_handle": "[int,int]:::initial_numbers",
+            "type": "custom"
+        },
+        {
+            "data": {
+                "color": "#000",
+                "running": true
+            },
+            "id": "xy-edge__n_2[int]:::fibonacci_list-n_4[int]:::fibonacci_list",
+            "source": "n_2",
+            "source_handle": "[int]:::fibonacci_list",
+            "target": "n_4",
+            "target_handle": "[int]:::fibonacci_list",
+            "type": "custom"
+        },
+        {
+            "data": {
+                "color": "#000",
+                "running": true
+            },
+            "id": "xy-edge__n_2int:::last_numbers-n_3int:::last_numbers",
+            "source": "n_2",
+            "source_handle": "int:::last_numbers",
+            "target": "n_3",
+            "target_handle": "int:::last_numbers",
+            "type": "custom"
+        },
+        {
+            "data": {
+                "color": "#000",
+                "running": true
+            },
+            "id": "xy-edge__n_3int:::next_number-n_4int:::next_number",
+            "source": "n_3",
+            "source_handle": "int:::next_number",
+            "target": "n_4",
+            "target_handle": "int:::next_number",
+            "type": "custom"
+        },
+        {
+            "data": {
+                "color": "#000",
+                "running": true
+            },
+            "id": "xy-edge__n_3int:::next_number-n_2int:::next_number",
+            "source": "n_3",
+            "source_handle": "int:::next_number",
+            "target": "n_2",
+            "target_handle": "int:::next_number",
+            "type": "custom"
+        }
+    ],
+    "id": "workflows:qtwu4bd04ukswjjst4s4",
+    "kin_id": "kins:test",
+    "nodes": [
+        {
+            "data": {
+                "color": "#686",
+                "id": "fibonacci_trigger",
+                "name": "fibonacci_trigger",
+                "sources": [
+                    {
+                        "label": "initial_numbers",
+                        "type": "[int,int]"
+                    }
+                ],
+                "targets": [],
+                "type": "trigger"
+            },
+            "dragging": false,
+            "id": "n_1",
+            "measured": {
+                "height": 56,
+                "width": 91
+            },
+            "position": {
+                "x": -41.5,
+                "y": 98.5
+            },
+            "selected": false,
+            "type": "wfbox"
+        },
+        {
+            "data": {
+                "color": "#866",
+                "id": "sequence_tool",
+                "name": "sequence_tool",
+                "sources": [
+                    {
+                        "label": "fibonacci_list",
+                        "type": "[int]"
+                    },
+                    {
+                        "label": "last_numbers",
+                        "type": "[int, int]"
+                    }
+                ],
+                "targets": [
+                    {
+                        "label": "initial_numbers",
+                        "optional": false,
+                        "type": "[int,int]"
+                    },
+                    {
+                        "label": "next_number",
+                        "optional": true,
+                        "type": "int"
+                    }
+                ],
+                "type": "tool"
+            },
+            "dragging": false,
+            "id": "n_2",
+            "measured": {
+                "height": 92,
+                "width": 80
+            },
+            "position": {
+                "x": 132,
+                "y": 158
+            },
+            "selected": false,
+            "type": "wfbox"
+        },
+        {
+            "data": {
+                "color": "#866",
+                "id": "addition_tool",
+                "name": "addition_tool",
+                "sources": [
+                    {
+                        "label": "next_number",
+                        "type": "int"
+                    }
+                ],
+                "targets": [
+                    {
+                        "label": "last_numbers",
+                        "optional": false,
+                        "type": "[int,int]"
+                    }
+                ],
+                "type": "tool"
+            },
+            "dragging": false,
+            "id": "n_3",
+            "measured": {
+                "height": 68,
+                "width": 80
+            },
+            "position": {
+                "x": 134,
+                "y": 302.5
+            },
+            "selected": false,
+            "type": "wfbox"
+        },
+        {
+            "data": {
+                "color": "#886",
+                "id": "display_tool",
+                "name": "display_tool",
+                "sources": [],
+                "targets": [
+                    {
+                        "label": "fibonacci_list",
+                        "optional": false,
+                        "type": "[int]"
+                    },
+                    {
+                        "label": "next_number",
+                        "optional": false,
+                        "type": "int"
+                    }
+                ],
+                "type": "view"
+            },
+            "dragging": false,
+            "id": "n_4",
+            "measured": {
+                "height": 68,
+                "width": 80
+            },
+            "position": {
+                "x": 412,
+                "y": 179.5
+            },
+            "selected": true,
+            "type": "wfbox"
+        }
+    ]
+}

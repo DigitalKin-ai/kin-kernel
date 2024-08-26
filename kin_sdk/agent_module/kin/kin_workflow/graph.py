@@ -1,3 +1,5 @@
+"""TODO: sphinx docstring"""
+
 import datetime
 import asyncio
 import threading
@@ -10,6 +12,11 @@ import networkx as nx
 from kin_sdk.common.types import ModuleType
 from kin_sdk.agent_module.kin.kin_workflow.edge import Edge
 from kin_sdk.agent_module.kin.kin_workflow.node import InputData, Node, OutputData
+from kin_sdk.exception import (
+    NodeInitializationException,
+    EdgeInitializationException,
+    GraphNodeExecutionException,
+)
 
 
 class GraphExecutor:
@@ -61,7 +68,7 @@ class GraphExecutor:
                 )
                 for node in nodes
             }
-        except Exception as e:
+        except NodeInitializationException as e:
             print(f"Error initializing nodes: {e}")
             return {}
 
@@ -100,7 +107,7 @@ class GraphExecutor:
                         },
                     ),
                 )
-        except Exception as e:
+        except EdgeInitializationException as e:
             print(f"Error initializing edges: {e}")
 
     def get_modules_nodes(self, module_type: ModuleType) -> List[str]:
@@ -239,7 +246,7 @@ class GraphExecutor:
         # Verify if it is the initial trigger node
         initial_trigger = (
             node.module_type == ModuleType.TRIGGER and node.last_execution is None
-        )  # TODO: improve that
+        )  # ! TODO: improve that
 
         try:
             # Verify if it not the initial_trigger and if all inputs have values except for optional inputs
@@ -257,7 +264,7 @@ class GraphExecutor:
 
             with self.lock:
                 # Launch the node execution in a thread-safe manner and retrieve the output data
-                output_data = await node.execute(module_callback)  # TODO: here
+                output_data = await node.execute(module_callback)  # ! TODO: here
 
                 # Propagate the output data to the successors
                 for successor in self.graph.successors(node_id):
@@ -315,11 +322,12 @@ class GraphExecutor:
                     #     )
                 # Update the node execution count and timestamp
                 # self.nodes[node_id].last_execution = datetime.datetime.now()
-        except Exception as e:
+        except GraphNodeExecutionException as e:
             print(f"{datetime.datetime.now()} - Error executing node {node_id}: {e}")
             self.error_occurred.set()
 
     def execute_node(self, *args, **kwargs) -> None:
+        """TODO: Sphinx docstring."""
         asyncio.run(self.async_execute_node(*args, **kwargs))
 
     def execute(self, initial_node: str, module_callback: Callable) -> None:
@@ -337,7 +345,7 @@ class GraphExecutor:
         )
 
         # Execute the nodes in parallel using a thread pool
-        with ThreadPoolExecutor(max_workers=10) as executor:  # TODO thread number
+        with ThreadPoolExecutor(max_workers=10) as executor:  # ! TODO thread number
             futures = {}
             # Keep executing nodes until the execution queue is empty and all nodes have completed and all futures have completed
             while (
@@ -379,7 +387,7 @@ class GraphExecutor:
                     node_id = futures.pop(future)
                     try:
                         future.result()
-                    except Exception as e:
+                    except GraphNodeExecutionException as e:
                         print(
                             f"{datetime.datetime.now()} - Error executing node {node_id}: {e}"
                         )
