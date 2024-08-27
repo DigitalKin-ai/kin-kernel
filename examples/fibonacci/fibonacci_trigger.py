@@ -11,13 +11,13 @@ class CronFibonacciInput(BaseModel):
 
 
 class CronFibonacciOutput(BaseModel):
-    initials_numbers: Tuple[int, int] = Field(
+    initial_numbers: Tuple[int, int] = Field(
         ..., description="The first two numbers of fibonacci sequence"
     )
 
 
 class CronFibonacciSetup(BaseModel):
-    initials_numbers: Tuple[int, int] = Field(
+    initial_numbers: Tuple[int, int] = Field(
         ..., description="The first two numbers of fibonacci sequence"
     )
 
@@ -42,13 +42,13 @@ class CronTrigger(
     ) -> None:
 
         print("input_data", input_data)
-        exec_result = {"initials_numbers": [1, 1]}
+        exec_result = {"initial_numbers": [1, 1]}
         callback(CronFibonacciOutput(**exec_result))
 
         # counter = 0
         # while counter < 10:
         #     # Implémentez la logique spécifique de l'outil ici
-        #     exec_result = {"initials_numbers": [1, 1]}
+        #     exec_result = {"initial_numbers": [1, 1]}
         #     callback(CronFibonacciOutput(**exec_result))
         #     counter += 1
         #     time.sleep(1)

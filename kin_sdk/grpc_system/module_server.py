@@ -168,7 +168,6 @@ class ModuleServer(GRPCServerBase):
                     module_id=module_model.module_id,
                     llm_format=llm_format,
                 )
-                print(module_model)
                 response = stub.GetModuleInput(request)
                 json_response = json_format.MessageToDict(
                     response,
@@ -199,7 +198,7 @@ class ModuleServer(GRPCServerBase):
         """
         try:
             module_model: Union[ModuleModel, None] = self.search_module(module_id)
-            print(module_model)
+            logger.info(module_model)
             if module_model is None:
                 raise ValueError(
                     f"The module: {module_id} is not found in the module registry"
@@ -219,7 +218,7 @@ class ModuleServer(GRPCServerBase):
                     module_ids=module_ids,
                     request_type=request_type,
                 )
-                print(f"request: {request}")
+                logger.info("request: %s", request)
                 metadata = [
                     ("module_id", self.module_id),
                     ("module_role", module_role),

@@ -26,6 +26,18 @@ def callback(output: WorkflowOutput):
 
 def main():
     """TODO sphinx docstring"""
+
+    # test = dict(tuple=(1, 2))
+    # test2 = dict(array=[1, 2])
+    # test3 = {"tuple": (1, 2)}
+    # test4 = {"array": [1, 2]}
+
+    # print(test)
+    # print(test2)
+    # print(test3)
+    # print(test4)
+
+    # assert "a" == "b", "a is not equal to b"
     kin_workflow = KinWorkflow(
         name="First Kin Workflow",
         description="This is the first Kin workflow.",

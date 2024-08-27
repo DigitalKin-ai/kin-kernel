@@ -241,22 +241,22 @@ class KinWorkflow(BaseKin):
                     result = output_response.get("output", {})
                     print(f"response: {output_response.get('message', 'no message')}")
                     print(f"result: {result}")
-                    break
+                    break  # ? TODO check if we need to break here
                 print(f"Response: {response}")
             # print(f"Input data: {input_data}")
-            if module_id == "fibonacci_trigger":
-                return {"initial_numbers": (1, 1)}
-            elif module_id == "sequence_tool":
-                # inputs: initial_numbers / new_numbers
-                return {"last_number": sequence[-1], "fibonacci_list": sequence}
-            elif module_id == "addition_tool":
-                # inputs: last_numbers (tuple)
-                sequence.append(sequence[-1] + sequence[-2])
-                return {"next_number": sequence[-1]}
-            elif module_id == "display_tool":
-                # inputs: fibonacci_list / new_number
-                print(f"Sequence: {sequence}")
-                return {}
+            # if module_id == "fibonacci_trigger":
+            #     return {"initial_numbers": (1, 1)}
+            # elif module_id == "sequence_tool":
+            #     # inputs: initial_numbers / new_numbers
+            #     return {"last_number": sequence[-1], "fibonacci_list": sequence}
+            # elif module_id == "addition_tool":
+            #     # inputs: last_numbers (tuple)
+            #     sequence.append(sequence[-1] + sequence[-2])
+            #     return {"next_number": sequence[-1]}
+            # elif module_id == "display_tool":
+            #     # inputs: fibonacci_list / new_number
+            #     print(f"Sequence: {sequence}")
+            #     return {}
             return result
             # raise NotImplementedError
 

@@ -104,6 +104,7 @@ class Node:
                 for output in self.outputs
                 if output.label is not None
             }
+            print(output_data)
 
             self.last_execution = datetime.datetime.now()
             self.status = "completed"
@@ -138,7 +139,7 @@ class Node:
     def update_output(self, label: str, value: Any) -> None:
         """TODO Sphinx docstring."""
         for output_data in self.outputs:
-            # print(f"\t\t- outputs: {output}, label: {label}")
+            # print(f"\t\t- outputs: {output_data}, label: {label}")
             if output_data.label == label:
                 output_data.value = value
                 output_data.updated_at = datetime.datetime.now()
