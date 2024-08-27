@@ -17,6 +17,8 @@ OutputModelT = TypeVar("OutputModelT", bound=BaseModel)
 SetupModelT = TypeVar("SetupModelT", bound=BaseModel)
 
 
+# ! TODO: changer l'architecture pour que nous ajoutions le BaseModule a serveur et qu'on run le serveur
+# Ainsi le base module va dans le jobManager
 class BaseKin(BaseModule[InputModelT, OutputModelT, SetupModelT], ABC):
     """TODO: Sphinx docstring"""
 
