@@ -203,7 +203,30 @@ class ModuleServicer(ModuleServiceServicer):
     def GetModuleInput(
         self, request: GetModuleInputRequest, context: grpc.ServicerContext
     ) -> GetModuleInputResponse:
-        print("Get module input schema")
+        try:
+            llm_format = request.llm_format
+            # ? job_id instead of module_id
+            module_id = request.module_id  # pylint: disable=unused-variable # noqa
+
+            json_string = self.module.get_input_format(llm_format)
+            input_format_struct = json_format.Parse(
+                text=json_string,
+                message=struct_pb2.Struct(),  # pylint: disable=no-member
+                ignore_unknown_fields=True,
+            )
+            return GetModuleInputResponse(
+                success=True,
+                input_schema=input_format_struct,
+            )
+        except ValueError as e:
+            logger.error("Exception Error: %s", e)
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(str(e))
+
+            return GetModuleInputResponse(
+                success=False,
+                input_schema=None,
+            )
 
     def GetModuleOutput(
         self,

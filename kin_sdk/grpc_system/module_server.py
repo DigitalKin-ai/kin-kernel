@@ -17,7 +17,10 @@ from proto.digitalkin.module_registry.v1.registration_pb2 import (
     DeregisterRequest,
     DeregisterResponse,
 )
-from proto.digitalkin.module.v1.information_pb2 import GetModuleInputRequest
+from proto.digitalkin.module.v1.information_pb2 import (
+    GetModuleInputRequest,
+    GetModuleInputResponse,
+)
 from proto.digitalkin.module.v1.lifecycle_pb2 import StartModuleRequest
 
 from kin_sdk.exception import (
@@ -168,12 +171,12 @@ class ModuleServer(GRPCServerBase):
                     module_id=module_model.module_id,
                     llm_format=llm_format,
                 )
-                response = stub.GetModuleInput(request)
+                response: GetModuleInputResponse = stub.GetModuleInput(request)
                 json_response = json_format.MessageToDict(
                     response,
                     preserving_proto_field_name=True,
                 )
-                return json_response
+                return json_response.get("input_schema", {})
         except ModuleNotFoundException as e:
             logger.error("Error retreaving inputs for module %s: %s", module_id, e)
             return None
