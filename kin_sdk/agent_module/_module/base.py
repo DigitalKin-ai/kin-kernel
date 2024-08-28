@@ -188,7 +188,7 @@ class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ModuleServer, 
         )
 
     @abstractmethod
-    def start(self) -> None:  # ? other params like module_id ?
+    def start(self, setup_id: str) -> None:
         """
         Starts the module.
         """

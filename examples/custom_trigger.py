@@ -46,7 +46,7 @@ class CustomTrigger(
             counter += 1
             time.sleep(1)
 
-    def start(self) -> None:
+    def start(self, setup_id: str) -> None:
         print("Executing cron job", self.name)
 
     def stop(self) -> None:

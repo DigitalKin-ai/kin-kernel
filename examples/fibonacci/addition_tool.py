@@ -33,7 +33,7 @@ class AdditionTool(BaseTool[AdditionInput, AdditionOutput, AdditionSetup]):
     output_format = AdditionOutput
     setup_format = AdditionSetup
 
-    def start(self) -> None:
+    def start(self, setup_id: str) -> None:
         """
         Start the module
         """

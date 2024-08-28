@@ -41,12 +41,12 @@ def main():
     kin_workflow = KinWorkflow(
         name="First Kin Workflow",
         description="This is the first Kin workflow.",
-        module_id="first kin workflow",
+        module_id="fibonacci",
         module_address="localhost",
         module_port=50050,
         registry_address="localhost:50051",
     )
-    kin_workflow.start(kin_id="fibonacci")
+    kin_workflow.start()
     time.sleep(5)
     input_data = WorkflowInput(trigger_id="fibonacci_trigger")
     setup_id = "setups:fibonacci_setup"

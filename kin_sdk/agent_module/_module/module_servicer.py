@@ -73,7 +73,7 @@ class ModuleServicer(ModuleServiceServicer):
             module_ids = current_job.module_ids
 
             # Start the module
-            self.module.start()
+            self.module.start(setup_id=setup_id)
 
             # Create a callback that captures the module_ids
             def callback(output: BaseModel):

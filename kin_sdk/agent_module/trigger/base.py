@@ -49,7 +49,7 @@ class BaseTrigger(
         )
 
     @abstractmethod
-    def start(self) -> None:
+    def start(self, setup_id: str) -> None:
         """
         Starts the trigger.
         """

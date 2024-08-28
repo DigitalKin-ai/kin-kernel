@@ -7,7 +7,9 @@ from kin_sdk.agent_module import BaseTrigger
 
 
 class CronFibonacciInput(BaseModel):
-    pass
+    """
+    Input data for the cron job
+    """
 
 
 class CronFibonacciOutput(BaseModel):

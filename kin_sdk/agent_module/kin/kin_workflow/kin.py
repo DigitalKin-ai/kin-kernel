@@ -8,47 +8,13 @@ and executing specific nodes.
 
 import asyncio
 from typing import Callable, Dict, List, Any, Tuple, Union
-from pydantic import BaseModel, create_model, Field
+from pydantic import BaseModel, Field
 
 from kin_sdk.grpc_system.models import ModuleModel
 from kin_sdk.agent_module.kin.base import BaseKin
 from kin_sdk.common import logger
 from kin_sdk.agent_management import DBStorage
 from kin_sdk.agent_module.kin.kin_workflow.graph import GraphExecutor
-
-
-# def update_model_with_fields(
-#     base_model: Type[BaseModel], fields_model: Type[BaseModel]
-# ) -> Type[BaseModel]:
-#     """
-#     Update the base model with fields from another model.
-
-#     :param base_model: The base Pydantic model class to be updated.
-#     :param fields_model: The Pydantic model class whose fields will be added to the base model.
-#     :return: The updated Pydantic model class.
-#     """
-#     # Create a copy of the base model's annotations and fields
-#     updated_annotations = base_model.__annotations__.copy()
-#     updated_fields = {
-#         name: getattr(base_model, name) for name in base_model.__annotations__
-#     }
-
-#     # Add fields from the fields_model
-#     for field_name, field_type in fields_model.__annotations__.items():
-#         updated_annotations[field_name] = field_type
-#         updated_fields[field_name] = getattr(fields_model, field_name, ...)
-
-#     # Create a new model class with the updated annotations and fields
-#     updated_model = create_model(
-#         "UpdatedWorkflowInput",
-#         __base__=base_model,
-#         **{
-#             name: (field_type, updated_fields[name])
-#             for name, field_type in updated_annotations.items()
-#         },
-#     )
-
-#     return updated_model
 
 
 class WorkflowInput(BaseModel):
@@ -214,53 +180,6 @@ class KinWorkflow(BaseKin):
             return None
         return workflows[0]
 
-    # def get_kin_input(self) -> Dict[str, Any]:
-    #     """
-    #     Gets the input schema for the workflow.
-
-    #     Returns:
-    #         Dict[str, Any]: The input schema.
-    #     """
-    #     inputs_schema = {
-    #         trigger_id: self.get_module_input(module_id=trigger_id)
-    #         for _node_id, trigger_id in self._graphs_executor.get_modules_nodes(
-    #             "trigger"
-    #         )
-    #     }
-    #     return inputs_schema
-
-    def update_workflow_input_model(self, nodes: List[Dict[str, Any]]) -> None:
-        """
-        Updates the WorkflowInput model with the inputs from the triggers.
-
-        Args:
-            nodes (List[Dict[str, Any]]): The nodes to register.
-        """
-        modules_by_type = self.get_modules_by_type(nodes)
-        # Create a dictionary to store the trigger models
-        trigger_models = {}
-
-        # Add fields from each trigger
-        for trigger_id, trigger_model in modules_by_type["trigger"]:
-            trigger_inputs = self.get_module_input(trigger_id)
-            if "properties" in trigger_inputs:
-                trigger_fields = {
-                    input_name: (input_type, ...)
-                    for input_name, input_type in trigger_inputs["properties"].items()
-                }
-                trigger_model = create_model(f"{trigger_id}Input", **trigger_fields)
-                trigger_models[trigger_id] = trigger_model
-
-        # Create a new WorkflowInput model with the updated fields
-        fields = {
-            "trigger_id": (str, Field(..., description="Trigger ID of the workflow")),
-            "triggers": (
-                List[Union[tuple(trigger_models.values())]],
-                Field(..., description="Triggers"),
-            ),
-        }
-        self.input_format = create_model("WorkflowInput", **fields)
-
     async def get_kin_setup(self, kin_id: str, setup_id: str) -> Dict[str, Any]:
         """
         Gets the setup data for the workflow.
@@ -277,7 +196,7 @@ class KinWorkflow(BaseKin):
         )
         return setups
 
-    def start(self, kin_id: str, setups_id: str = "fibonacci_setup") -> None:
+    def start(self, setup_id: str = "fibonacci_setup") -> None:
         """
         Starts the workflow.
 
@@ -287,16 +206,15 @@ class KinWorkflow(BaseKin):
         """
         try:
             # Load workflow from db
-            workflow = asyncio.run(self._load_workflow(kin_id=kin_id))
+            workflow = asyncio.run(self._load_workflow(kin_id=self.module_id))
 
             # Add triggers and tools
             self.register_modules(workflow["nodes"])
-            self.update_workflow_input_model(workflow["nodes"])
-            import json
 
-            print(json.dumps(self.input_format.model_json_schema(), indent=2))
             # Load setups from db
-            setups = asyncio.run(self.get_kin_setup(kin_id, setups_id))
+            setups = asyncio.run(
+                self.get_kin_setup(kin_id=self.module_id, setup_id=setup_id)
+            )
 
             # Create a graph executor
             self._graphs_executor = GraphExecutor(

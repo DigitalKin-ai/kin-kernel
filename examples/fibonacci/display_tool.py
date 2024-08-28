@@ -24,7 +24,7 @@ class DisplayTool(BaseTool[DisplayInput, DisplayOutput, DisplaySetup]):
     output_format = DisplayOutput
     setup_format = DisplaySetup
 
-    def start(self) -> None:
+    def start(self, setup_id: str) -> None:
         """
         Start the module
         """

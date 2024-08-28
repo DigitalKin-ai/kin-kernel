@@ -63,7 +63,7 @@ class BaseKin(BaseModule[InputModelT, OutputModelT, SetupModelT], ABC):
     #                 )
 
     @abstractmethod
-    def start(self) -> None:
+    def start(self, setup_id: str) -> None:
         """
         Starts the kin.
         """
