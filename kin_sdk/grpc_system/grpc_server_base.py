@@ -26,7 +26,7 @@ class GRPCServerBase:
         servicer_class: "GRPCServerBase",
         port: int,
         servicer_args: tuple = (),
-        servicer_kwargs: dict = {},
+        servicer_kwargs: dict = None,
         max_workers: int = 10,
     ) -> None:
         """
@@ -41,7 +41,7 @@ class GRPCServerBase:
         """
         self.servicer_class = servicer_class
         self.servicer_args = servicer_args
-        self.servicer_kwargs = servicer_kwargs
+        self.servicer_kwargs = servicer_kwargs if servicer_kwargs else {}
         self.port = port
         self.max_workers = max_workers
         self.__server: _Server = None

@@ -28,7 +28,7 @@ class DisplayTool(BaseTool[DisplayInput, DisplayOutput, DisplaySetup]):
         """
         Start the module
         """
-        print("Starting the module")
+        print("Starting the module setup: ", setup_id)
 
     def execute(
         self,

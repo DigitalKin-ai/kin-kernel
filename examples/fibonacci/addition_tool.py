@@ -37,7 +37,7 @@ class AdditionTool(BaseTool[AdditionInput, AdditionOutput, AdditionSetup]):
         """
         Start the module
         """
-        print("Starting the module")
+        print("Starting the module setup: ", setup_id)
 
     def execute(
         self,

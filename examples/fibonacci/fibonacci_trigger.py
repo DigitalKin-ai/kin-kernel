@@ -33,8 +33,8 @@ class CronTrigger(
     output_format = CronFibonacciOutput
     setup_format = CronFibonacciSetup
 
-    def start(self) -> None:
-        print("Executing cron job", self.name)
+    def start(self, setup_id: str) -> None:
+        print("Executing cron job", self.name, setup_id)
 
     def execute(
         self,

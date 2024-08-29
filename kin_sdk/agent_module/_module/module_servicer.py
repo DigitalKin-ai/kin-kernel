@@ -80,7 +80,6 @@ class ModuleServicer(ModuleServiceServicer):
                 if not self.job_manager.update_job_status(job_id, JobStatus.PROCESSING):
                     raise ValueError(f"😵 Trigger {job_id} not found.")
                 self.module.send_output(output, module_ids)
-                print(output)
                 current_job.add_to_outputs(output)
 
             # Execute the module
@@ -131,7 +130,6 @@ class ModuleServicer(ModuleServiceServicer):
                 input_data, setup_id, module_ids, self.__start_job
             )
             for output in self.job_manager.get_outputs(job_id):
-                print(output)
                 output_struct = json_format.Parse(
                     text=json.dumps(output.model_dump()),
                     message=struct_pb2.Struct(),  # pylint: disable=no-member

@@ -35,7 +35,7 @@ class SequenceTool(BaseTool[SequenceInput, SequenceOutput, SequenceSetup]):
         super().__init__(*args, **kwargs)
         self.fibonacci = None
 
-    def start(self) -> None:
+    def start(self, setup_id: str) -> None:
         """
         Start the module
         """

@@ -82,7 +82,18 @@ def create_model_from_schema(schema: JsonSchemaValue, model_name: str) -> type[A
     return create_model(model_name, **fields)
 
 
+def test_func(*args, **kwargs):
+    """
+    Test function
+    """
+    print(args, kwargs)
+
+
 if __name__ == "__main__":
+
+    test = {}
+    test_func(**test)
+
     # Extract JSON schema
     user_schema = User.model_json_schema()
     print("user_schema", user_schema)

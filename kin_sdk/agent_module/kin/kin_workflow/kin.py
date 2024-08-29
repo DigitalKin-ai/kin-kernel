@@ -247,14 +247,18 @@ class KinWorkflow(BaseKin):
         )
 
         async def module_callback(
-            module_id: str, input_data: Dict[str, Any]
+            module_id: str, input_data: Dict[str, Any], node_id: str
         ) -> Dict[str, Any]:
             response_iterator = self.start_module(
-                module_id, input_data, setup_id, request_type="REQUEST_TYPE_VALIDATE"
+                module_id,
+                input_data,
+                setup_id=f"{setup_id}::nodes:{node_id}",
+                request_type="REQUEST_TYPE_VALIDATE",
             )
             result = {}
             for response in response_iterator:
                 response_type = response.get("response_type", None)
+                print(f"response_type: {response_type}")
                 if (
                     response_type is not None
                     and response_type == "START_RESPONSE_TYPE_OUTPUT"

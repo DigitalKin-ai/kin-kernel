@@ -8,7 +8,7 @@ from abc import ABC, abstractmethod
 from typing import Type, TypeVar, Generic, List, Callable
 
 import grpc
-from pydantic import BaseModel, schema_json_of
+from pydantic import BaseModel
 from google.protobuf import json_format, struct_pb2
 from proto.digitalkin.module.v1.module_service_pb2_grpc import (
     ModuleServiceServicer,
