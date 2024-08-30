@@ -1,4 +1,10 @@
+"""
+TODO: Add module description.
+"""
+
 from typing import Dict, Any
+
+import grpc
 from kin_sdk.common import validate_grpc_request
 from kin_sdk.grpc_system.grpc_server_base import GRPCServerBase
 
@@ -21,8 +27,10 @@ class ModuleRegistry(module_registry_pb2_grpc.ModuleRegistryServiceServicer):
         self.modules: Dict[str, Dict[str, Any]] = {}
 
     @validate_grpc_request
-    def RegisterModule(
-        self, request: registration_pb2.RegisterRequest, context
+    async def RegisterModule(
+        self,
+        request: registration_pb2.RegisterRequest,
+        context: grpc.aio.ServicerContext,
     ) -> registration_pb2.RegisterResponse:
         """
         Registers a module with the given details.
@@ -42,7 +50,7 @@ class ModuleRegistry(module_registry_pb2_grpc.ModuleRegistryServiceServicer):
         return registration_pb2.RegisterResponse(success=True)
 
     @validate_grpc_request
-    def DeregisterModule(
+    async def DeregisterModule(
         self, request: registration_pb2.DeregisterRequest, context
     ) -> registration_pb2.DeregisterResponse:
         """
@@ -60,7 +68,7 @@ class ModuleRegistry(module_registry_pb2_grpc.ModuleRegistryServiceServicer):
         return registration_pb2.DeregisterResponse(success=False)
 
     @validate_grpc_request
-    def DiscoverModule(
+    async def DiscoverModule(
         self, request: action_pb2.DiscoverRequest, context
     ) -> action_pb2.DiscoverResponse:
         """
@@ -83,7 +91,7 @@ class ModuleRegistry(module_registry_pb2_grpc.ModuleRegistryServiceServicer):
         return action_pb2.DiscoverResponse()
 
     @validate_grpc_request
-    def UpdateModuleStatus(
+    async def UpdateModuleStatus(
         self, request: action_pb2.UpdateStatusRequest, context
     ) -> action_pb2.UpdateStatusResponse:
         """
@@ -100,16 +108,6 @@ class ModuleRegistry(module_registry_pb2_grpc.ModuleRegistryServiceServicer):
             return action_pb2.UpdateStatusResponse(success=True)
         return action_pb2.UpdateStatusResponse(success=False)
 
-    def add_to_server(self, server) -> None:
-        """
-        Adds the ModuleRegistry service to the gRPC server.
-
-        :param server: The gRPC server instance.
-        """
-        module_registry_pb2_grpc.add_ModuleRegistryServiceServicer_to_server(
-            self, server
-        )
-
 
 class ModuleRegistryServer(GRPCServerBase):
     """
@@ -124,3 +122,13 @@ class ModuleRegistryServer(GRPCServerBase):
         :type port: int
         """
         super().__init__(ModuleRegistry, port)
+
+    def add_to_server(self, server) -> None:
+        """
+        Adds the ModuleRegistry service to the gRPC server.
+
+        :param server: The gRPC server instance.
+        """
+        module_registry_pb2_grpc.add_ModuleRegistryServiceServicer_to_server(
+            self, server
+        )

@@ -2,9 +2,9 @@
 
 from concurrent import futures
 import grpc
-from grpc._server import _Server
+from grpc.aio._server import Server
 
-from kin_sdk.common.logger import logger
+from kin_sdk.common import logger, get_certificates, Certificates, CertValues
 
 
 class GRPCServerBase:
@@ -44,37 +44,64 @@ class GRPCServerBase:
         self.servicer_kwargs = servicer_kwargs if servicer_kwargs else {}
         self.port = port
         self.max_workers = max_workers
-        self.__server: _Server = None
+        self._server: Server = None
+        self._credentials = grpc.ssl_channel_credentials(
+            root_certificates=None,  # Use None to use the default root certificates
+            private_key=None,  # Use None if client authentication is not required
+            certificate_chain=None,  # Use None if client authentication is not required
+        )
 
-    def serve(self) -> None:
+    def _init_credentials(self) -> grpc.ServerCredentials:
+        """
+        Initializes the gRPC server credentials.
+        """
+        certificates: Certificates = get_certificates()
+        server_cert: CertValues = certificates.server_cert
+
+        return grpc.ssl_server_credentials(
+            private_key_certificate_chain_pairs=[
+                (
+                    server_cert.private_key,
+                    server_cert.certificate_chain,
+                )
+            ],
+            root_certificates=server_cert.root_certificates,
+            require_client_auth=True,
+        )
+
+    async def serve(self) -> None:
         """
         Starts the server, binds it to the specified port, and waits for termination.
 
         The server runs indefinitely until an external interruption or termination.
         """
-        self.__server = grpc.server(
+        self._server = grpc.aio.server(
             futures.ThreadPoolExecutor(max_workers=self.max_workers)
         )
-        servicer = self.servicer_class(*self.servicer_args, **self.servicer_kwargs)
-        servicer.add_to_server(self.__server)
-        self.__server.add_insecure_port(f"[::]:{self.port}")
+        servicer: GRPCServerBase = self.servicer_class(
+            *self.servicer_args, **self.servicer_kwargs
+        )
+        servicer.add_to_server(self._server)
+        self._server.add_secure_port(
+            address=f"[::]:{self.port}", server_credentials=self._init_credentials()
+        )
         logger.info("🤖 Service starting on port %s", self.port)
-        self.__server.start()
-        self.__server.wait_for_termination()
+        await self._server.start()
+        await self._server.wait_for_termination()
 
-    def serve_stop(self, grace: int = 0) -> None:
+    async def serve_stop(self, grace: int = 0) -> None:
         """
         Stops the server.
         """
         logger.info("🛑 Stopping service on port %s", self.port)
-        self.__server.stop(grace)
+        await self._server.stop(grace)
 
-    def add_to_server(self, server: grpc.Server) -> None:
+    def add_to_server(self, server: grpc.aio.Server) -> None:
         """
         Abstract method to add the servicer to the server. Must be implemented by subclasses.
 
         Args:
-            server (grpc.Server): The gRPC server instance to which the servicer will be added.
+            server (grpc.aio.Server): The gRPC server instance to which the servicer will be added.
 
         Raises:
             NotImplementedError: If the subclass does not implement this method.

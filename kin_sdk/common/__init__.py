@@ -10,6 +10,7 @@ from kin_sdk.common.rooms import Room, Rooms
 from kin_sdk.common.validated_request import ValidatedRequest
 from kin_sdk.common.merge_dicts import merge_dicts
 from kin_sdk.common.job_manager import JobManager, Job, JobStatus
+from kin_sdk.common._certificates import get_certificates, Certificates, CertValues
 
 __all__ = [
     "logger",
@@ -26,4 +27,7 @@ __all__ = [
     "JobManager",
     "Job",
     "JobStatus",
+    "get_certificates",
+    "Certificates",
+    "CertValues",
 ]

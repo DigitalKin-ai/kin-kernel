@@ -9,6 +9,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
+certs/
 develop-eggs/
 dist/
 downloads/
@@ -19,6 +20,7 @@ lib64/
 parts/
 sdist/
 var/
+logs/
 wheels/
 pip-wheel-metadata/
 share/python-wheels/
@@ -139,4 +141,3 @@ backup.dump.gz
 .vscode
 surreal_schema.txt
 
-/logs/
