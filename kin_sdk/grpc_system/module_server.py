@@ -298,7 +298,7 @@ class ModuleServer(GRPCServerBase):
         module_ids: Optional[List[str]] = None,
         request_type: str = "SEND",
         module_role: Literal["owner", "member"] = "owner",
-    ) -> AsyncGenerator[None, None, Optional[dict]]:
+    ) -> AsyncGenerator[Optional[dict], None]:
         """
         Get the input of a module.
 

@@ -41,6 +41,7 @@ class ModuleRegistry(module_registry_pb2_grpc.ModuleRegistryServiceServicer):
         :return: The registration response indicating success.
         :rtype: registration_pb2.RegisterResponse
         """
+        print("RegisterModule")
         self.modules[request.module_id] = {
             "type": request.module_type,
             "address": request.address,
@@ -114,14 +115,14 @@ class ModuleRegistryServer(GRPCServerBase):
     ModuleRegistryServer for hosting the ModuleRegistry service.
     """
 
-    def __init__(self, port) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         """
         Initializes the ModuleRegistryServer with the given port.
 
         :param port: The port number on which the server will listen.
         :type port: int
         """
-        super().__init__(ModuleRegistry, port)
+        super().__init__(*args, **kwargs)
 
     def add_to_server(self, server) -> None:
         """
@@ -130,5 +131,5 @@ class ModuleRegistryServer(GRPCServerBase):
         :param server: The gRPC server instance.
         """
         module_registry_pb2_grpc.add_ModuleRegistryServiceServicer_to_server(
-            self, server
+            ModuleRegistry(), server
         )

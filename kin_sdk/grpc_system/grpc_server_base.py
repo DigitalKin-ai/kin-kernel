@@ -23,10 +23,7 @@ class GRPCServerBase:
 
     def __init__(
         self,
-        servicer_class: "GRPCServerBase",
         port: int,
-        servicer_args: tuple = (),
-        servicer_kwargs: dict = None,
         max_workers: int = 10,
     ) -> None:
         """
@@ -39,17 +36,10 @@ class GRPCServerBase:
             servicer_kwargs (dict): Keyword arguments for the servicer's constructor.
             max_workers (int): The maximum number of worker threads.
         """
-        self.servicer_class = servicer_class
-        self.servicer_args = servicer_args
-        self.servicer_kwargs = servicer_kwargs if servicer_kwargs else {}
         self.port = port
         self.max_workers = max_workers
         self._server: Server = None
-        self._credentials = grpc.ssl_channel_credentials(
-            root_certificates=None,  # Use None to use the default root certificates
-            private_key=None,  # Use None if client authentication is not required
-            certificate_chain=None,  # Use None if client authentication is not required
-        )
+        self._credentials = self._init_credentials()
 
     def _init_credentials(self) -> grpc.ServerCredentials:
         """
@@ -57,6 +47,11 @@ class GRPCServerBase:
         """
         certificates: Certificates = get_certificates()
         server_cert: CertValues = certificates.server_cert
+        has_cert = (
+            server_cert.private_key is not None
+            and server_cert.certificate_chain is not None
+            and server_cert.certificate_chain is not None
+        )
 
         return grpc.ssl_server_credentials(
             private_key_certificate_chain_pairs=[
@@ -66,7 +61,7 @@ class GRPCServerBase:
                 )
             ],
             root_certificates=server_cert.root_certificates,
-            require_client_auth=True,
+            require_client_auth=has_cert,
         )
 
     async def serve(self) -> None:
@@ -78,12 +73,9 @@ class GRPCServerBase:
         self._server = grpc.aio.server(
             futures.ThreadPoolExecutor(max_workers=self.max_workers)
         )
-        servicer: GRPCServerBase = self.servicer_class(
-            *self.servicer_args, **self.servicer_kwargs
-        )
-        servicer.add_to_server(self._server)
+        self.add_to_server(self._server)
         self._server.add_secure_port(
-            address=f"[::]:{self.port}", server_credentials=self._init_credentials()
+            address=f"[::]:{self.port}", server_credentials=self._credentials
         )
         logger.info("🤖 Service starting on port %s", self.port)
         await self._server.start()

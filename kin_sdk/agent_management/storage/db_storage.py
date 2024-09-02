@@ -47,6 +47,9 @@ class DBStorage(BaseStorage):
     def storage_save(self, kin_id, content):
         """TODO: sphinx docstring"""
 
+    async def load_workflow(self, kin_id: str, workflow_id: str):
+        pass
+
     async def storage_load(self, kin_id: str, table: str):
         """
         This method loads the data from the database.
