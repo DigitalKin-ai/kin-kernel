@@ -40,11 +40,19 @@ def get_certificates() -> Certificates:
     Get certificates for the SDK
     """
     ca_pem = os.getenv("CA_PEM", None)
-    cert_pem = os.getenv("CERT_PEM", None)
-    key_pem = os.getenv("KEY_PEM", None)
+    server_cert_pem = os.getenv("SERVER_CERT_PEM", None)
+    server_key_pem = os.getenv("SERVER_KEY_PEM", None)
+    client_cert_pem = os.getenv("CLIENT_CERT_PEM", None)
+    client_key_pem = os.getenv("CLIENT_KEY_PEM", None)
 
     # Check if the certificates are set
-    if ca_pem is None or cert_pem is None or key_pem is None:
+    if (
+        ca_pem is None
+        or server_cert_pem is None
+        or server_key_pem is None
+        or client_key_pem is None
+        or client_key_pem is None
+    ):
         return Certificates(
             client_cert=CertValues(
                 root_certificates=None,
@@ -65,29 +73,44 @@ def get_certificates() -> Certificates:
     except FileNotFoundError:
         root_certificates = None
         logger.error("Root certificates file not found")
-    try:
-        with open(cert_pem, "rb") as f:
-            certificate_chain = f.read()
-    except FileNotFoundError:
-        certificate_chain = None
-        logger.error("Certificate chain file not found")
 
+    # Server certificates
     try:
-        with open(key_pem, "rb") as f:
-            private_key = f.read()
+        with open(server_cert_pem, "rb") as f:
+            server_certificate_chain = f.read()
     except FileNotFoundError:
-        private_key = None
+        server_certificate_chain = None
+        logger.error("Certificate chain file not found")
+    try:
+        with open(server_key_pem, "rb") as f:
+            server_private_key = f.read()
+    except FileNotFoundError:
+        server_private_key = None
+        logger.error("Private key file not found")
+
+    # Client certificates
+    try:
+        with open(client_cert_pem, "rb") as f:
+            client_certificate_chain = f.read()
+    except FileNotFoundError:
+        client_certificate_chain = None
+        logger.error("Certificate chain file not found")
+    try:
+        with open(client_key_pem, "rb") as f:
+            client_private_key = f.read()
+    except FileNotFoundError:
+        client_private_key = None
         logger.error("Private key file not found")
 
     return Certificates(
         client_cert=CertValues(
             root_certificates=root_certificates,
-            certificate_chain=certificate_chain,
-            private_key=private_key,
+            certificate_chain=server_certificate_chain,
+            private_key=server_private_key,
         ),
         server_cert=CertValues(
             root_certificates=root_certificates,
-            certificate_chain=certificate_chain,
-            private_key=private_key,
+            certificate_chain=client_certificate_chain,
+            private_key=client_private_key,
         ),
     )

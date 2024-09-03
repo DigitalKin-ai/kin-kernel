@@ -74,8 +74,8 @@ class GRPCServerBase:
             futures.ThreadPoolExecutor(max_workers=self.max_workers)
         )
         self.add_to_server(self._server)
-        self._server.add_secure_port(
-            address=f"[::]:{self.port}", server_credentials=self._credentials
+        self._server.add_insecure_port(
+            address=f"[::]:{self.port}"  # , server_credentials=self._credentials
         )
         logger.info("🤖 Service starting on port %s", self.port)
         await self._server.start()

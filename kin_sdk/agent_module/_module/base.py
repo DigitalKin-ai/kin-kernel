@@ -11,20 +11,20 @@ import grpc
 from pydantic import BaseModel
 from google.protobuf import json_format, struct_pb2
 from proto.digitalkin.module.v1.module_service_pb2_grpc import (
-    ModuleServiceServicer,
     ModuleServiceStub,
 )
 from proto.digitalkin.module.v1.lifecycle_pb2 import StartModuleRequest
 from kin_sdk.grpc_system.models import ModuleModel
-from kin_sdk.grpc_system import ModuleServer
-from kin_sdk.common import ModuleType, logger
+from kin_sdk.agent_management import AgentManagement
+from kin_sdk.agent_management.identity import ModuleIdentity
+from kin_sdk.common import logger
 
 InputModelT = TypeVar("InputModelT", bound=BaseModel)
 OutputModelT = TypeVar("OutputModelT", bound=BaseModel)
 SetupModelT = TypeVar("SetupModelT", bound=BaseModel)
 
 
-class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ModuleServer, ABC):
+class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ABC):
     """
     Abstract base class for defining a module.
     """
@@ -37,46 +37,23 @@ class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ModuleServer, 
 
     def __init__(
         self,
-        module_id: str,
-        module_address: str,
-        module_port: int,
-        module_type: ModuleType,
-        registry_address: str,
-        max_workers: int = 10,
+        agent_management: AgentManagement,
     ):
         """
         Initializes the BaseModule.
 
-        :param module_id: The ID of the module.
-        :param module_address: The address of the module.
-        :param module_port: The port of the module.
-        :param module_type: The type of the module.
-        :param registry_address: The address of the registry.
-        :param max_workers: The maximum number of worker threads.
+        :param agent_management: The agent management object.
         """
-        self.max_workers = max_workers
-        super().__init__(
-            module_id=module_id,
-            module_address=module_address,
-            module_port=module_port,
-            module_type=module_type,
-            servicer_class=self.__get_module_servicer(),
-            servicer_kwargs=dict(
-                module=self,
-            ),
-            registry_address=registry_address,
-            max_workers=max_workers,
-        )
+        self._agent_management = agent_management
 
-    def __get_module_servicer(self) -> Type[ModuleServiceServicer]:
+    @property
+    def identity(self) -> ModuleIdentity:
         """
-        Gets the ModuleServiceServicer class.
+        Gets the module identity.
 
-        :return: The module servicer class.
+        :return: The module identity.
         """
-        from kin_sdk.agent_module._module.module_servicer import ModuleServicer
-
-        return ModuleServicer
+        return self._agent_management.identity
 
     def __init_subclass__(cls, **kwargs):
         """
@@ -245,8 +222,9 @@ class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ModuleServer, 
 
             # use module_ids to send the output to the right module
             for module_id in module_ids:
-                module = self.search_module(module_id)
-
+                # module = self.search_module(module_id)
+                print("module_id", module_id)
+                module = None
                 if module is None:
                     return None
 
@@ -271,7 +249,7 @@ class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ModuleServer, 
                 message = "😵 Error sending output to none existing module:\n\t"
             else:
                 # Handle gRPC exceptions
-                message = f"😵 Error sending output to {module.module_type} module {module_id}:\n\t"
+                message = f"😵 Error sending output to {self.identity.type} module {module_id}:\n\t"
             if e.code() == grpc.StatusCode.UNAVAILABLE:
                 message += "- Server is unavailable"
             elif e.code() == grpc.StatusCode.DEADLINE_EXCEEDED:

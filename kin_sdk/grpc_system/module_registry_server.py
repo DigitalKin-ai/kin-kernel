@@ -2,7 +2,7 @@
 TODO: Add module description.
 """
 
-from typing import Dict, Any
+from typing import Coroutine, Dict, Any
 
 import grpc
 from kin_sdk.common import validate_grpc_request
@@ -71,7 +71,7 @@ class ModuleRegistry(module_registry_pb2_grpc.ModuleRegistryServiceServicer):
     @validate_grpc_request
     async def DiscoverModule(
         self, request: action_pb2.DiscoverRequest, context
-    ) -> action_pb2.DiscoverResponse:
+    ) -> Coroutine[action_pb2.DiscoverResponse, None, None]:
         """
         Discovers a module by its ID.
 

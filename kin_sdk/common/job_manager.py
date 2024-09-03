@@ -15,6 +15,8 @@ from concurrent.futures import Future, ThreadPoolExecutor
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from kin_sdk.agent_module._module.base import BaseModule
+
 
 class ConcurrentDict(UserDict):
     """TODO: sphinx docstring"""
@@ -88,7 +90,7 @@ class Job(BaseModel):
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
-
+    module: BaseModule = Field(..., description="The module associated with the job")
     input_data: BaseModel = Field(..., description="The input data for the job")
     setup_id: str = Field(..., description="The setup ID for the job")
     module_ids: List[str] = Field(
@@ -143,6 +145,7 @@ class JobManager:
 
     def start_job(
         self,
+        module: BaseModule,
         input_data: BaseModel,
         setup_id: str,
         module_ids: List[str],
@@ -170,6 +173,7 @@ class JobManager:
 
         try:
             job = Job(
+                module=module,
                 input_data=input_data,
                 setup_id=setup_id,
                 module_ids=module_ids,

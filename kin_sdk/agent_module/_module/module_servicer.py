@@ -4,7 +4,7 @@ TODO: sphinx docstring
 
 import json
 import threading
-from typing import Any, Generator
+from typing import Any, Generator, Type
 
 import grpc
 
@@ -34,6 +34,7 @@ from proto.digitalkin.module.v1.information_pb2 import (
     GetModuleOutputResponse,
 )
 from kin_sdk.common.validate_grpc_request import validate_grpc_request
+from kin_sdk.agent_management import AgentManagement
 from kin_sdk.agent_module._module.base import BaseModule
 from kin_sdk.common import (
     Rooms,
@@ -48,11 +49,14 @@ from kin_sdk.common import (
 class ModuleServicer(ModuleServiceServicer):
     """TODO: Sphinx docstring"""
 
-    def __init__(self, module: BaseModule):
-        self.module = module
-        self.job_manager = JobManager(self.module.max_workers)
+    def __init__(
+        self, module_class: Type[BaseModule], agent_management: AgentManagement
+    ):
+        self.module_class = module_class
+        self.agent_management = agent_management
+        self.job_manager = JobManager(max_workers=10)
         self.rooms: Rooms = Rooms()  # ! TODO: remove expired rooms
-        self.tracer = trace.get_tracer(self.module.__class__.__name__)
+        self.tracer = trace.get_tracer(self.module_class.__class__.__name__)
         self.lock = threading.Lock()
 
     def __start_job(
@@ -68,22 +72,23 @@ class ModuleServicer(ModuleServiceServicer):
 
             # Get job information
             current_job: Job = self.job_manager.get_job(job_id)
+            module = current_job.module
             input_data = current_job.input_data
             setup_id = current_job.setup_id
             module_ids = current_job.module_ids
 
             # Start the module
-            self.module.start(setup_id=setup_id)
+            module.start(setup_id=setup_id)
 
             # Create a callback that captures the module_ids
             def callback(output: BaseModel):
                 if not self.job_manager.update_job_status(job_id, JobStatus.PROCESSING):
                     raise ValueError(f"😵 Trigger {job_id} not found.")
-                self.module.send_output(output, module_ids)
+                module.send_output(output, module_ids)
                 current_job.add_to_outputs(output)
 
             # Execute the module
-            self.module.execute(
+            module.execute(
                 input_data,
                 setup_id,
                 callback,
@@ -98,7 +103,9 @@ class ModuleServicer(ModuleServiceServicer):
         self, job_id: str, *args, **kwargs  # pylint: disable=unused-argument
     ) -> None:
         try:
-            self.module.stop()
+            current_job: Job = self.job_manager.get_job(job_id)
+            module = current_job.module
+            module.stop()
             self.job_manager.update_job_status(job_id, JobStatus.STOPPED)
             self.job_manager.stop_outputs(job_id)
         except ValueError as e:
@@ -124,10 +131,14 @@ class ModuleServicer(ModuleServiceServicer):
             setup_id = json_request.get("setup_id", None)
 
             # Validate the input_param data
-            input_data = self.module.input_format.model_validate(input_param)
+            input_data = self.module_class.input_format.model_validate(input_param)
             # Create and Start the job
             job_id = self.job_manager.start_job(
-                input_data, setup_id, module_ids, self.__start_job
+                self.module_class(agent_management=self.agent_management),
+                input_data,
+                setup_id,
+                module_ids,
+                self.__start_job,
             )
             for output in self.job_manager.get_outputs(job_id):
                 output_struct = json_format.Parse(
@@ -143,7 +154,7 @@ class ModuleServicer(ModuleServiceServicer):
                         output=output_struct,
                         job_id=job_id,
                     ),
-                    module_id=self.module.module_id,
+                    module_id=self.agent_management.identity.id,  # ? is there any other and better way to get the module id
                 )
             # Mark the job as completed
             self.job_manager.update_job_status(job_id, JobStatus.SUCCESS)
@@ -206,7 +217,7 @@ class ModuleServicer(ModuleServiceServicer):
             # ? job_id instead of module_id
             module_id = request.module_id  # pylint: disable=unused-variable # noqa
 
-            json_string = self.module.get_input_format(llm_format)
+            json_string = self.module_class.get_input_format(llm_format)
             input_format_struct = json_format.Parse(
                 text=json_string,
                 message=struct_pb2.Struct(),  # pylint: disable=no-member

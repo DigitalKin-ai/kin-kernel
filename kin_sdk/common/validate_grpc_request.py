@@ -1,5 +1,6 @@
 """TODO: Add a description here."""
 
+import asyncio
 import json
 import time
 import uuid
@@ -31,21 +32,21 @@ from kin_sdk.common.types import RequestType
 from kin_sdk.common.rooms import Rooms
 
 
-def merge_dicts(accumulated_dict: Dict[str, Any], new_dict: Dict[str, Any]) -> None:
-    """Recursively merge new_dict into accumulated_dict."""
-    for key, value in new_dict.items():
-        if key in accumulated_dict:
-            if isinstance(value, dict) and isinstance(accumulated_dict[key], dict):
-                merge_dicts(accumulated_dict[key], value)
-            elif isinstance(value, list) and isinstance(accumulated_dict[key], list):
-                # Merge lists without duplicating elements
-                for item in value:
-                    if item not in accumulated_dict[key]:
-                        accumulated_dict[key].append(item)
-            else:
-                accumulated_dict[key] = value
-        else:
-            accumulated_dict[key] = value
+# def merge_dicts(accumulated_dict: Dict[str, Any], new_dict: Dict[str, Any]) -> None:
+#     """Recursively merge new_dict into accumulated_dict."""
+#     for key, value in new_dict.items():
+#         if key in accumulated_dict:
+#             if isinstance(value, dict) and isinstance(accumulated_dict[key], dict):
+#                 merge_dicts(accumulated_dict[key], value)
+#             elif isinstance(value, list) and isinstance(accumulated_dict[key], list):
+#                 # Merge lists without duplicating elements
+#                 for item in value:
+#                     if item not in accumulated_dict[key]:
+#                         accumulated_dict[key].append(item)
+#             else:
+#                 accumulated_dict[key] = value
+#         else:
+#             accumulated_dict[key] = value
 
 
 def validate_grpc_request(func):
@@ -65,9 +66,41 @@ def validate_grpc_request(func):
     """
 
     @wraps(func)
-    def wrapper(self, request, context):
+    async def async_wrapper(self, request, context):
         """
-        Wrapper function to execute validation and handle exceptions.
+        Wrapper function to execute validation and handle exceptions for async methods.
+
+        Parameters:
+            self: The instance of the gRPC module class.
+            request: The request message for the gRPC method.
+            context: The gRPC context.
+
+        Returns:
+            Varies: The return type depends on the gRPC method being called.
+
+        Raises:
+            grpc.RpcError: An appropriate gRPC error is raised and handled if validation fails.
+        """
+        try:
+            # Validate the request using protoc_gen_validate
+            validate(request)
+            # If validation is successful, proceed to the actual function
+            return await func(self, request, context)
+        except ValidationFailed as e:
+            # Handle validation errors
+            logger.error("Validation Error: %s", e)
+            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+            context.set_details(str(e))
+        except ValidateGrpcRequestException as e:
+            # Handle other exceptions that may occur
+            logger.error("Validate Exception Error: %s", e)
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(str(e))
+
+    @wraps(func)
+    def sync_wrapper(self, request, context):
+        """
+        Wrapper function to execute validation and handle exceptions for sync methods.
 
         Parameters:
             self: The instance of the gRPC module class.
@@ -96,109 +129,113 @@ def validate_grpc_request(func):
             context.set_code(grpc.StatusCode.INTERNAL)
             context.set_details(str(e))
 
-    return wrapper
+    # Check if the function is a coroutine function
+    if asyncio.iscoroutinefunction(func):
+        return async_wrapper
+    else:
+        return sync_wrapper
 
 
-def validate_stream_grpc_request():
-    """
-    A decorator to validate streaming gRPC requests using protoc_gen_validate.
+# def validate_stream_grpc_request():
+#     """
+#     A decorator to validate streaming gRPC requests using protoc_gen_validate.
 
-    This decorator intercepts the execution of a gRPC module method to
-    perform validation on the incoming request. If the validation fails,
-    it sets the appropriate gRPC status code and details. If the validation
-    passes, it proceeds with the actual module method.
+#     This decorator intercepts the execution of a gRPC module method to
+#     perform validation on the incoming request. If the validation fails,
+#     it sets the appropriate gRPC status code and details. If the validation
+#     passes, it proceeds with the actual module method.
 
-    Parameters:
-        func (Callable): The gRPC module method to be decorated.
+#     Parameters:
+#         func (Callable): The gRPC module method to be decorated.
 
-    Returns:
-        Callable: A wrapper function that incorporates validation logic.
-    """
+#     Returns:
+#         Callable: A wrapper function that incorporates validation logic.
+#     """
 
-    def decorator(func: Callable):
-        @wraps(func)
-        def wrapper(self, request_iterator: Iterator, context: grpc.ServicerContext):
-            """
-            Todo: sphinx docstring
-            """
-            try:
-                # Extract module name from metadata
-                metadata = dict(context.invocation_metadata())
-                module_name = metadata.get("name", "default_module")
+#     def decorator(func: Callable):
+#         @wraps(func)
+#         def wrapper(self, request_iterator: Iterator, context: grpc.ServicerContext):
+#             """
+#             Todo: sphinx docstring
+#             """
+#             try:
+#                 # Extract module name from metadata
+#                 metadata = dict(context.invocation_metadata())
+#                 module_name = metadata.get("name", "default_module")
 
-                # Initialize room if not exists
-                with self.lock:
-                    if module_name not in self.rooms:
-                        self.rooms[module_name] = {
-                            "clients": 0,
-                            "data": None,
-                            "type": None,
-                            "last_update": time.time(),
-                        }
+#                 # Initialize room if not exists
+#                 with self.lock:
+#                     if module_name not in self.rooms:
+#                         self.rooms[module_name] = {
+#                             "clients": 0,
+#                             "data": None,
+#                             "type": None,
+#                             "last_update": time.time(),
+#                         }
 
-                self.rooms[module_name]["clients"] += 1
-                # Process incoming requests
-                for request in request_iterator:
-                    with self.lock:
-                        self.rooms[module_name]["type"] = type(request)
-                        data_dict = (
-                            json_format.MessageToDict(
-                                self.rooms[module_name]["data"],
-                                preserving_proto_field_name=True,
-                            )
-                            if self.rooms[module_name]["data"]
-                            else {}
-                        )
-                        merge_dicts(
-                            data_dict,
-                            json_format.MessageToDict(
-                                request,
-                                preserving_proto_field_name=True,
-                            ),
-                        )
-                        self.rooms[module_name]["data"] = json_format.ParseDict(
-                            data_dict, type(request)()
-                        )
-                        self.rooms[module_name]["last_update"] = time.time()
+#                 self.rooms[module_name]["clients"] += 1
+#                 # Process incoming requests
+#                 for request in request_iterator:
+#                     with self.lock:
+#                         self.rooms[module_name]["type"] = type(request)
+#                         data_dict = (
+#                             json_format.MessageToDict(
+#                                 self.rooms[module_name]["data"],
+#                                 preserving_proto_field_name=True,
+#                             )
+#                             if self.rooms[module_name]["data"]
+#                             else {}
+#                         )
+#                         merge_dicts(
+#                             data_dict,
+#                             json_format.MessageToDict(
+#                                 request,
+#                                 preserving_proto_field_name=True,
+#                             ),
+#                         )
+#                         self.rooms[module_name]["data"] = json_format.ParseDict(
+#                             data_dict, type(request)()
+#                         )
+#                         self.rooms[module_name]["last_update"] = time.time()
 
-                # Decrease the number of clients when the stream ends
-                with self.lock:
-                    self.rooms[module_name]["clients"] -= 1
-                    if self.rooms[module_name]["clients"] <= 0:
-                        self.condition.notify_all()
+#                 # Decrease the number of clients when the stream ends
+#                 with self.lock:
+#                     self.rooms[module_name]["clients"] -= 1
+#                     if self.rooms[module_name]["clients"] <= 0:
+#                         self.condition.notify_all()
 
-                if self.rooms[module_name]["clients"] <= 0:
-                    # Execute the merged request
-                    with self.lock:
-                        merged_request = self.rooms[module_name]["data"]
-                        del self.rooms[module_name]
-                        validate(merged_request)
+#                 if self.rooms[module_name]["clients"] <= 0:
+#                     # Execute the merged request
+#                     with self.lock:
+#                         merged_request = self.rooms[module_name]["data"]
+#                         del self.rooms[module_name]
+#                         validate(merged_request)
 
-                    return func(self, merged_request, context)
+#                     return func(self, merged_request, context)
 
-                return func(
-                    self,
-                    json_format.ParseDict(
-                        {"partial_request": True},
-                        struct_pb2.Struct(),  # pylint: disable=no-member
-                    ),
-                    context,
-                )
+#                 return func(
+#                     self,
+#                     json_format.ParseDict(
+#                         {"partial_request": True},
+#                         struct_pb2.Struct(),  # pylint: disable=no-member
+#                     ),
+#                     context,
+#                 )
 
-            except ValidationFailed as e:
-                # Handle validation errors
-                logger.error("Validation Error: %s", e)
-                context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
-                context.set_details(str(e))
-            except ValidateGrpcRequestException as e:
-                # Handle other exceptions that may occur
-                logger.error("Validate Exception Error: %s", e)
-                context.set_code(grpc.StatusCode.INTERNAL)
-                context.set_details(str(e))
+#             except ValidationFailed as e:
+#                 # Handle validation errors
+#                 logger.error("Validation Error: %s", e)
+#                 context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+#                 context.set_details(str(e))
+#             except ValidateGrpcRequestException as e:
+#                 # Handle other exceptions that may occur
+#                 logger.error("Validate Exception Error: %s", e)
+#                 context.set_code(grpc.StatusCode.INTERNAL)
+#                 context.set_details(str(e))
 
-        return wrapper
+#         return wrapper
 
-    return decorator
+#     return decorator
 
 
 MAX_WORKERS = 10  # Adjust this value based on your system's capabilities

@@ -1,11 +1,13 @@
 """TODO Module docstring."""
 
 import json
-from typing import Any, AsyncGenerator, Dict, List, Literal, Type, Optional, Union
+from typing import Any, AsyncGenerator, Dict, List, Literal, Optional, Type, Union
 
 import grpc
 from google.protobuf import json_format, struct_pb2
 
+from kin_sdk.agent_management.base import AgentManagement
+from kin_sdk.agent_module._module.base import BaseModule
 from proto.digitalkin.module.v1.module_service_pb2_grpc import (
     ModuleServiceStub,
     add_ModuleServiceServicer_to_server,
@@ -30,6 +32,7 @@ from proto.digitalkin.module.v1.information_pb2 import (
 )
 from proto.digitalkin.module.v1.lifecycle_pb2 import StartModuleRequest
 
+from kin_sdk.agent_module._module.module_servicer import ModuleServicer
 from kin_sdk.exception import (
     ModuleRegistrationException,
 )
@@ -52,30 +55,33 @@ class ModuleServer(GRPCServerBase):
 
     def __init__(
         self,
+        module_class: Type[BaseModule],
         module_id: str,
         module_address: str,
         module_port: int,
         module_type: ModuleType,
         registry_address: str,
-        servicer_class: Type,
-        servicer_args: tuple = (),
-        servicer_kwargs: dict = None,
         max_workers: int = 10,
     ):
         super().__init__(
-            servicer_class=servicer_class,  # type: ignore
             port=module_port,
-            servicer_args=servicer_args,
-            servicer_kwargs=servicer_kwargs,
             max_workers=max_workers,
         )
-
+        self.module_class = module_class
         self.module_id = module_id
         self.module_address = module_address
         self.module_port = module_port
         self.module_type = module_type
         self.registry_address = registry_address
         self._credentials = self._init_credentials()
+        self.agent_management = AgentManagement(
+            params_identity={
+                "module_id": self.module_id,
+                "module_type": self.module_type,
+                "module_address": self.module_address,
+                "module_port": self.module_port,
+            }
+        )
 
     def _init_credentials(self) -> grpc.ChannelCredentials:
         """
@@ -94,7 +100,9 @@ class ModuleServer(GRPCServerBase):
         """
         Creates a secure gRPC channel to the Module Registry.
         """
-        return grpc.aio.secure_channel(target=target, credentials=self._credentials)
+        return grpc.aio.insecure_channel(
+            target=target
+        )  # , credentials=self._credentials)
 
     async def _register_module(self) -> bool:
         """
@@ -350,7 +358,13 @@ class ModuleServer(GRPCServerBase):
 
     def add_to_server(self, server: grpc.Server) -> None:
         """TODO: Sphinx docstring"""
-        add_ModuleServiceServicer_to_server(self, server)
+        add_ModuleServiceServicer_to_server(
+            ModuleServicer(
+                module_class=self.module_class,
+                agent_management=self.agent_management,
+            ),
+            server,
+        )
 
     async def serve(self) -> None:
         """
