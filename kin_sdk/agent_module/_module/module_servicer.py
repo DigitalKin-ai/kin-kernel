@@ -57,7 +57,8 @@ class ModuleServicer(ModuleServiceServicer):
         self.lock = threading.Lock()
 
     async def __start_job(
-        self, job_id: str, *args, **kwargs  # pylint: disable=unused-argument
+        self,
+        job_id: str,
     ) -> None:
         """
         Starts the job in a separate thread.
@@ -143,6 +144,7 @@ class ModuleServicer(ModuleServiceServicer):
                 module_ids,
                 self.__start_job,
             )
+            print("hje3")
             for output in self.job_manager.get_outputs(job_id):
                 output_struct = json_format.Parse(
                     text=json.dumps(output.model_dump()),

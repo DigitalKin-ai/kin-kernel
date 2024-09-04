@@ -1,6 +1,5 @@
 """TODO: Add a description here"""
 
-import asyncio
 from typing import Callable
 from pydantic import BaseModel
 
@@ -55,7 +54,7 @@ class CustomTool(BaseTool[MultiplyInput, MultiplyOutput, MultiplySetup]):
         print("Stopping the module")
 
 
-async def main():
+def main():
     """
     TODO: Add a description here
     """
@@ -69,8 +68,8 @@ async def main():
         registry_address="localhost:50051",
         max_workers=10,
     )
-    await tool_server.serve()
+    tool_server.asyncio_serve()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

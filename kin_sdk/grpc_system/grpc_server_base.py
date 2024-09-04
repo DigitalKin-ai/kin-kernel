@@ -1,5 +1,7 @@
 """TODO: Add a description here"""
 
+import asyncio
+import signal
 from concurrent import futures
 import grpc
 from grpc.aio._server import Server
@@ -81,12 +83,34 @@ class GRPCServerBase:
         await self._server.start()
         await self._server.wait_for_termination()
 
-    async def serve_stop(self, grace: int = 0) -> None:
+    async def stop(self, grace: int = 0) -> None:
         """
         Stops the server.
         """
         logger.info("🛑 Stopping service on port %s", self.port)
         await self._server.stop(grace)
+
+    def asyncio_serve(self) -> None:
+        """
+        Synchronous method to start the server.
+        """
+
+        async def main():
+            loop = asyncio.get_running_loop()
+
+            # Define a signal handler to stop the server
+            def signal_handler():
+                loop.create_task(self.stop())
+
+            # Register the signal handler for SIGINT (Ctrl+C)
+            loop.add_signal_handler(signal.SIGINT, signal_handler)
+
+            try:
+                await self.serve()
+            except asyncio.CancelledError:
+                pass
+
+        asyncio.run(main())
 
     def add_to_server(self, server: grpc.aio.Server) -> None:
         """

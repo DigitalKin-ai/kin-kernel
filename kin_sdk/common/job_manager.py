@@ -188,6 +188,7 @@ class JobManager:
             return func(job_id, *args, **kwargs)
 
         try:
+            print(f"Creating job {job_id}")  # check circular import Module
             job = Job(
                 module=module,
                 input_data=input_data,
@@ -198,6 +199,7 @@ class JobManager:
                 outputs=Queue(),
                 stop_event=threading.Event(),
             )
+            print(f"Job {job_id} created")
             self.jobs[job_id] = job
             start_event.set()  # Signaler que le job est stocké
             return job_id

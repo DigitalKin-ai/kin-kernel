@@ -1,5 +1,6 @@
 """TODO: Add a description here."""
 
+from __future__ import annotations
 import asyncio
 import json
 import uuid
@@ -7,7 +8,16 @@ from threading import Lock, Thread
 from functools import wraps
 
 # from datetime import datetime
-from typing import Dict, Any, Iterator, Callable, Literal, Optional, Union
+from typing import (
+    Dict,
+    Any,
+    Iterator,
+    Callable,
+    Literal,
+    Optional,
+    Union,
+    TYPE_CHECKING,
+)
 from queue import Queue
 
 import grpc
@@ -28,7 +38,6 @@ from kin_sdk.exception import ValidateGrpcRequestException
 from kin_sdk.common.pydantic_validation_error import pydantic_validation_error
 from kin_sdk.common.logger import logger
 from kin_sdk.common.types import RequestType
-from kin_sdk.common.rooms import Rooms
 
 
 # def merge_dicts(accumulated_dict: Dict[str, Any], new_dict: Dict[str, Any]) -> None:
@@ -348,7 +357,7 @@ def validate_stream_request(func: Callable):
     @wraps(func)
     async def async_wrapper(
         self,
-        request_iterator,
+        request_iterator: Iterator[StartModuleRequest],
         context: Union[grpc.aio.ServicerContext, grpc.ServicerContext],
     ):
         """
@@ -367,6 +376,8 @@ def validate_stream_request(func: Callable):
                 f"{self.__class__.__name__} instance must have 'rooms', 'lock', and 'module_class' attributes."
             )
 
+        from kin_sdk.common.rooms import Rooms
+
         if not isinstance(self.rooms, Rooms):
             raise TypeError(
                 f"The 'rooms' attribute must be of type Rooms, got {type(self.rooms).__name__}."
@@ -377,12 +388,19 @@ def validate_stream_request(func: Callable):
                 f"The 'lock' attribute must be of type Lock, got {type(self.lock).__name__}."
             )
 
+        from kin_sdk.agent_management.base import AgentManagement
+
+        if not isinstance(self.agent_management, AgentManagement):
+            raise TypeError(
+                f"The 'agent_management' attribute must be of type AgentManagement, got {type(self.agent_management).__name__}."
+            )
+
         # be cautious of circular imports
         from kin_sdk.agent_module._module.base import BaseModule
 
-        if not isinstance(self.module_class, BaseModule):
+        if not issubclass(self.module_class, BaseModule):
             raise TypeError(
-                f"The 'module' attribute must be of type BaseModule, got {type(self.module_class).__name__}."
+                f"The 'module' attribute must be of type BaseModule, got {self.module_class.__name__}."
             )
 
         try:
@@ -425,13 +443,13 @@ def validate_stream_request(func: Callable):
                     message=f"Connected to room {metadata.room_id}",
                     room_id=str(metadata.room_id),
                 ),
-                module_id=self.module_class.identity.id,
+                module_id=self.agent_management.identity.id,
             )
 
-            def handle_incoming_messages() -> None:
+            async def handle_incoming_messages() -> None:
                 """Handle incoming messages from the client and publish them to the room."""
                 try:
-                    for request in request_iterator:
+                    async for request in request_iterator:
                         request_dict = (
                             json_format.MessageToDict(
                                 request, preserving_proto_field_name=True
@@ -474,8 +492,11 @@ def validate_stream_request(func: Callable):
 
             # Start the incoming message handler in a separate thread
             # this is useful to do not block the main thread that is waiting for the room incoming messages
-            incoming_thread = Thread(target=handle_incoming_messages)
-            incoming_thread.start()
+            # def run_async_in_thread():
+            #     asyncio.run(handle_incoming_messages())
+            await handle_incoming_messages()
+            # incoming_thread = Thread(target=run_async_in_thread)
+            # incoming_thread.start()
 
             # usefull to know if we want to try to validate the request
             is_validate: bool = False
@@ -525,7 +546,7 @@ def validate_stream_request(func: Callable):
                                 message="New input data has been added in the room",
                                 input=input_data,
                             ),
-                            module_id=self.module_class.identity.id,
+                            module_id=self.agent_management.identity.id,
                         ),
                         False,
                     )
