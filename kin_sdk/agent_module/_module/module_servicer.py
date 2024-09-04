@@ -34,14 +34,12 @@ from proto.digitalkin.module.v1.information_pb2 import (
 )
 from kin_sdk.agent_management import AgentManagement
 from kin_sdk.agent_module._module.base import BaseModule
-from kin_sdk.common import (
-    Rooms,
+from kin_sdk.common.logger import logger
+from kin_sdk.common.job_manager import JobManager, Job, JobStatus
+from kin_sdk.common.rooms import Rooms
+from kin_sdk.common.validate_grpc_request import (
     validate_stream_request,
     validate_grpc_request,
-    JobManager,
-    Job,
-    JobStatus,
-    logger,
 )
 
 
@@ -116,10 +114,10 @@ class ModuleServicer(ModuleServiceServicer):
             logger.error("😵 Exception Error: %s", e)
             self.job_manager.update_job_status(job_id, JobStatus.FAILED)
 
-    @validate_stream_request()
+    @validate_stream_request
     async def StartModule(  # pylint: disable=arguments-renamed
         self, request: StartModuleRequest, context: grpc.aio.ServicerContext
-    ) -> AsyncGenerator[StartModuleResponse, Any, Any]:
+    ) -> AsyncGenerator[StartModuleResponse, Any]:
         """
         https://medium.com/@iamdeepaksinghh/create-a-real-time-chat-service-using-grpc-in-python-fc63127d570c
         """
@@ -249,10 +247,10 @@ class ModuleServicer(ModuleServiceServicer):
                 input_schema=None,
             )
 
-    def GetModuleOutput(
+    async def GetModuleOutput(
         self,
         _request: GetModuleOutputRequest,
-        _context: grpc.ServicerContext,
+        _context: grpc.aio.ServicerContext,
     ) -> GetModuleOutputResponse:
         """TODO: Sphinx docstring"""
         logger.info("Get module output schema, Method Not implemented")

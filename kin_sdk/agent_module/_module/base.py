@@ -15,9 +15,10 @@ from proto.digitalkin.module.v1.module_service_pb2_grpc import (
 )
 from proto.digitalkin.module.v1.lifecycle_pb2 import StartModuleRequest
 from kin_sdk.grpc_system.models import ModuleModel
-from kin_sdk.agent_management import AgentManagement
+from kin_sdk.agent_management.base import AgentManagement
 from kin_sdk.agent_management.identity import ModuleIdentity
-from kin_sdk.common import logger
+from kin_sdk.common.types import ModuleType
+from kin_sdk.common.logger import logger
 
 InputModelT = TypeVar("InputModelT", bound=BaseModel)
 OutputModelT = TypeVar("OutputModelT", bound=BaseModel)
@@ -34,6 +35,7 @@ class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ABC):
     input_format: Type[InputModelT]
     output_format: Type[OutputModelT]
     setup_format: Type[SetupModelT]
+    _module_type: ModuleType
 
     def __init__(
         self,
@@ -121,6 +123,20 @@ class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ABC):
             return cls.description
         raise NotImplementedError(
             f"'{cls.__name__}' class does not define a 'description'."
+        )
+
+    @classmethod
+    def get_type(cls) -> ModuleType:
+        """
+        Gets the type of the module.
+
+        :return: The type of the module.
+        :raises NotImplementedError: If the `type` is not defined.
+        """
+        if cls._module_type is not None:
+            return cls._module_type
+        raise NotImplementedError(
+            f"'{cls.__name__}' class does not define a 'module type'."
         )
 
     @classmethod

@@ -8,7 +8,7 @@ from typing import TypeVar, List, Callable
 from pydantic import BaseModel
 
 from kin_sdk.common.types import ModuleType
-from kin_sdk.agent_module._module import BaseModule
+from kin_sdk.agent_module._module.base import BaseModule
 from kin_sdk.agent_module.trigger.base import BaseTrigger
 from kin_sdk.agent_module.tool.base import BaseTool
 
@@ -24,32 +24,7 @@ class BaseKin(BaseModule[InputModelT, OutputModelT, SetupModelT], ABC):
 
     triggers: List[BaseTrigger]
     tools: List[BaseTool]
-
-    def __init__(
-        self,
-        module_id: str,
-        module_address: str,
-        module_port: int,
-        registry_address: str,
-        max_workers: int = 10,
-    ):
-        """
-        Initializes the BaseKin.
-
-        :param module_id: The ID of the module.
-        :param module_address: The address of the module.
-        :param module_port: The port of the module.
-        :param registry_address: The address of the registry.
-        :param max_workers: The maximum number of worker threads.
-        """
-        super().__init__(
-            module_id=module_id,
-            module_address=module_address,
-            module_port=module_port,
-            module_type=ModuleType.KIN,
-            registry_address=registry_address,
-            max_workers=max_workers,
-        )
+    _module_type: ModuleType = ModuleType.KIN
 
     # ? do I need to override it in order to add the triggers and tools?
     # def __init_subclass__(cls, **kwargs):
@@ -63,14 +38,14 @@ class BaseKin(BaseModule[InputModelT, OutputModelT, SetupModelT], ABC):
     #                 )
 
     @abstractmethod
-    def start(self, setup_id: str) -> None:
+    async def start(self, setup_id: str) -> None:
         """
         Starts the kin.
         """
         raise NotImplementedError("Kin must implement 'start' abstract method")
 
     @abstractmethod
-    def execute(
+    async def execute(
         self,
         input_data: InputModelT,
         setup_id: str,
@@ -86,7 +61,7 @@ class BaseKin(BaseModule[InputModelT, OutputModelT, SetupModelT], ABC):
         raise NotImplementedError("Kin must implement 'execute' abstract method")
 
     @abstractmethod
-    def stop(self) -> None:
+    async def stop(self) -> None:
         """
         Stops the kin.
         """

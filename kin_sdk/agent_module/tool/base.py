@@ -53,41 +53,17 @@ SetupModelT = TypeVar("SetupModelT", bound=BaseModel)
 class BaseTool(BaseModule[InputModelT, OutputModelT, SetupModelT], ABC):
     """TODO: Sphinx docstring"""
 
-    def __init__(
-        self,
-        module_id: str,
-        module_address: str,
-        module_port: int,
-        registry_address: str,
-        max_workers: int = 10,
-    ):
-        """
-        Initializes the BaseTool.
-
-        :param module_id: The ID of the module.
-        :param module_address: The address of the module.
-        :param module_port: The port of the module.
-        :param registry_address: The address of the registry.
-        :param max_workers: The maximum number of worker threads.
-        """
-        super().__init__(
-            module_id=module_id,
-            module_address=module_address,
-            module_port=module_port,
-            module_type=ModuleType.TOOL,
-            registry_address=registry_address,
-            max_workers=max_workers,
-        )
+    _module_type: ModuleType = ModuleType.TOOL
 
     @abstractmethod
-    def start(self, setup_id: str) -> None:
+    async def start(self, setup_id: str) -> None:
         """
         Starts the tool.
         """
         raise NotImplementedError("Tool must implement 'start' abstract method")
 
     @abstractmethod
-    def execute(
+    async def execute(
         self,
         input_data: InputModelT,
         setup_id: str,
@@ -103,7 +79,7 @@ class BaseTool(BaseModule[InputModelT, OutputModelT, SetupModelT], ABC):
         raise NotImplementedError("Tool must implement 'execute' abstract method")
 
     @abstractmethod
-    def stop(self) -> None:
+    async def stop(self) -> None:
         """
         Stops the tool.
         """

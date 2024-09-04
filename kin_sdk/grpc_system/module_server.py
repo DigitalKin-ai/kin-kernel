@@ -6,8 +6,7 @@ from typing import Any, AsyncGenerator, Dict, List, Literal, Optional, Type, Uni
 import grpc
 from google.protobuf import json_format, struct_pb2
 
-from kin_sdk.agent_management.base import AgentManagement
-from kin_sdk.agent_module._module.base import BaseModule
+from kin_sdk.agent_management.identity import ParamsModuleIdentity
 from proto.digitalkin.module.v1.module_service_pb2_grpc import (
     ModuleServiceStub,
     add_ModuleServiceServicer_to_server,
@@ -32,6 +31,8 @@ from proto.digitalkin.module.v1.information_pb2 import (
 )
 from proto.digitalkin.module.v1.lifecycle_pb2 import StartModuleRequest
 
+from kin_sdk.agent_management.base import AgentManagement
+from kin_sdk.agent_module._module.base import BaseModule
 from kin_sdk.agent_module._module.module_servicer import ModuleServicer
 from kin_sdk.exception import (
     ModuleRegistrationException,
@@ -59,7 +60,6 @@ class ModuleServer(GRPCServerBase):
         module_id: str,
         module_address: str,
         module_port: int,
-        module_type: ModuleType,
         registry_address: str,
         max_workers: int = 10,
     ):
@@ -71,16 +71,16 @@ class ModuleServer(GRPCServerBase):
         self.module_id = module_id
         self.module_address = module_address
         self.module_port = module_port
-        self.module_type = module_type
+        self.module_type = module_class.get_type()
         self.registry_address = registry_address
         self._credentials = self._init_credentials()
         self.agent_management = AgentManagement(
-            params_identity={
-                "module_id": self.module_id,
-                "module_type": self.module_type,
-                "module_address": self.module_address,
-                "module_port": self.module_port,
-            }
+            params_identity=ParamsModuleIdentity(
+                module_id=self.module_id,
+                module_type=self.module_type,
+                module_address=self.module_address,
+                module_port=self.module_port,
+            )
         )
 
     def _init_credentials(self) -> grpc.ChannelCredentials:
@@ -125,7 +125,7 @@ class ModuleServer(GRPCServerBase):
                 port=self.port,
             )
             response: RegisterResponse = await stub.RegisterModule(request)
-            channel.close()
+            await channel.close()
             return response.success
         except Exception as e:  # pylint: disable=broad-except
             logger.error("Error registering module: %s", e)

@@ -2,13 +2,12 @@
 
 import asyncio
 import json
-import time
 import uuid
 from threading import Lock, Thread
 from functools import wraps
 
 # from datetime import datetime
-from typing import Dict, Any, Iterator, Callable, Literal, Optional
+from typing import Dict, Any, Iterator, Callable, Literal, Optional, Union
 from queue import Queue
 
 import grpc
@@ -156,7 +155,7 @@ def validate_grpc_request(func):
 #         @wraps(func)
 #         def wrapper(self, request_iterator: Iterator, context: grpc.ServicerContext):
 #             """
-#             Todo: sphinx docstring
+# !            Todo: sphinx docstring
 #             """
 #             try:
 #                 # Extract module name from metadata
@@ -250,12 +249,15 @@ class Metadata(BaseModel):
     :param room_id: The unique identifier of the room
     """
 
-    module_id: str = Field(..., description="The unique identifier of the module")
+    module_id: str = Field(
+        ..., description="The unique identifier of the module that send the request"
+    )
     module_role: Literal["owner", "member"] = Field(
-        default="member", description="The role of the module"
+        default="member", description="The role of the module that send the request"
     )
     room_id: Optional[uuid.UUID] = Field(
-        None, description="The unique identifier of the room"
+        None,
+        description="The unique identifier of the room that the module is connected to",
     )
 
     @model_validator(mode="before")
@@ -332,7 +334,7 @@ def pydantic_validation(request: Dict[str, Any], model: BaseModel) -> None:
     model.model_validate(input_data)
 
 
-def validate_stream_request():
+def validate_stream_request(func: Callable):
     """
     Decorator to handle the communication between the client and the server.
 
@@ -343,307 +345,309 @@ def validate_stream_request():
     Only owners can ask to validate the final request.
     """
 
-    def decorator(func: Callable):
-        @wraps(func)
-        def wrapper(self, request_iterator, context: grpc.ServicerContext):
-            """
-            Wrapper function for the decorated method.
+    @wraps(func)
+    async def async_wrapper(
+        self,
+        request_iterator,
+        context: Union[grpc.aio.ServicerContext, grpc.ServicerContext],
+    ):
+        """
+        Internal wrapper function to handle both synchronous and asynchronous functions.
 
-            :param self: The instance of the class containing the decorated method
-            :param request_iterator: Iterator for incoming client requests
-            :param context: gRPC module context
-            :yield: StartModuleResponse messages
-            :raises AttributeError: If required attributes are missing
-            :raises TypeError: If attributes are of incorrect type
-            """
-            # Check required attributes
-            if not all(hasattr(self, attr) for attr in ["rooms", "lock", "module"]):
-                raise AttributeError(
-                    f"{self.__class__.__name__} instance must have 'rooms', 'lock', and 'module' attributes."
-                )
+        :param self: The instance of the class containing the decorated method
+        :param request_iterator: Iterator for incoming client requests
+        :param context: gRPC module context
+        :yield: StartModuleResponse messages
+        :raises AttributeError: If required attributes are missing
+        :raises TypeError: If attributes are of incorrect type
+        """
+        # Check required attributes
+        if not all(hasattr(self, attr) for attr in ["rooms", "lock", "module_class"]):
+            raise AttributeError(
+                f"{self.__class__.__name__} instance must have 'rooms', 'lock', and 'module_class' attributes."
+            )
 
-            if not isinstance(self.rooms, Rooms):
-                raise TypeError(
-                    f"The 'rooms' attribute must be of type Rooms, got {type(self.rooms).__name__}."
-                )
+        if not isinstance(self.rooms, Rooms):
+            raise TypeError(
+                f"The 'rooms' attribute must be of type Rooms, got {type(self.rooms).__name__}."
+            )
 
-            if not isinstance(self.lock, type(Lock())):
-                raise TypeError(
-                    f"The 'lock' attribute must be of type Lock, got {type(self.lock).__name__}."
-                )
+        if not isinstance(self.lock, type(Lock())):
+            raise TypeError(
+                f"The 'lock' attribute must be of type Lock, got {type(self.lock).__name__}."
+            )
 
-            # be cautious of circular imports
-            from kin_sdk.agent_module._module.base import BaseModule
+        # be cautious of circular imports
+        from kin_sdk.agent_module._module.base import BaseModule
 
-            if not isinstance(self.module, BaseModule):
-                raise TypeError(
-                    f"The 'module' attribute must be of type BaseModule, got {type(self.module).__name__}."
-                )
+        if not isinstance(self.module_class, BaseModule):
+            raise TypeError(
+                f"The 'module' attribute must be of type BaseModule, got {type(self.module_class).__name__}."
+            )
 
-            try:
-                metadata = get_metadata(context)
-                message_queue: Queue = Queue()
+        try:
+            metadata = get_metadata(context)
+            message_queue: Queue = Queue()
 
-                # Create room if not exists
-                if not metadata.room_id:
-                    metadata.room_id = uuid.uuid4()
-                    with self.lock:
-                        self.rooms.create_room(metadata.room_id)
-
-                # Check if room exists before adding module and raising an error if it doesn't
-                if not self.rooms.get_room(metadata.room_id):
-                    raise ValueError(f"Room {metadata.room_id} does not exist.")
-
-                # Add module to room
+            # Create room if not exists
+            if not metadata.room_id:
+                metadata.room_id = uuid.uuid4()
                 with self.lock:
-                    self.rooms.add_module_to_room(
-                        room_id=metadata.room_id,
-                        module_id=metadata.module_id,
-                        module_role=metadata.module_role,
-                    )
+                    self.rooms.create_room(metadata.room_id)
 
-                def callback(
-                    module_id: str, request: Dict[str, Any], request_type: RequestType
-                ) -> None:
-                    """Callback function to handle incoming messages from the room."""
-                    message_queue.put((module_id, request, request_type))
+            # Check if room exists before adding module and raising an error if it doesn't
+            if not self.rooms.get_room(metadata.room_id):
+                raise ValueError(f"Room {metadata.room_id} does not exist.")
 
-                # Subscribe to the room to receive messages from other modules in the room
-                logger.debug("Subscribing to room %s", metadata.room_id)
-                self.rooms.subscribe_to_room(
-                    metadata.room_id, metadata.module_id, callback
+            # Add module to room
+            with self.lock:
+                self.rooms.add_module_to_room(
+                    room_id=metadata.room_id,
+                    module_id=metadata.module_id,
+                    module_role=metadata.module_role,
                 )
 
-                # Send success message to client
-                yield StartModuleResponse(
-                    success=True,
-                    response_type="START_RESPONSE_TYPE_CONNECTION",
-                    connection=ConnectionResponse(
-                        message=f"Connected to room {metadata.room_id}",
-                        room_id=str(metadata.room_id),
-                    ),
-                    module_id=self.module.module_id,
-                )
+            def callback(
+                module_id: str, request: Dict[str, Any], request_type: RequestType
+            ) -> None:
+                """Callback function to handle incoming messages from the room."""
+                message_queue.put((module_id, request, request_type))
 
-                def handle_incoming_messages() -> None:
-                    """Handle incoming messages from the client and publish them to the room."""
-                    try:
-                        for request in request_iterator:
-                            request_dict = (
-                                json_format.MessageToDict(
-                                    request, preserving_proto_field_name=True
-                                )
-                                if request
-                                else {}
+            # Subscribe to the room to receive messages from other modules in the room
+            logger.debug("Subscribing to room %s", metadata.room_id)
+            self.rooms.subscribe_to_room(metadata.room_id, metadata.module_id, callback)
+
+            # Send success message to client
+            yield StartModuleResponse(
+                success=True,
+                response_type="START_RESPONSE_TYPE_CONNECTION",
+                connection=ConnectionResponse(
+                    message=f"Connected to room {metadata.room_id}",
+                    room_id=str(metadata.room_id),
+                ),
+                module_id=self.module_class.identity.id,
+            )
+
+            def handle_incoming_messages() -> None:
+                """Handle incoming messages from the client and publish them to the room."""
+                try:
+                    for request in request_iterator:
+                        request_dict = (
+                            json_format.MessageToDict(
+                                request, preserving_proto_field_name=True
+                            )
+                            if request
+                            else {}
+                        )
+
+                        with self.lock:
+                            request_type = (
+                                RequestType[
+                                    request_dict.pop(
+                                        "request_type", "REQUEST_TYPE_SEND"
+                                    )
+                                ]
+                                if metadata.module_role == "owner"
+                                else RequestType.REQUEST_TYPE_SEND
                             )
 
-                            with self.lock:
-                                request_type = (
-                                    RequestType[
-                                        request_dict.pop(
-                                            "request_type", "REQUEST_TYPE_SEND"
-                                        )
-                                    ]
-                                    if metadata.module_role == "owner"
-                                    else RequestType.REQUEST_TYPE_SEND
-                                )
-
-                                self.rooms.publish_to_room(
-                                    metadata.room_id,
-                                    metadata.module_id,
-                                    request_dict,
-                                    request_type,
-                                )
-
-                            if (
-                                request_type == RequestType.REQUEST_TYPE_VALIDATE
-                                and metadata.module_role == "owner"
-                            ):
-                                break
-                    except grpc.RpcError as e:
-                        logger.info("Client disconnected: %s", e)
-                    except ValidateGrpcRequestException as e:
-                        logger.error("Error handling incoming messages: %s", e)
-                    finally:
-                        message_queue.put(
-                            (metadata.module_id, None, RequestType.REQUEST_TYPE_EXIT)
-                        )
-
-                # Start the incoming message handler in a separate thread
-                # this is useful to do not block the main thread that is waiting for the room incoming messages
-                incoming_thread = Thread(target=handle_incoming_messages)
-                incoming_thread.start()
-
-                # usefull to know if we want to try to validate the request
-                is_validate: bool = False
-
-                def message_sender() -> Iterator[StartModuleResponse]:
-                    """
-                    Handle message that coming from the room and send it to the client
-                    """
-                    while True:
-                        sender_id, request, request_type = message_queue.get()
-                        logger.debug(
-                            "Received request from %s: %s \n %s",
-                            sender_id,
-                            request_type,
-                            request,
-                        )
-
-                        if (
-                            request is None
-                            or request_type == RequestType.REQUEST_TYPE_EXIT
-                        ):
-                            logger.info("Module %s disconnected", metadata.module_id)
-                            break
-
-                        # if the module is the owner of the room and the request is a validate request
-                        # we want to try to validate the request and if it is valid we want to return the func and disconnect all other members
-                        if (
-                            metadata.module_role == "owner"
-                            and metadata.module_id == sender_id
-                            and request_type == RequestType.REQUEST_TYPE_VALIDATE
-                        ):
-                            logger.debug(
-                                "Module: %s want to validate the request",
+                            self.rooms.publish_to_room(
+                                metadata.room_id,
                                 metadata.module_id,
+                                request_dict,
+                                request_type,
                             )
-                            yield (None, True)
-                            break
 
-                        input_data = json_format.Parse(
-                            text=json.dumps(request.get("input", {})),
-                            message=struct_pb2.Struct(),  # pylint: disable=no-member
-                            ignore_unknown_fields=True,
-                        )
-                        # yield the message to the client
-                        yield (
-                            StartModuleResponse(
-                                success=True,
-                                response_type="START_RESPONSE_TYPE_INPUT",
-                                input_response=InputDataResponse(
-                                    message="New input data has been added in the room",
-                                    input=input_data,
-                                ),
-                                module_id=self.module.module_id,
-                            ),
-                            False,
-                        )
+                        if (
+                            request_type == RequestType.REQUEST_TYPE_VALIDATE
+                            and metadata.module_role == "owner"
+                        ):
+                            break
+                except grpc.RpcError as e:
+                    logger.info("Client disconnected: %s", e)
+                except ValidateGrpcRequestException as e:
+                    logger.error("Error handling incoming messages: %s", e)
+                finally:
+                    message_queue.put(
+                        (metadata.module_id, None, RequestType.REQUEST_TYPE_EXIT)
+                    )
+
+            # Start the incoming message handler in a separate thread
+            # this is useful to do not block the main thread that is waiting for the room incoming messages
+            incoming_thread = Thread(target=handle_incoming_messages)
+            incoming_thread.start()
+
+            # usefull to know if we want to try to validate the request
+            is_validate: bool = False
+
+            def message_sender() -> Iterator[StartModuleResponse]:
+                """
+                Handle message that coming from the room and send it to the client
+                """
+                while True:
+                    sender_id, request, request_type = message_queue.get()
                     logger.debug(
-                        "Message sender finished for module %s", metadata.module_id
+                        "Received request from %s: %s \n %s",
+                        sender_id,
+                        request_type,
+                        request,
                     )
 
-                # Return the message sender generator to the client
-                for item, need_validate in message_sender():
-                    # update the is_validate variable
-                    is_validate = need_validate
-                    # if the item is None we want to break the loop
-                    if item is None:
+                    if request is None or request_type == RequestType.REQUEST_TYPE_EXIT:
+                        logger.info("Module %s disconnected", metadata.module_id)
                         break
-                    # yield the item to the client
-                    yield item
-                # if the module is the owner of the room and it is the last one in the room
-                # we will eject all the members and delete the room
-                if (
-                    metadata.module_role == "owner"
-                    and len(self.rooms.get_room(metadata.room_id).owners) <= 1
-                ):
-                    # if the stream ends and the owner is the only one left in the room
-                    # eject all members
-                    self.rooms.publish_to_room(
-                        metadata.room_id,
-                        metadata.module_id,
-                        {},
-                        RequestType.REQUEST_TYPE_EXIT,
-                    )
 
-                # Leave the room
-                with self.lock:
-                    self.rooms.remove_module_from_room(
-                        room_id=metadata.room_id,
-                        module_id=metadata.module_id,
-                        module_role=metadata.module_role,
-                    )
+                    # if the module is the owner of the room and the request is a validate request
+                    # we want to try to validate the request and if it is valid we want to return the func and disconnect all other members
+                    if (
+                        metadata.module_role == "owner"
+                        and metadata.module_id == sender_id
+                        and request_type == RequestType.REQUEST_TYPE_VALIDATE
+                    ):
+                        logger.debug(
+                            "Module: %s want to validate the request",
+                            metadata.module_id,
+                        )
+                        yield (None, True)
+                        break
 
-                # if the module is the owner of the room and the request is a validate request
-                # we want to try to validate the request and if it is valid we want to return the func
-                if metadata.module_role == "owner" and is_validate:
-                    # get a copy of the final request from the room
-                    req = self.rooms.get_room(metadata.room_id).request.copy()
-                    # parse the request to the correct type
-                    request = json_format.ParseDict(
-                        req,
-                        StartModuleRequest(),
+                    input_data = json_format.Parse(
+                        text=json.dumps(request.get("input", {})),
+                        message=struct_pb2.Struct(),  # pylint: disable=no-member
+                        ignore_unknown_fields=True,
                     )
-                    # Try to validate the request it will raise an error if the request is not valid
-                    validate(request)
-                    pydantic_validation(req, self.module.input_format)
-                    # call func and yield the result to the client
-                    for message in func(self, request, context):
-                        if message is None:
-                            break
-                        yield message
+                    # yield the message to the client
+                    yield (
+                        StartModuleResponse(
+                            success=True,
+                            response_type="START_RESPONSE_TYPE_INPUT",
+                            input_response=InputDataResponse(
+                                message="New input data has been added in the room",
+                                input=input_data,
+                            ),
+                            module_id=self.module_class.identity.id,
+                        ),
+                        False,
+                    )
+                logger.debug(
+                    "Message sender finished for module %s", metadata.module_id
+                )
 
-                # Après incoming_future.result(), on arrête le module et ferme la connexion gRPC
-                logger.info("Stopping module for %s", metadata.module_id)
-                context.set_code(grpc.StatusCode.OK)
-                context.set_details("Module completed successfully")
-                return  # This will stop the generator and close the gRPC connection
-            except ValidationError as e:
-                error_message = pydantic_validation_error(e, context)
-                logger.error(error_message)  # Validation Error
-                # Reconvert in gRPC Struct proto format the output data
-            except ValidationFailed as e:
-                # Handle validation errors
-                logger.error("Validation Error: %s ", str(e))
-                context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+            # Return the message sender generator to the client
+            for item, need_validate in message_sender():
+                # update the is_validate variable
+                is_validate = need_validate
+                # if the item is None we want to break the loop
+                if item is None:
+                    break
+                # yield the item to the client
+                yield item
+            # if the module is the owner of the room and it is the last one in the room
+            # we will eject all the members and delete the room
+            if (
+                metadata.module_role == "owner"
+                and len(self.rooms.get_room(metadata.room_id).owners) <= 1
+            ):
+                # if the stream ends and the owner is the only one left in the room
+                # eject all members
+                self.rooms.publish_to_room(
+                    metadata.room_id,
+                    metadata.module_id,
+                    {},
+                    RequestType.REQUEST_TYPE_EXIT,
+                )
+
+            # Leave the room
+            with self.lock:
+                self.rooms.remove_module_from_room(
+                    room_id=metadata.room_id,
+                    module_id=metadata.module_id,
+                    module_role=metadata.module_role,
+                )
+
+            # if the module is the owner of the room and the request is a validate request
+            # we want to try to validate the request and if it is valid we want to return the func
+            if metadata.module_role == "owner" and is_validate:
+                # get a copy of the final request from the room
+                req = self.rooms.get_room(metadata.room_id).request.copy()
+                # parse the request to the correct type
+                request = json_format.ParseDict(
+                    req,
+                    StartModuleRequest(),
+                )
+                # Try to validate the request it will raise an error if the request is not valid
+                validate(request)
+                pydantic_validation(req, self.module_class.input_format)
+                # call func and yield the result to the client
+
+                async for message in func(self, request, context):
+                    if message is None:
+                        break
+                    yield message
+
+                # for message in func(self, request, context):
+                #     if message is None:
+                #         break
+                #     yield message
+
+            # Après incoming_future.result(), on arrête le module et ferme la connexion gRPC
+            logger.info("Stopping module for %s", metadata.module_id)
+            context.set_code(grpc.StatusCode.OK)
+            context.set_details("Module completed successfully")
+            return  # This will stop the generator and close the gRPC connection
+        except ValidationError as e:
+            error_message = pydantic_validation_error(e, context)
+            logger.error(error_message)  # Validation Error
+            # Reconvert in gRPC Struct proto format the output data
+        except ValidationFailed as e:
+            # Handle validation errors
+            logger.error("Validation Error: %s ", str(e))
+            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+            context.set_details(str(e))
+            yield StartModuleResponse(
+                success=False,
+                response_type="START_RESPONSE_TYPE_ERROR",
+                error=ErrorResponse(
+                    message="An error occurred while starting the module",
+                    details=str(e),
+                ),
+            )
+            return
+        except grpc.RpcError as e:
+            if e.code() == grpc.StatusCode.ABORTED:
+                logger.info("Server ejected the client: %s", e.details())
+                context.set_code(grpc.StatusCode.ABORTED)
                 context.set_details(str(e))
-                yield StartModuleResponse(
-                    success=False,
-                    response_type="START_RESPONSE_TYPE_ERROR",
-                    error=ErrorResponse(
-                        message="An error occurred while starting the module",
-                        details=str(e),
-                    ),
-                )
-                return
-            except grpc.RpcError as e:
-                if e.code() == grpc.StatusCode.ABORTED:
-                    logger.info("Server ejected the client: %s", e.details())
-                    context.set_code(grpc.StatusCode.ABORTED)
-                    context.set_details(str(e))
-                else:
-                    logger.error("Error during server communication: %s", e)
-                    context.set_code(grpc.StatusCode.INTERNAL)
-                    context.set_details(str(e))
-                yield StartModuleResponse(
-                    success=False,
-                    response_type="START_RESPONSE_TYPE_ERROR",
-                    error=ErrorResponse(
-                        message="An error occurred while starting the module",
-                        details=str(e),
-                    ),
-                )
-            except ValidateGrpcRequestException as e:
-                logger.exception("Unexpected error: %s", e)
+            else:
+                logger.error("Error during server communication: %s", e)
                 context.set_code(grpc.StatusCode.INTERNAL)
                 context.set_details(str(e))
-                yield StartModuleResponse(
-                    success=False,
-                    response_type="START_RESPONSE_TYPE_ERROR",
-                    error=ErrorResponse(
-                        message="An error occurred while starting the module",
-                        details=str(e),
-                    ),
-                )
-            finally:
-                # Ensure that the module is always stopped and the connection is closed
-                logger.info("Finalizing module for %s", metadata.module_id)
-                # You might want to add any cleanup code here
+            yield StartModuleResponse(
+                success=False,
+                response_type="START_RESPONSE_TYPE_ERROR",
+                error=ErrorResponse(
+                    message="An error occurred while starting the module",
+                    details=str(e),
+                ),
+            )
+        except ValidateGrpcRequestException as e:
+            logger.exception("Unexpected error: %s", e)
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(str(e))
+            yield StartModuleResponse(
+                success=False,
+                response_type="START_RESPONSE_TYPE_ERROR",
+                error=ErrorResponse(
+                    message="An error occurred while starting the module",
+                    details=str(e),
+                ),
+            )
+        finally:
+            # Ensure that the module is always stopped and the connection is closed
+            logger.info("Finalizing module for %s", metadata.module_id)
+            # You might want to add any cleanup code here
 
-            # Stop the generator and close the gRPC connection if it hasn't been closed already
-            return
+        # Stop the generator and close the gRPC connection if it hasn't been closed already
+        return
 
-        return wrapper
-
-    return decorator
+    return async_wrapper

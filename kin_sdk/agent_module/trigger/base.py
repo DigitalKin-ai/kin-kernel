@@ -22,41 +22,17 @@ class BaseTrigger(
     Abstract base class for defining a trigger.
     """
 
-    def __init__(
-        self,
-        module_id: str,
-        module_address: str,
-        module_port: int,
-        registry_address: str,
-        max_workers: int = 10,
-    ):
-        """
-        Initializes the BaseTrigger.
-
-        :param module_id: The ID of the module.
-        :param module_address: The address of the module.
-        :param module_port: The port of the module.
-        :param registry_address: The address of the registry.
-        :param max_workers: The maximum number of worker threads.
-        """
-        super().__init__(
-            module_id=module_id,
-            module_address=module_address,
-            module_port=module_port,
-            module_type=ModuleType.TRIGGER,
-            registry_address=registry_address,
-            max_workers=max_workers,
-        )
+    _module_type: ModuleType = ModuleType.TRIGGER
 
     @abstractmethod
-    def start(self, setup_id: str) -> None:
+    async def start(self, setup_id: str) -> None:
         """
         Starts the trigger.
         """
         raise NotImplementedError("Trigger must implement 'start' abstract method")
 
     @abstractmethod
-    def execute(
+    async def execute(
         self,
         input_data: InputModelT,
         setup_id: str,
@@ -72,7 +48,7 @@ class BaseTrigger(
         raise NotImplementedError("Trigger must implement 'execute' abstract method")
 
     @abstractmethod
-    def stop(self) -> None:
+    async def stop(self) -> None:
         """
         Stops the trigger.
         """

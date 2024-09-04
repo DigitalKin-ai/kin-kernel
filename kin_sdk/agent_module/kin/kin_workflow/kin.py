@@ -71,20 +71,14 @@ class KinWorkflow(BaseKin):
         self,
         name: str,
         description: str,
-        module_id: str,
-        module_address: str,
-        module_port: int,
-        registry_address: str,
-        max_workers: int = 10,
+        *args,
+        **kwargs,
     ):
         self._name = name
         self._description = description
         super().__init__(
-            module_id=module_id,
-            module_address=module_address,
-            module_port=module_port,
-            registry_address=registry_address,
-            max_workers=max_workers,
+            *args,
+            **kwargs,
         )
 
         self._db_storage = DBStorage()
