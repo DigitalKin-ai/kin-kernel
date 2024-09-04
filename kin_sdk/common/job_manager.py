@@ -10,7 +10,7 @@ import threading
 from collections import UserDict
 from queue import Queue
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Iterator
+from typing import Annotated, Any, Callable, Dict, List, Optional, Iterator, Union
 from concurrent.futures import Future, ThreadPoolExecutor
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -100,10 +100,11 @@ class Job(BaseModel):
         JobStatus.STARTING, description="The current status of the job"
     )
     task: Future = Field(default_factory=Future)
-    outputs: Queue = Field(default_factory=Queue)
+
+    outputs: Annotated[Queue, Field(default_factory=Queue)]
     stop_event: threading.Event = Field(default_factory=threading.Event)
 
-    def add_to_outputs(self, item: Any) -> None:
+    def add_to_outputs(self, item: BaseModel) -> None:
         """
         Adds an item to the job's output queue.
 
@@ -118,14 +119,16 @@ class Job(BaseModel):
         self.stop_event.set()  # pylint: disable=no-member
         self.outputs.put(None)  # pylint: disable=no-member # Sentinel value
 
-    def get_outputs(self) -> Iterator[Any]:
+    def get_outputs(self) -> Iterator[BaseModel]:
         """
         Returns an iterator for the job's output items.
 
         :return: An iterator yielding output items.
         """
         while not self.stop_event.is_set():  # pylint: disable=no-member
-            item = self.outputs.get()  # pylint: disable=no-member
+            item: Union[BaseModel, None] = (
+                self.outputs.get()
+            )  # pylint: disable=no-member
             if item is None:  # Check for sentinel value
                 break
             yield item
@@ -197,7 +200,7 @@ class JobManager:
         """
         return self.jobs.get(job_id, None)
 
-    def get_outputs(self, job_id: str) -> Iterator[Any]:
+    def get_outputs(self, job_id: str) -> Iterator[BaseModel]:
         """
         Retrieves the outputs of a job by its ID.
 

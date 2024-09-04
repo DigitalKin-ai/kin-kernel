@@ -4,7 +4,7 @@ TODO: sphinx docstring
 
 import json
 import threading
-from typing import Any, Generator, Type
+from typing import Any, AsyncGenerator, Type
 
 import grpc
 
@@ -13,7 +13,6 @@ from google.protobuf import json_format, struct_pb2
 from pydantic import BaseModel
 from proto.digitalkin.module.v1.module_service_pb2_grpc import (
     ModuleServiceServicer,
-    add_ModuleServiceServicer_to_server,
 )
 from proto.digitalkin.module.v1.lifecycle_pb2 import (
     StartModuleRequest,
@@ -33,12 +32,12 @@ from proto.digitalkin.module.v1.information_pb2 import (
     GetModuleOutputRequest,
     GetModuleOutputResponse,
 )
-from kin_sdk.common.validate_grpc_request import validate_grpc_request
 from kin_sdk.agent_management import AgentManagement
 from kin_sdk.agent_module._module.base import BaseModule
 from kin_sdk.common import (
     Rooms,
     validate_stream_request,
+    validate_grpc_request,
     JobManager,
     Job,
     JobStatus,
@@ -59,7 +58,7 @@ class ModuleServicer(ModuleServiceServicer):
         self.tracer = trace.get_tracer(self.module_class.__class__.__name__)
         self.lock = threading.Lock()
 
-    def __start_job(
+    async def __start_job(
         self, job_id: str, *args, **kwargs  # pylint: disable=unused-argument
     ) -> None:
         """
@@ -78,34 +77,39 @@ class ModuleServicer(ModuleServiceServicer):
             module_ids = current_job.module_ids
 
             # Start the module
-            module.start(setup_id=setup_id)
+            await module.start(setup_id=setup_id)
 
             # Create a callback that captures the module_ids
-            def callback(output: BaseModel):
+            async def callback(output: BaseModel):
                 if not self.job_manager.update_job_status(job_id, JobStatus.PROCESSING):
                     raise ValueError(f"😵 Trigger {job_id} not found.")
-                module.send_output(output, module_ids)
+                await module.send_output(output, module_ids)
                 current_job.add_to_outputs(output)
 
             # Execute the module
-            module.execute(
+            await module.execute(
                 input_data,
                 setup_id,
                 callback,
             )
-            self.__stop_job(job_id)
+            await self.__stop_job(job_id)
 
         except ValueError as e:
             logger.error("😵 Exception Error: %s", e)
             self.job_manager.update_job_status(job_id, JobStatus.FAILED)
 
-    def __stop_job(
+    async def __stop_job(
         self, job_id: str, *args, **kwargs  # pylint: disable=unused-argument
     ) -> None:
         try:
+            # Retrieve the current job and module
             current_job: Job = self.job_manager.get_job(job_id)
             module = current_job.module
-            module.stop()
+
+            # Stop the module
+            await module.stop()
+
+            # Update the job status
             self.job_manager.update_job_status(job_id, JobStatus.STOPPED)
             self.job_manager.stop_outputs(job_id)
         except ValueError as e:
@@ -113,9 +117,9 @@ class ModuleServicer(ModuleServiceServicer):
             self.job_manager.update_job_status(job_id, JobStatus.FAILED)
 
     @validate_stream_request()
-    def StartModule(  # pylint: disable=arguments-renamed
-        self, request: StartModuleRequest, context: grpc.ServicerContext
-    ) -> Generator[StartModuleResponse, Any, Any]:
+    async def StartModule(  # pylint: disable=arguments-renamed
+        self, request: StartModuleRequest, context: grpc.aio.ServicerContext
+    ) -> AsyncGenerator[StartModuleResponse, Any, Any]:
         """
         https://medium.com/@iamdeepaksinghh/create-a-real-time-chat-service-using-grpc-in-python-fc63127d570c
         """
@@ -131,7 +135,8 @@ class ModuleServicer(ModuleServiceServicer):
             setup_id = json_request.get("setup_id", None)
 
             # Validate the input_param data
-            input_data = self.module_class.input_format.model_validate(input_param)
+            input_data = self.module_class.validate_format(input_param, "input")
+
             # Create and Start the job
             job_id = self.job_manager.start_job(
                 self.module_class(agent_management=self.agent_management),
@@ -172,30 +177,37 @@ class ModuleServicer(ModuleServiceServicer):
             )
             return
 
-    def StopModule(
-        self, request: StopModuleRequest, context: grpc.ServicerContext
+    async def StopModule(
+        self, request: StopModuleRequest, context: grpc.aio.ServicerContext
     ) -> StopModuleResponse:
-        print("Stop module")
+        logger.info("Stop module Not implemented")
 
     @validate_grpc_request
-    def GetModuleStatus(
+    async def GetModuleStatus(
         self,
         request: GetModuleStatusRequest,
-        context: grpc.ServicerContext,
+        context: grpc.aio.ServicerContext,
     ) -> GetModuleStatusResponse:
         try:
+            # Extract the job_id from the request
             job_id = request.job_id
 
+            # Validate the job_id
             if not job_id:
                 raise ValueError("😵 Job ID is required.")
 
+            # Retrieve the job
             job = self.job_manager.get_job(job_id)
+
+            # Return the job status
             if job is not None:
                 return GetModuleStatusResponse(
                     success=True,
                     status=job.status.name,
                     job_id=job_id,
                 )
+
+            # Raise an error if the job is not found
             raise ValueError(f"😵 Job ID {job_id} is not found.")
 
         except ValueError as e:
@@ -209,12 +221,12 @@ class ModuleServicer(ModuleServiceServicer):
                 job_id=None,
             )
 
-    def GetModuleInput(
-        self, request: GetModuleInputRequest, context: grpc.ServicerContext
+    async def GetModuleInput(
+        self, request: GetModuleInputRequest, context: grpc.aio.ServicerContext
     ) -> GetModuleInputResponse:
         try:
             llm_format = request.llm_format
-            # ? job_id instead of module_id
+            # ! job_id instead of module_id to get a specific module it is important for KinModel Module
             module_id = request.module_id  # pylint: disable=unused-variable # noqa
 
             json_string = self.module_class.get_input_format(llm_format)
@@ -243,8 +255,4 @@ class ModuleServicer(ModuleServiceServicer):
         _context: grpc.ServicerContext,
     ) -> GetModuleOutputResponse:
         """TODO: Sphinx docstring"""
-        print("Get module output schema")
-
-    def add_to_server(self, server: grpc.Server) -> None:
-        """TODO: Sphinx docstring"""
-        add_ModuleServiceServicer_to_server(self, server)
+        logger.info("Get module output schema, Method Not implemented")

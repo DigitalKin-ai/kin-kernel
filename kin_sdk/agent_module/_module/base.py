@@ -5,7 +5,7 @@ TODO: sphinx docstring
 import json
 import inspect
 from abc import ABC, abstractmethod
-from typing import Type, TypeVar, Generic, List, Callable
+from typing import Literal, Type, TypeVar, Generic, List, Callable, Union
 
 import grpc
 from pydantic import BaseModel
@@ -54,6 +54,29 @@ class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ABC):
         :return: The module identity.
         """
         return self._agent_management.identity
+
+    @classmethod
+    def validate_format(
+        cls,
+        data: dict,
+        data_format: Literal["input", "output", "setup"],
+    ) -> Union[InputModelT, OutputModelT, SetupModelT]:
+        """
+        Validates the input data.
+
+        :param model: The model to validate.
+        :param data: The data to validate.
+        :return: The validated input data.
+        """
+        try:
+            if data_format == "input":
+                return cls.input_format.model_validate(data)
+            if data_format == "output":
+                return cls.output_format.model_validate(data)
+            if data_format == "setup":
+                return cls.setup_format.model_validate(data)
+        except Exception as e:
+            raise ValueError(f"Invalid model '{data_format}' : {str(e)}") from e
 
     def __init_subclass__(cls, **kwargs):
         """
@@ -165,14 +188,14 @@ class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ABC):
         )
 
     @abstractmethod
-    def start(self, setup_id: str) -> None:
+    async def start(self, setup_id: str) -> None:
         """
         Starts the module.
         """
         raise NotImplementedError("Subclasses must implement 'start' abstract method")
 
     @abstractmethod
-    def execute(
+    async def execute(
         self,
         input_data: InputModelT,
         setup_id: str,
@@ -188,13 +211,13 @@ class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ABC):
         raise NotImplementedError("Subclasses must implement 'execute' abstract method")
 
     @abstractmethod
-    def stop(self) -> None:  # ? Other params like module_id ?
+    async def stop(self) -> None:  # ? Other params like module_id ?
         """
         Stops the module.
         """
         raise NotImplementedError("Subclasses must implement 'stop' abstract method")
 
-    def send_output(self, output: OutputModelT, module_ids: List[str]) -> None:
+    async def send_output(self, output: OutputModelT, module_ids: List[str]) -> None:
         """
         Sends the output to the list of gRPC modules.
 
@@ -210,6 +233,7 @@ class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ABC):
                 raise TypeError(
                     f"Output must be of type '{self.output_format.__name__}', not '{type(output).__name__}'."
                 )
+
             # Validate and serialize the output using the output_format Pydantic model
             output_data = self.output_format.model_validate(
                 output.model_dump()
@@ -222,7 +246,7 @@ class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ABC):
 
             # use module_ids to send the output to the right module
             for module_id in module_ids:
-                # module = self.search_module(module_id)
+                # module = await self.search_module(module_id) # ! TODO: Implement search_module
                 print("module_id", module_id)
                 module = None
                 if module is None:
@@ -231,7 +255,7 @@ class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ABC):
                 logger.info("Module found: \n\t%s", module)
 
                 # Send the result to the list of gRPC modules
-                with grpc.insecure_channel(
+                async with grpc.aio.insecure_channel(  # ! TODO replace with secure_channel
                     f"{module.address}:{module.port}"
                 ) as channel:
                     stub = ModuleServiceStub(channel)
@@ -240,11 +264,11 @@ class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ABC):
                         setup_id="I don't know what to put here",  # ! TODO: What to put here?
                         module_ids=[],  # ! TODO: What to put here?
                     )
-                    stub.StartModule(request)
+                    await stub.StartModule(request)  # ! TODO not streaming response
                     logger.info(
                         "📞 Output sent to Tool module %s \n\t%s", module_id, module
                     )
-        except grpc.RpcError as e:
+        except grpc.aio.AioRpcError as e:
             if not isinstance(module, ModuleModel):
                 message = "😵 Error sending output to none existing module:\n\t"
             else:

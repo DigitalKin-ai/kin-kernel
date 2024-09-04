@@ -41,7 +41,6 @@ class ModuleRegistry(module_registry_pb2_grpc.ModuleRegistryServiceServicer):
         :return: The registration response indicating success.
         :rtype: registration_pb2.RegisterResponse
         """
-        print("RegisterModule")
         self.modules[request.module_id] = {
             "type": request.module_type,
             "address": request.address,
@@ -52,7 +51,9 @@ class ModuleRegistry(module_registry_pb2_grpc.ModuleRegistryServiceServicer):
 
     @validate_grpc_request
     async def DeregisterModule(
-        self, request: registration_pb2.DeregisterRequest, context
+        self,
+        request: registration_pb2.DeregisterRequest,
+        context: grpc.aio.ServicerContext,
     ) -> registration_pb2.DeregisterResponse:
         """
         Deregisters a module by its ID.
@@ -70,7 +71,9 @@ class ModuleRegistry(module_registry_pb2_grpc.ModuleRegistryServiceServicer):
 
     @validate_grpc_request
     async def DiscoverModule(
-        self, request: action_pb2.DiscoverRequest, context
+        self,
+        request: action_pb2.DiscoverRequest,
+        context: grpc.aio.ServicerContext,
     ) -> Coroutine[action_pb2.DiscoverResponse, None, None]:
         """
         Discovers a module by its ID.
@@ -93,7 +96,9 @@ class ModuleRegistry(module_registry_pb2_grpc.ModuleRegistryServiceServicer):
 
     @validate_grpc_request
     async def UpdateModuleStatus(
-        self, request: action_pb2.UpdateStatusRequest, context
+        self,
+        request: action_pb2.UpdateStatusRequest,
+        context: grpc.aio.ServicerContext,
     ) -> action_pb2.UpdateStatusResponse:
         """
         Updates the status of a module by its ID.
