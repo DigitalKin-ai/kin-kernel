@@ -37,7 +37,7 @@ from kin_sdk.agent_module._module.base import BaseModule
 from kin_sdk.common.logger import logger
 from kin_sdk.common.job_manager import JobManager, Job, JobStatus
 from kin_sdk.models.rooms import Rooms
-from kin_sdk.validation.validate_grpc_request import (
+from kin_sdk.validation.grpc_decorators import (
     validate_stream_request,
     validate_grpc_request,
 )
@@ -83,7 +83,7 @@ class ModuleServicer(ModuleServiceServicer):
                 if not self.job_manager.update_job_status(job_id, JobStatus.PROCESSING):
                     raise ValueError(f"😵 Trigger {job_id} not found.")
                 await module.send_output(output, module_ids)
-                current_job.add_to_outputs(output)
+                await current_job.add_to_outputs(output)
 
             # Execute the module
             await module.execute(
@@ -110,7 +110,7 @@ class ModuleServicer(ModuleServiceServicer):
 
             # Update the job status
             self.job_manager.update_job_status(job_id, JobStatus.STOPPED)
-            self.job_manager.stop_outputs(job_id)
+            await self.job_manager.stop_outputs(job_id)
         except ValueError as e:
             logger.error("😵 Exception Error: %s", e)
             self.job_manager.update_job_status(job_id, JobStatus.FAILED)
@@ -137,15 +137,14 @@ class ModuleServicer(ModuleServiceServicer):
             input_data = self.module_class.validate_format(input_param, "input")
 
             # Create and Start the job
-            job_id = self.job_manager.start_job(
+            job_id = await self.job_manager.start_job(
                 self.module_class(agent_management=self.agent_management),
                 input_data,
                 setup_id,
                 module_ids,
                 self.__start_job,
             )
-            print("hje3")
-            for output in self.job_manager.get_outputs(job_id):
+            async for output in self.job_manager.get_outputs(job_id):
                 output_struct = json_format.Parse(
                     text=json.dumps(output.model_dump()),
                     message=struct_pb2.Struct(),  # pylint: disable=no-member

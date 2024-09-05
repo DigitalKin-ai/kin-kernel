@@ -5,7 +5,7 @@ TODO: sphinx docstring
 import time
 from uuid import UUID
 from collections import defaultdict
-from typing import Callable, DefaultDict, Union
+from typing import Any, Callable, Coroutine, DefaultDict, Union
 
 from kin_sdk.common.merge_dicts import merge_dicts
 from kin_sdk.common.types import RequestType
@@ -174,7 +174,9 @@ class Room:
             raise InvalidModuleRoleException("Invalid module role")
 
     # Methods
-    def subscribe(self, module_id: str, callback: Callable[[str], None]) -> None:
+    def subscribe(
+        self, module_id: str, callback: Callable[[str], Coroutine[Any, Any, Any]]
+    ) -> None:
         """
         Subscribe to a module
         """
@@ -192,13 +194,15 @@ class Room:
 
         self.__subscribers.pop(module_id)
 
-    def publish(self, module_id: str, request: dict, request_type: RequestType) -> None:
+    async def publish(
+        self, module_id: str, request: dict, request_type: RequestType
+    ) -> None:
         """
         Publish to all subscribers
         """
         self.__request = merge_dicts(self.__request, request)
         for _id, callback in self.__subscribers.items():
-            callback(module_id, self.__request, request_type)
+            await callback(module_id, self.__request, request_type)
 
 
 class Rooms:
@@ -261,7 +265,10 @@ class Rooms:
             raise KeyError("Room not found") from exc
 
     def subscribe_to_room(
-        self, room_id: UUID, module_id: str, callback: Callable[[str], None]
+        self,
+        room_id: UUID,
+        module_id: str,
+        callback: Callable[[str], Coroutine[Any, Any, Any]],
     ) -> None:
         """
         Subscribe to a room
@@ -280,14 +287,16 @@ class Rooms:
         except KeyError as exc:
             raise KeyError("Room not found") from exc
 
-    def publish_to_room(
+    async def publish_to_room(
         self, room_id: UUID, module_id: str, request: dict, request_type: RequestType
     ) -> None:
         """
         Publish to a room
         """
         try:
-            self.__rooms.get(room_id, None).publish(module_id, request, request_type)
+            await self.__rooms.get(room_id, None).publish(
+                module_id, request, request_type
+            )
         except KeyError as exc:
             raise KeyError("Room not found") from exc
 

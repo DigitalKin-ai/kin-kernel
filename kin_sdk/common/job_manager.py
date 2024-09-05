@@ -5,22 +5,23 @@ This module provides a job management system with support for asynchronous job e
 status tracking, and output streaming.
 """
 
+import asyncio
 import uuid
 import threading
 from collections import UserDict
-from queue import Queue
 from enum import Enum
 from typing import (
     Annotated,
     Any,
+    AsyncIterator,
     Callable,
+    Coroutine,
     Dict,
     List,
     Optional,
-    Iterator,
     Union,
 )
-from concurrent.futures import Future, ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -108,36 +109,34 @@ class Job(BaseModel):
     status: JobStatus = Field(
         JobStatus.STARTING, description="The current status of the job"
     )
-    task: Future = Field(default_factory=Future)
+    task: asyncio.Future = Field(default_factory=asyncio.Future)
 
-    outputs: Annotated[Queue, Field(default_factory=Queue)]
+    outputs: Annotated[asyncio.Queue, Field(default_factory=asyncio.Queue)]
     stop_event: threading.Event = Field(default_factory=threading.Event)
 
-    def add_to_outputs(self, item: BaseModel) -> None:
+    async def add_to_outputs(self, item: BaseModel) -> Coroutine[Any, Any, None]:
         """
         Adds an item to the job's output queue.
 
         :param item: The item to be added to the outputs.
         """
-        self.outputs.put(item)  # pylint: disable=no-member
+        await self.outputs.put(item)  # pylint: disable=no-member
 
-    def stop_outputs(self) -> None:
+    async def stop_outputs(self) -> Coroutine[Any, Any, None]:
         """
         Signals the termination of the job's output stream.
         """
         self.stop_event.set()  # pylint: disable=no-member
-        self.outputs.put(None)  # pylint: disable=no-member # Sentinel value
+        await self.outputs.put(None)  # pylint: disable=no-member # Sentinel value
 
-    def get_outputs(self) -> Iterator[BaseModel]:
+    async def get_outputs(self) -> AsyncIterator[BaseModel]:
         """
         Returns an iterator for the job's output items.
 
         :return: An iterator yielding output items.
         """
         while not self.stop_event.is_set():  # pylint: disable=no-member
-            item: Union[BaseModel, None] = (
-                self.outputs.get()
-            )  # pylint: disable=no-member
+            item: Union[BaseModel, None] = await self.outputs.get()
             if item is None:  # Check for sentinel value
                 break
             yield item
@@ -155,13 +154,13 @@ class JobManager:
         self.executor = ThreadPoolExecutor(max_workers=max_workers)
         self.lock = threading.Lock()
 
-    def start_job(
+    async def start_job(
         self,
         module: BaseModule,
         input_data: BaseModel,
         setup_id: str,
         module_ids: List[str],
-        func: Callable[..., Any],
+        func: Callable[..., Coroutine[Any, Any, Any]],
         *args: Any,
         **kwargs: Any,
     ) -> str:
@@ -179,23 +178,23 @@ class JobManager:
         job_id = f"jobs:{uuid.uuid4().hex}"
         start_event = threading.Event()
 
-        def wrapped_func():
-            start_event.wait()  # Attendre que le job soit stocké
-            return func(job_id, *args, **kwargs)
+        async def wrapped_func():
+            await asyncio.get_event_loop().run_in_executor(
+                None, start_event.wait
+            )  # Wait for the job to be stored
+            return await func(job_id, *args, **kwargs)
 
         try:
-            print(f"Creating job {job_id}")  # check circular import Module
             job = Job(
                 module=module,
                 input_data=input_data,
                 setup_id=setup_id,
                 module_ids=module_ids,
                 status=JobStatus.STARTING,
-                task=self.executor.submit(wrapped_func),
-                outputs=Queue(),
+                task=asyncio.create_task(wrapped_func()),
+                outputs=asyncio.Queue(),
                 stop_event=threading.Event(),
             )
-            print(f"Job {job_id} created")
             self.jobs[job_id] = job
             start_event.set()  # Signaler que le job est stocké
             return job_id
@@ -211,7 +210,7 @@ class JobManager:
         """
         return self.jobs.get(job_id, None)
 
-    def get_outputs(self, job_id: str) -> Iterator[BaseModel]:
+    def get_outputs(self, job_id: str) -> AsyncIterator[BaseModel]:
         """
         Retrieves the outputs of a job by its ID.
 
@@ -224,7 +223,7 @@ class JobManager:
         else:
             raise ValueError(f"Job with id {job_id} not found")
 
-    def stop_outputs(self, job_id: str) -> None:
+    async def stop_outputs(self, job_id: str) -> Coroutine[Any, Any, None]:
         """
         Stops the output stream of a job by its ID.
 
@@ -232,7 +231,8 @@ class JobManager:
         :raises ValueError: If the job is not found.
         """
         if job_id in self.jobs:
-            return self.jobs.get(job_id).stop_outputs()
+            await self.jobs.get(job_id).stop_outputs()
+            return None
         else:
             raise ValueError(f"Job with id {job_id} not found")
 
@@ -250,7 +250,7 @@ class JobManager:
             return True
         return False
 
-    def delete_job(self, job_id: str) -> bool:
+    async def delete_job(self, job_id: str) -> Coroutine[Any, Any, bool]:
         """
         Deletes a job by its ID.
 
@@ -261,23 +261,29 @@ class JobManager:
         if job is None:
             return False
         if job.task.cancel() or job.task.done():
-            job.stop_outputs()
+            await job.stop_outputs()
             del self.jobs[job_id]
             return True
         return False
 
-    def stop_all_jobs(self) -> None:
+    async def stop_all_jobs(self) -> Coroutine[Any, Any, None]:
         """
         Stops all running jobs.
         """
         for job_id in list(self.jobs.keys()):
-            self.delete_job(job_id)
+            await self.delete_job(job_id)
 
-    def shutdown(self, wait: bool = True) -> None:
+    async def shutdown(self, wait: bool = True) -> None:
         """
         Shuts down the job manager.
 
         :param wait: If True, wait for all jobs to complete before shutting down.
         """
-        self.stop_all_jobs()
+        await self.stop_all_jobs()
+
+        if wait:
+            # Wait for all jobs to complete
+            await asyncio.gather(*(job.task for job in self.jobs.values()))
+
+        # Shutdown the executor
         self.executor.shutdown(wait=wait)

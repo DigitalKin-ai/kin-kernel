@@ -1,30 +1,26 @@
-"""TODO: Add a description here."""
+"""TODO: Add a description here"""
 
 from __future__ import annotations
 import asyncio
 import json
 import uuid
-from threading import Lock, Thread
 from functools import wraps
+from threading import Lock
 
 # from datetime import datetime
 from typing import (
+    AsyncIterator,
     Dict,
     Any,
-    Iterator,
     Callable,
-    Literal,
-    Optional,
     Union,
     TYPE_CHECKING,
 )
-from queue import Queue
 
 import grpc
-from pydantic import BaseModel, Field, model_validator, ValidationError
+from pydantic import ValidationError
 from google.protobuf import json_format, struct_pb2
 from protoc_gen_validate.validator import validate, ValidationFailed
-from pydantic_core import PydanticUndefinedType
 
 from proto.digitalkin.module.v1.lifecycle_pb2 import (
     StartModuleRequest,
@@ -33,11 +29,18 @@ from proto.digitalkin.module.v1.lifecycle_pb2 import (
     ErrorResponse,
     InputDataResponse,
 )
-
-from kin_sdk.exception import ValidateGrpcRequestException
+from kin_sdk.models.metadata import Metadata
+from kin_sdk.validation.grpc_helpers import (
+    check_required_attributes,
+    get_metadata,
+    pydantic_validation,
+)
 from kin_sdk.validation.pydantic_validation_error import pydantic_validation_error
 from kin_sdk.common.logger import logger
 from kin_sdk.common.types import RequestType
+
+if TYPE_CHECKING:
+    from kin_sdk.models.rooms import Rooms
 
 
 def validate_grpc_request(func):
@@ -82,7 +85,7 @@ def validate_grpc_request(func):
             logger.error("Validation Error: %s", e)
             context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
             context.set_details(str(e))
-        except ValidateGrpcRequestException as e:
+        except Exception as e:  # pylint: disable=broad-except
             # Handle other exceptions that may occur
             logger.error("Validate Exception Error: %s", e)
             context.set_code(grpc.StatusCode.INTERNAL)
@@ -114,7 +117,7 @@ def validate_grpc_request(func):
             logger.error("Validation Error: %s", e)
             context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
             context.set_details(str(e))
-        except ValidateGrpcRequestException as e:
+        except Exception as e:  # pylint: disable=broad-except
             # Handle other exceptions that may occur
             logger.error("Validate Exception Error: %s", e)
             context.set_code(grpc.StatusCode.INTERNAL)
@@ -127,101 +130,49 @@ def validate_grpc_request(func):
         return sync_wrapper
 
 
-MAX_WORKERS = 10  # Adjust this value based on your system's capabilities
-
-
-class Metadata(BaseModel):
-    """
-    Metadata model for gRPC module.
-
-    :param module_id: The unique identifier of the module
-    :param module_role: The role of the module (owner or member)
-    :param room_id: The unique identifier of the room
-    """
-
-    module_id: str = Field(
-        ..., description="The unique identifier of the module that send the request"
-    )
-    module_role: Literal["owner", "member"] = Field(
-        default="member", description="The role of the module that send the request"
-    )
-    room_id: Optional[uuid.UUID] = Field(
-        None,
-        description="The unique identifier of the room that the module is connected to",
-    )
-
-    @model_validator(mode="before")
-    def set_defaults_for_none(cls, values: Dict[str, Any]) -> Dict[str, Any]:
-        """Set default values for None fields."""
-        fields = cls.model_fields
-        for field_name, field_info in fields.items():
-            value = values.get(field_name)
-            default_value = (
-                field_info.default
-                if not isinstance(field_info.default, PydanticUndefinedType)
-                else None
-            )
-            default_factory = (
-                field_info.default_factory
-                if not isinstance(field_info.default_factory, PydanticUndefinedType)
-                else None
-            )
-
-            if value is None:
-                if default_value is not None:
-                    values[field_name] = default_value
-                elif default_factory is not None:
-                    values[field_name] = default_factory()
-
-        return values
-
-
-def get_metadata(context: grpc.ServicerContext) -> Metadata:
-    """
-    Extract metadata from the gRPC context.
-
-    :param context: The gRPC context object
-    :return: A Metadata object containing the extracted metadata
-    :raises ValueError: If required metadata is missing or invalid
-    """
+async def handle_incoming_messages(
+    rooms: Rooms,
+    lock: Lock,
+    metadata: Metadata,
+    request_iterator: AsyncIterator[StartModuleRequest],
+    message_queue: asyncio.Queue,
+) -> None:
+    """Handle incoming messages from the client and publish them to the room."""
     try:
-        metadata = dict(context.invocation_metadata())
-        module_id = metadata.get("module_id", None)
-        module_role = metadata.get("module_role", None)
-        room_id = metadata.get("room_id", None)
-
-        if not module_id:
-            raise ValueError("Module ID metadata is required.")
-
-        if (module_role is None or module_role == "member") and not room_id:
-            raise ValueError(
-                "Module role metadata should be `owner` if there is no `room_id` or should be `member` with a `room_id`."
+        async for request in request_iterator:
+            request_dict = (
+                json_format.MessageToDict(request, preserving_proto_field_name=True)
+                if request
+                else {}
             )
 
-        return Metadata(
-            module_id=module_id,
-            module_role=module_role,
-            room_id=uuid.UUID(room_id) if room_id else None,
-        )
+            with lock:
+                request_type = (
+                    RequestType[request_dict.pop("request_type", "REQUEST_TYPE_SEND")]
+                    if metadata.module_role == "owner"
+                    else RequestType.REQUEST_TYPE_SEND
+                )
 
+                await rooms.publish_to_room(
+                    metadata.room_id,
+                    metadata.module_id,
+                    request_dict,
+                    request_type,
+                )
+
+            if (
+                request_type == RequestType.REQUEST_TYPE_VALIDATE
+                and metadata.module_role == "owner"
+            ):
+                break
     except grpc.RpcError as e:
-        logger.error("Error getting metadata: %s", e)
-        raise e
-    except ValueError as e:
-        context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
-        context.set_details(str(e))
-        raise e
-
-
-def pydantic_validation(request: Dict[str, Any], model: BaseModel) -> None:
-    """TODO: sphinx docstring"""
-    input_data = request.get("input", None)
-
-    if input_data is None:
-        raise ValueError("Input data is missing.")
-
-    # Parse and validate the input JSON using the input_format Pydantic model
-    model.model_validate(input_data)
+        logger.info("Client disconnected: %s", e)
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error("Error handling incoming messages: %s", e)
+    finally:
+        await message_queue.put(
+            (metadata.module_id, None, RequestType.REQUEST_TYPE_EXIT)
+        )
 
 
 def validate_stream_request(func: Callable):
@@ -238,7 +189,7 @@ def validate_stream_request(func: Callable):
     @wraps(func)
     async def async_wrapper(
         self,
-        request_iterator: Iterator[StartModuleRequest],
+        request_iterator: AsyncIterator[StartModuleRequest],
         context: Union[grpc.aio.ServicerContext, grpc.ServicerContext],
     ):
         """
@@ -251,42 +202,13 @@ def validate_stream_request(func: Callable):
         :raises AttributeError: If required attributes are missing
         :raises TypeError: If attributes are of incorrect type
         """
-        # Check required attributes
-        if not all(hasattr(self, attr) for attr in ["rooms", "lock", "module_class"]):
-            raise AttributeError(
-                f"{self.__class__.__name__} instance must have 'rooms', 'lock', and 'module_class' attributes."
-            )
-
-        from kin_sdk.models.rooms import Rooms
-
-        if not isinstance(self.rooms, Rooms):
-            raise TypeError(
-                f"The 'rooms' attribute must be of type Rooms, got {type(self.rooms).__name__}."
-            )
-
-        if not isinstance(self.lock, type(Lock())):
-            raise TypeError(
-                f"The 'lock' attribute must be of type Lock, got {type(self.lock).__name__}."
-            )
-
-        from kin_sdk.agent_management.base import AgentManagement
-
-        if not isinstance(self.agent_management, AgentManagement):
-            raise TypeError(
-                f"The 'agent_management' attribute must be of type AgentManagement, got {type(self.agent_management).__name__}."
-            )
-
-        # be cautious of circular imports
-        from kin_sdk.agent_module._module.base import BaseModule
-
-        if not issubclass(self.module_class, BaseModule):
-            raise TypeError(
-                f"The 'module' attribute must be of type BaseModule, got {self.module_class.__name__}."
-            )
 
         try:
+            # Check required attributes
+            check_required_attributes(self)
+            # Extract metadata from the gRPC context
             metadata = get_metadata(context)
-            message_queue: Queue = Queue()
+            message_queue: asyncio.Queue = asyncio.Queue()
 
             # Create room if not exists
             if not metadata.room_id:
@@ -306,11 +228,11 @@ def validate_stream_request(func: Callable):
                     module_role=metadata.module_role,
                 )
 
-            def callback(
+            async def callback(
                 module_id: str, request: Dict[str, Any], request_type: RequestType
             ) -> None:
                 """Callback function to handle incoming messages from the room."""
-                message_queue.put((module_id, request, request_type))
+                await message_queue.put((module_id, request, request_type))
 
             # Subscribe to the room to receive messages from other modules in the room
             logger.debug("Subscribing to room %s", metadata.room_id)
@@ -327,67 +249,22 @@ def validate_stream_request(func: Callable):
                 module_id=self.agent_management.identity.id,
             )
 
-            async def handle_incoming_messages() -> None:
-                """Handle incoming messages from the client and publish them to the room."""
-                try:
-                    async for request in request_iterator:
-                        request_dict = (
-                            json_format.MessageToDict(
-                                request, preserving_proto_field_name=True
-                            )
-                            if request
-                            else {}
-                        )
-
-                        with self.lock:
-                            request_type = (
-                                RequestType[
-                                    request_dict.pop(
-                                        "request_type", "REQUEST_TYPE_SEND"
-                                    )
-                                ]
-                                if metadata.module_role == "owner"
-                                else RequestType.REQUEST_TYPE_SEND
-                            )
-
-                            self.rooms.publish_to_room(
-                                metadata.room_id,
-                                metadata.module_id,
-                                request_dict,
-                                request_type,
-                            )
-
-                        if (
-                            request_type == RequestType.REQUEST_TYPE_VALIDATE
-                            and metadata.module_role == "owner"
-                        ):
-                            break
-                except grpc.RpcError as e:
-                    logger.info("Client disconnected: %s", e)
-                except ValidateGrpcRequestException as e:
-                    logger.error("Error handling incoming messages: %s", e)
-                finally:
-                    message_queue.put(
-                        (metadata.module_id, None, RequestType.REQUEST_TYPE_EXIT)
-                    )
-
-            # Start the incoming message handler in a separate thread
-            # this is useful to do not block the main thread that is waiting for the room incoming messages
-            # def run_async_in_thread():
-            #     asyncio.run(handle_incoming_messages())
-            await handle_incoming_messages()
-            # incoming_thread = Thread(target=run_async_in_thread)
-            # incoming_thread.start()
+            # Create a task for handle_incoming_messages to run it in the background
+            message_handler_task = asyncio.create_task(
+                handle_incoming_messages(
+                    self.rooms, self.lock, metadata, request_iterator, message_queue
+                )
+            )
 
             # usefull to know if we want to try to validate the request
             is_validate: bool = False
 
-            def message_sender() -> Iterator[StartModuleResponse]:
+            async def message_sender() -> AsyncIterator[StartModuleResponse]:
                 """
                 Handle message that coming from the room and send it to the client
                 """
                 while True:
-                    sender_id, request, request_type = message_queue.get()
+                    sender_id, request, request_type = await message_queue.get()
                     logger.debug(
                         "Received request from %s: %s \n %s",
                         sender_id,
@@ -436,7 +313,7 @@ def validate_stream_request(func: Callable):
                 )
 
             # Return the message sender generator to the client
-            for item, need_validate in message_sender():
+            async for item, need_validate in message_sender():
                 # update the is_validate variable
                 is_validate = need_validate
                 # if the item is None we want to break the loop
@@ -444,6 +321,8 @@ def validate_stream_request(func: Callable):
                     break
                 # yield the item to the client
                 yield item
+            # Wait for the message handler task to complete
+            await message_handler_task
             # if the module is the owner of the room and it is the last one in the room
             # we will eject all the members and delete the room
             if (
@@ -452,7 +331,7 @@ def validate_stream_request(func: Callable):
             ):
                 # if the stream ends and the owner is the only one left in the room
                 # eject all members
-                self.rooms.publish_to_room(
+                await self.rooms.publish_to_room(
                     metadata.room_id,
                     metadata.module_id,
                     {},
@@ -532,7 +411,7 @@ def validate_stream_request(func: Callable):
                     details=str(e),
                 ),
             )
-        except ValidateGrpcRequestException as e:
+        except Exception as e:  # pylint: disable=broad-except
             logger.exception("Unexpected error: %s", e)
             context.set_code(grpc.StatusCode.INTERNAL)
             context.set_details(str(e))
