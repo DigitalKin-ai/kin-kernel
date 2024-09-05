@@ -14,7 +14,7 @@ from proto.digitalkin.module.v1.module_service_pb2_grpc import (
     ModuleServiceStub,
 )
 from proto.digitalkin.module.v1.lifecycle_pb2 import StartModuleRequest
-from kin_sdk.grpc_system.models import ModuleModel
+from kin_sdk.models.module import ModuleModel
 from kin_sdk.agent_management.base import AgentManagement
 from kin_sdk.agent_management.identity import ModuleIdentity
 from kin_sdk.common.types import ModuleType

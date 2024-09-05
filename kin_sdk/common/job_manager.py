@@ -5,8 +5,6 @@ This module provides a job management system with support for asynchronous job e
 status tracking, and output streaming.
 """
 
-from __future__ import annotations
-
 import uuid
 import threading
 from collections import UserDict
@@ -21,14 +19,12 @@ from typing import (
     Optional,
     Iterator,
     Union,
-    TYPE_CHECKING,
 )
 from concurrent.futures import Future, ThreadPoolExecutor
 
 from pydantic import BaseModel, ConfigDict, Field
 
-if TYPE_CHECKING:
-    from kin_sdk.agent_module._module.base import BaseModule
+from kin_sdk.agent_module._module.base import BaseModule
 
 
 class ConcurrentDict(UserDict):

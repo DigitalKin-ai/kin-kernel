@@ -7,7 +7,7 @@ import os
 from contextlib import asynccontextmanager
 from surrealdb import Surreal
 from kin_sdk.agent_management.storage.base import BaseStorage
-from kin_sdk.common import logger
+from kin_sdk.common.logger import logger
 from kin_sdk.exception import LoadingDatabaseException
 
 

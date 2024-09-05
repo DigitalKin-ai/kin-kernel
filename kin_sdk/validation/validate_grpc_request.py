@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import json
 import uuid
-from threading import Lock, Thread
+from threading import Lock
 from functools import wraps
 
 # from datetime import datetime
@@ -16,7 +16,6 @@ from typing import (
     Literal,
     Optional,
     Union,
-    TYPE_CHECKING,
 )
 from queue import Queue
 
@@ -35,7 +34,7 @@ from proto.digitalkin.module.v1.lifecycle_pb2 import (
 )
 
 from kin_sdk.exception import ValidateGrpcRequestException
-from kin_sdk.common.pydantic_validation_error import pydantic_validation_error
+from kin_sdk.validation.pydantic_validation_error import pydantic_validation_error
 from kin_sdk.common.logger import logger
 from kin_sdk.common.types import RequestType
 
@@ -376,7 +375,7 @@ def validate_stream_request(func: Callable):
                 f"{self.__class__.__name__} instance must have 'rooms', 'lock', and 'module_class' attributes."
             )
 
-        from kin_sdk.common.rooms import Rooms
+        from kin_sdk.models.rooms import Rooms
 
         if not isinstance(self.rooms, Rooms):
             raise TypeError(

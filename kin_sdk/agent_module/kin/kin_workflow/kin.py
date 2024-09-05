@@ -10,9 +10,9 @@ import asyncio
 from typing import Callable, Dict, List, Any, Tuple, Union
 from pydantic import BaseModel, Field
 
-from kin_sdk.grpc_system.models import ModuleModel
+from kin_sdk.models.module import ModuleModel
 from kin_sdk.agent_module.kin.base import BaseKin
-from kin_sdk.common import logger
+from kin_sdk.common.logger import logger
 from kin_sdk.agent_management import DBStorage
 from kin_sdk.agent_module.kin.kin_workflow.graph import GraphExecutor
 

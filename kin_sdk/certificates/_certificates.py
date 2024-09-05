@@ -7,7 +7,7 @@ from typing import Annotated, Optional
 
 from pydantic import BaseModel, Field
 
-from kin_sdk.common import logger
+from kin_sdk.common.logger import logger
 
 
 class CertValues(BaseModel):

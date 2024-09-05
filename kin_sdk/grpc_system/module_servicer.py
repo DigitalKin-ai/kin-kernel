@@ -36,8 +36,8 @@ from kin_sdk.agent_management import AgentManagement
 from kin_sdk.agent_module._module.base import BaseModule
 from kin_sdk.common.logger import logger
 from kin_sdk.common.job_manager import JobManager, Job, JobStatus
-from kin_sdk.common.rooms import Rooms
-from kin_sdk.common.validate_grpc_request import (
+from kin_sdk.models.rooms import Rooms
+from kin_sdk.validation.validate_grpc_request import (
     validate_stream_request,
     validate_grpc_request,
 )

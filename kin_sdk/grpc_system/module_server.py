@@ -6,7 +6,6 @@ from typing import Any, AsyncGenerator, Dict, List, Literal, Optional, Type, Uni
 import grpc
 from google.protobuf import json_format, struct_pb2
 
-from kin_sdk.agent_management.identity import ParamsModuleIdentity
 from proto.digitalkin.module.v1.module_service_pb2_grpc import (
     ModuleServiceStub,
     add_ModuleServiceServicer_to_server,
@@ -31,21 +30,15 @@ from proto.digitalkin.module.v1.information_pb2 import (
 )
 from proto.digitalkin.module.v1.lifecycle_pb2 import StartModuleRequest
 
+from kin_sdk.agent_management.identity import ParamsModuleIdentity
 from kin_sdk.agent_management.base import AgentManagement
 from kin_sdk.agent_module._module.base import BaseModule
-from kin_sdk.agent_module._module.module_servicer import ModuleServicer
-from kin_sdk.exception import (
-    ModuleRegistrationException,
-)
-from kin_sdk.grpc_system.models import ModuleModel
+from kin_sdk.grpc_system.module_servicer import ModuleServicer
+from kin_sdk.exception import ModuleRegistrationException
+from kin_sdk.models.module import ModuleModel
 from kin_sdk.grpc_system.grpc_server_base import GRPCServerBase
-from kin_sdk.common import (
-    logger,
-    ModuleType,
-    get_certificates,
-    Certificates,
-    CertValues,
-)
+from kin_sdk.common import logger, ModuleType
+from kin_sdk.certificates import get_certificates, Certificates, CertValues
 
 
 class ModuleServer(GRPCServerBase):

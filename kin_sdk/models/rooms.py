@@ -1,6 +1,5 @@
 """
 TODO: sphinx docstring
-? Should go to _module I think
 """
 
 import time

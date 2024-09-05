@@ -5,7 +5,7 @@ TODO: Add module description.
 from typing import Coroutine, Dict, Any
 
 import grpc
-from kin_sdk.common import validate_grpc_request
+from kin_sdk.validation.validate_grpc_request import validate_grpc_request
 from kin_sdk.grpc_system.grpc_server_base import GRPCServerBase
 
 # Protos gRPC

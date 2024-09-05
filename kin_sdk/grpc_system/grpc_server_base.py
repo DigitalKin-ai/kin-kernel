@@ -6,7 +6,8 @@ from concurrent import futures
 import grpc
 from grpc.aio._server import Server
 
-from kin_sdk.common import logger, get_certificates, Certificates, CertValues
+from kin_sdk.common.logger import logger
+from kin_sdk.certificates import get_certificates, Certificates, CertValues
 
 
 class GRPCServerBase:

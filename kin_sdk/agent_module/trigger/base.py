@@ -8,7 +8,7 @@ from typing import TypeVar, Callable
 from pydantic import BaseModel
 
 from kin_sdk.common.types import ModuleType
-from kin_sdk.agent_module._module import BaseModule
+from kin_sdk.agent_module._module.base import BaseModule
 
 InputModelT = TypeVar("InputModelT", bound=BaseModel)
 OutputModelT = TypeVar("OutputModelT", bound=BaseModel)

@@ -3,7 +3,7 @@ TODO: sphinx documentation
 """
 
 from dataclasses import dataclass
-from kin_sdk.common import ModuleType
+from kin_sdk.common.types import ModuleType
 
 
 @dataclass
