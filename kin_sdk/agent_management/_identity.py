@@ -48,7 +48,7 @@ class ModuleIdentity:
         self._module_port: int = module_port
 
     @classmethod
-    def from_params(cls, params: ParamsModuleIdentity):
+    def from_params(cls, params: ParamsModuleIdentity) -> "ModuleIdentity":
         """
         Creates a ModuleIdentity object from the given parameters.
         """

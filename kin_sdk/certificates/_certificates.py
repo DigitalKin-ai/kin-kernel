@@ -5,6 +5,7 @@ Gestion des certificats pour le SDK
 import os
 from typing import Annotated, Optional
 
+import grpc
 from pydantic import BaseModel, Field
 
 from kin_sdk.common.logger import logger
@@ -113,4 +114,18 @@ def get_certificates() -> Certificates:
             certificate_chain=client_certificate_chain,
             private_key=client_private_key,
         ),
+    )
+
+
+def init_channel_credentials() -> grpc.ChannelCredentials:
+    """
+    Initializes the gRPC channel credentials.
+    """
+    certificates: Certificates = get_certificates()
+    server_cert: CertValues = certificates.client_cert
+
+    return grpc.ssl_channel_credentials(
+        root_certificates=server_cert.root_certificates,
+        private_key=server_cert.private_key,
+        certificate_chain=server_cert.certificate_chain,
     )

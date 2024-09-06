@@ -93,7 +93,7 @@ class KinWorkflow(BaseKin):
         """Get the graphs executor."""
         return self._graphs_executor
 
-    def get_modules_by_type(
+    async def get_modules_by_type(
         self, nodes: List[Dict[str, Any]]
     ) -> Dict[str, List[Tuple[str, ModuleModel]]]:
         """
@@ -118,7 +118,9 @@ class KinWorkflow(BaseKin):
             if data_id is None:
                 raise ValueError(f"The {data_type}: id is missing")
 
-            module_model: Union[ModuleModel, None] = self.search_module(data_id)
+            module_model: Union[ModuleModel, None] = (
+                await self.registry.find_module_by_id(data_id)
+            )
 
             if module_model is None:
                 raise ValueError(
@@ -135,14 +137,14 @@ class KinWorkflow(BaseKin):
 
         return modules_by_type
 
-    def register_modules(self, nodes: List[Dict[str, Any]]) -> None:
+    async def register_modules(self, nodes: List[Dict[str, Any]]) -> None:
         """
         Registers the modules.
 
         Args:
             nodes (List[Dict[str, Any]]): The nodes to register.
         """
-        modules_by_type = self.get_modules_by_type(nodes)
+        modules_by_type = await self.get_modules_by_type(nodes)
 
         for data_id, module_model in modules_by_type["trigger"]:
             self.triggers[data_id] = module_model
@@ -202,7 +204,7 @@ class KinWorkflow(BaseKin):
             workflow = await self._load_workflow(kin_id=self.identity.id)
 
             # Add triggers and tools
-            self.register_modules(workflow["nodes"])
+            await self.register_modules(workflow["nodes"])
 
             # Load setups from db
             setups = await self.get_kin_setup(
@@ -242,7 +244,7 @@ class KinWorkflow(BaseKin):
         async def module_callback(
             module_id: str, input_data: Dict[str, Any], node_id: str
         ) -> Dict[str, Any]:
-            response_iterator = self.start_module(
+            response_iterator = await self.registry.start_module(
                 module_id,
                 input_data,
                 setup_id=f"{setup_id}::nodes:{node_id}",

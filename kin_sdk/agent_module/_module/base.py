@@ -10,13 +10,15 @@ from typing import Awaitable, Literal, Type, TypeVar, Generic, List, Callable, U
 import grpc
 from pydantic import BaseModel
 from google.protobuf import json_format, struct_pb2
+
 from proto.digitalkin.module.v1.module_service_pb2_grpc import (
     ModuleServiceStub,
 )
 from proto.digitalkin.module.v1.lifecycle_pb2 import StartModuleRequest
 from kin_sdk.models.module import ModuleModel
 from kin_sdk.agent_management.base import AgentManagement
-from kin_sdk.agent_management.identity import ModuleIdentity
+from kin_sdk.agent_management._identity import ModuleIdentity
+from kin_sdk.agent_management._registry import ModuleRegistry
 from kin_sdk.common.types import ModuleType
 from kin_sdk.common.logger import logger
 
@@ -56,6 +58,15 @@ class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ABC):
         :return: The module identity.
         """
         return self._agent_management.identity
+
+    @property
+    def registry(self) -> ModuleRegistry:
+        """
+        Gets the module identity.
+
+        :return: The module identity.
+        """
+        return self._agent_management.registry
 
     @classmethod
     def validate_format(
@@ -262,7 +273,7 @@ class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ABC):
 
             # use module_ids to send the output to the right module
             for module_id in module_ids:
-                # module = await self.search_module(module_id) # ! TODO: Implement search_module
+                module = await self.registry.find_module_by_id(module_id)
                 print("module_id", module_id)
                 module = None
                 if module is None:
