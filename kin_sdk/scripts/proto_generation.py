@@ -6,6 +6,8 @@ import os
 import subprocess
 from typing import List
 
+from kin_sdk.scripts.async_tranformer import add_async_to_methods
+
 
 def create_init_files(directory: str) -> None:
     """
@@ -17,7 +19,7 @@ def create_init_files(directory: str) -> None:
     """
     for root, dirs, _ in os.walk(directory):
         # Ensure __init__.py exists in each subdirectory
-        for dir in dirs:
+        for dir in dirs:  # pylint: disable=redefined-builtin
             init_file_path = os.path.join(root, dir, "__init__.py")
             open(init_file_path, "a", encoding="utf-8").close()
 
@@ -93,12 +95,33 @@ def main():
             print(
                 f"Added import prefix '{import_prefix}' to all Python files in {output_dir}"
             )
+
+            # Add async
+            base_path = "proto/digitalkin"
+            file_methods_dict = {
+                f"{base_path}/module/v1/module_service_pb2_grpc.py": [
+                    "StartModule",
+                    "StopModule",
+                    "GetModuleStatus",
+                    "GetModuleInput",
+                    "GetModuleOutput",
+                    "GetModuleSetup",
+                ],
+                f"{base_path}/module_registry/v1/module_registry_service_pb2_grpc.py": [
+                    "RegisterModule",
+                    "DeregisterModule",
+                    "DiscoverModule",
+                    "UpdateModuleStatus",
+                ],
+            }
+            add_async_to_methods(file_methods_dict)
+            print("Added async to methods in the specified files")
         else:
             print("Command failed with the following error:")
             print(result.stderr)
     except subprocess.CalledProcessError as e:
         print("Subprocess error", e.stderr)
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         print("Error", str(e))
 
 
