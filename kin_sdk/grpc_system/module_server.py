@@ -37,7 +37,8 @@ from kin_sdk.grpc_system.module_servicer import ModuleServicer
 from kin_sdk.exception import ModuleRegistrationException
 from kin_sdk.models.module import ModuleModel
 from kin_sdk.grpc_system.grpc_server_base import GRPCServerBase
-from kin_sdk.common import logger, ModuleType
+from kin_sdk.common.logger import logger
+from kin_sdk.common.types import ModuleType
 from kin_sdk.certificates import get_certificates, Certificates, CertValues
 
 

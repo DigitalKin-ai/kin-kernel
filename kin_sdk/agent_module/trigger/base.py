@@ -3,7 +3,7 @@ This module defines a gRPC-based Trigger Service with job management capabilitie
 """
 
 from abc import ABC, abstractmethod
-from typing import TypeVar, Callable
+from typing import Awaitable, TypeVar, Callable
 
 from pydantic import BaseModel
 
@@ -36,7 +36,7 @@ class BaseTrigger(
         self,
         input_data: InputModelT,
         setup_id: str,
-        callback: Callable[[OutputModelT], None],
+        callback: Callable[[OutputModelT], Awaitable[None]],
     ) -> None:
         """
         Executes the trigger.

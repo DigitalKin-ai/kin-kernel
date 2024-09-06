@@ -9,6 +9,10 @@ from threading import Lock
 import grpc
 from pydantic import BaseModel
 
+from proto.digitalkin.module.v1.lifecycle_pb2 import (
+    StartModuleResponse,
+    ErrorResponse,
+)
 from kin_sdk.common.logger import logger
 from kin_sdk.models.metadata import Metadata
 
@@ -105,3 +109,32 @@ def check_required_attributes(instance: Any) -> None:
         raise TypeError(
             f"The 'module_class' attribute must be a subclass of BaseModule, got {instance.module_class.__name__}."
         )
+
+
+def handle_start_error(context, code, message, details):
+    """
+    Handle an error response when starting a module.
+
+    :param context: The gRPC context object.
+    :param code: The gRPC status code.
+    :param message: The error message.
+    :param details: The error details.
+    :return: A StartModuleResponse object.
+
+    ===
+    Example:
+    ===
+    ```
+    handle_start_error(context, grpc.StatusCode.INVALID_ARGUMENT, "Invalid argument", "The input data is invalid.")
+    ```
+    """
+    context.set_code(code)
+    context.set_details(details)
+    return StartModuleResponse(
+        success=False,
+        response_type="START_RESPONSE_TYPE_ERROR",
+        error=ErrorResponse(
+            message=message,
+            details=details,
+        ),
+    )

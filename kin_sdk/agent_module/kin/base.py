@@ -3,7 +3,7 @@ Todo: sphinx docstring
 """
 
 from abc import ABC, abstractmethod
-from typing import TypeVar, List, Callable
+from typing import Awaitable, TypeVar, List, Callable
 
 from pydantic import BaseModel
 
@@ -49,7 +49,7 @@ class BaseKin(BaseModule[InputModelT, OutputModelT, SetupModelT], ABC):
         self,
         input_data: InputModelT,
         setup_id: str,
-        callback: Callable[[OutputModelT], None],
+        callback: Callable[[OutputModelT], Awaitable[None]],
     ) -> None:
         """
         Executes the kin.

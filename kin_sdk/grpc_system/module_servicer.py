@@ -79,7 +79,7 @@ class ModuleServicer(ModuleServiceServicer):
             await module.start(setup_id=setup_id)
 
             # Create a callback that captures the module_ids
-            async def callback(output: BaseModel):
+            async def callback(output: BaseModel) -> None:
                 if not self.job_manager.update_job_status(job_id, JobStatus.PROCESSING):
                     raise ValueError(f"😵 Trigger {job_id} not found.")
                 await module.send_output(output, module_ids)

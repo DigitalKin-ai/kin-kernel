@@ -6,8 +6,7 @@ methods for registering modules, loading workflows, starting and stopping workfl
 and executing specific nodes.
 """
 
-import asyncio
-from typing import Callable, Dict, List, Any, Tuple, Union
+from typing import Awaitable, Callable, Dict, List, Any, Tuple, Union
 from pydantic import BaseModel, Field
 
 from kin_sdk.models.module import ModuleModel
@@ -190,7 +189,7 @@ class KinWorkflow(BaseKin):
         )
         return setups
 
-    def start(self, setup_id: str = "fibonacci_setup") -> None:
+    async def start(self, setup_id: str = "fibonacci_setup") -> None:
         """
         Starts the workflow.
 
@@ -200,14 +199,14 @@ class KinWorkflow(BaseKin):
         """
         try:
             # Load workflow from db
-            workflow = asyncio.run(self._load_workflow(kin_id=self.module_id))
+            workflow = await self._load_workflow(kin_id=self.identity.id)
 
             # Add triggers and tools
             self.register_modules(workflow["nodes"])
 
             # Load setups from db
-            setups = asyncio.run(
-                self.get_kin_setup(kin_id=self.module_id, setup_id=setup_id)
+            setups = await self.get_kin_setup(
+                kin_id=self.identity.id, setup_id=setup_id
             )
 
             # Create a graph executor
@@ -222,11 +221,11 @@ class KinWorkflow(BaseKin):
 
         return None
 
-    def execute(
+    async def execute(
         self,
         input_data: WorkflowInput,
         setup_id: str,
-        callback: Callable[[WorkflowOutput], None],
+        callback: Callable[[WorkflowOutput], Awaitable[None]],
     ) -> None:
         """
         Executes the workflow.
@@ -260,14 +259,14 @@ class KinWorkflow(BaseKin):
                     output_response = response.get("output_response", {})
                     result = output_response.get("output", {})
                     break
-            callback(WorkflowOutput(done=False))
+            await callback(WorkflowOutput(done=False))
             return result
 
         self._graphs_executor.execute(initial_node, module_callback)
         print("Executing Kin Workflow...")
-        callback(WorkflowOutput(done=True))
+        await callback(WorkflowOutput(done=True))
 
-    def stop(self) -> None:
+    async def stop(self) -> None:
         """
         Stops the trigger.
         """

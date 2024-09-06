@@ -37,7 +37,7 @@ Usage:
 """
 
 from abc import ABC, abstractmethod
-from typing import Callable, TypeVar
+from typing import Awaitable, Callable, TypeVar
 
 from pydantic import BaseModel
 
@@ -67,7 +67,7 @@ class BaseTool(BaseModule[InputModelT, OutputModelT, SetupModelT], ABC):
         self,
         input_data: InputModelT,
         setup_id: str,
-        callback: Callable[[OutputModelT], None],
+        callback: Callable[[OutputModelT], Awaitable[None]],
     ) -> None:
         """
         Executes the tool.

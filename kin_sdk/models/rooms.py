@@ -75,10 +75,9 @@ class Room:
         """
         if module_role == "owner":
             return self.owners
-        elif module_role == "member":
+        if module_role == "member":
             return self.members
-        else:
-            raise InvalidModuleRoleException("Invalid module role")
+        raise InvalidModuleRoleException("Invalid module role")
 
     def get_number_of_modules(self) -> int:
         """

@@ -14,4 +14,13 @@ class AgentManagement:
         """
         Initializes the AgentManagement object.
         """
-        self.identity = ModuleIdentity.from_params(params_identity)
+        self._identity = ModuleIdentity.from_params(params_identity)
+        self._registry = None
+        self._storage = None
+
+    @property
+    def identity(self) -> ModuleIdentity:
+        """
+        Returns the identity of the agent.
+        """
+        return self._identity

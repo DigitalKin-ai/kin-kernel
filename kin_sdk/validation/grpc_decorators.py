@@ -26,13 +26,13 @@ from proto.digitalkin.module.v1.lifecycle_pb2 import (
     StartModuleRequest,
     StartModuleResponse,
     ConnectionResponse,
-    ErrorResponse,
     InputDataResponse,
 )
 from kin_sdk.models.metadata import Metadata
 from kin_sdk.validation.grpc_helpers import (
     check_required_attributes,
     get_metadata,
+    handle_start_error,
     pydantic_validation,
 )
 from kin_sdk.validation.pydantic_validation_error import pydantic_validation_error
@@ -383,45 +383,37 @@ def validate_stream_request(func: Callable):
         except ValidationFailed as e:
             # Handle validation errors
             logger.error("Validation Error: %s ", str(e))
-            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
-            context.set_details(str(e))
-            yield StartModuleResponse(
-                success=False,
-                response_type="START_RESPONSE_TYPE_ERROR",
-                error=ErrorResponse(
-                    message="An error occurred while starting the module",
-                    details=str(e),
-                ),
+            yield handle_start_error(
+                context,
+                grpc.StatusCode.INVALID_ARGUMENT,
+                "A validation error occurred while starting the module",
+                str(e),
             )
             return
         except grpc.aio.AioRpcError as e:
             if e.code() == grpc.StatusCode.ABORTED:
                 logger.info("Server ejected the client: %s", e.details())
-                context.set_code(grpc.StatusCode.ABORTED)
-                context.set_details(str(e))
+                yield handle_start_error(
+                    context,
+                    grpc.StatusCode.ABORTED,
+                    "An error occurred while starting the module",
+                    str(e),
+                )
             else:
                 logger.error("Error during server communication: %s", e)
-                context.set_code(grpc.StatusCode.INTERNAL)
-                context.set_details(str(e))
-            yield StartModuleResponse(
-                success=False,
-                response_type="START_RESPONSE_TYPE_ERROR",
-                error=ErrorResponse(
-                    message="An error occurred while starting the module",
-                    details=str(e),
-                ),
-            )
+                yield handle_start_error(
+                    context,
+                    grpc.StatusCode.INTERNAL,
+                    "An error occurred while starting the module",
+                    str(e),
+                )
         except Exception as e:  # pylint: disable=broad-except
             logger.exception("Unexpected error: %s", e)
-            context.set_code(grpc.StatusCode.INTERNAL)
-            context.set_details(str(e))
-            yield StartModuleResponse(
-                success=False,
-                response_type="START_RESPONSE_TYPE_ERROR",
-                error=ErrorResponse(
-                    message="An error occurred while starting the module",
-                    details=str(e),
-                ),
+            yield handle_start_error(
+                context,
+                grpc.StatusCode.INTERNAL,
+                "An error occurred while starting the module",
+                str(e),
             )
         finally:
             # Ensure that the module is always stopped and the connection is closed

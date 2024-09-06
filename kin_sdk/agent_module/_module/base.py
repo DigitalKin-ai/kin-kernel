@@ -5,7 +5,7 @@ TODO: sphinx docstring
 import json
 import inspect
 from abc import ABC, abstractmethod
-from typing import Literal, Type, TypeVar, Generic, List, Callable, Union
+from typing import Awaitable, Literal, Type, TypeVar, Generic, List, Callable, Union
 
 import grpc
 from pydantic import BaseModel
@@ -215,7 +215,7 @@ class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ABC):
         self,
         input_data: InputModelT,
         setup_id: str,
-        callback: Callable[[OutputModelT], None],
+        callback: Callable[[OutputModelT], Awaitable[None]],
     ) -> None:
         """
         Executes the module.
