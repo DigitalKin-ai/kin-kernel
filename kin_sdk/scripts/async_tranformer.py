@@ -24,7 +24,7 @@ class AsyncTransformer(ast.NodeTransformer):
     def __init__(self, methods_to_transform):
         self.methods_to_transform = methods_to_transform
 
-    def visit_FunctionDef(self, node):
+    def visit_FunctionDef(self, node):  # pylint: disable=invalid-name
         """
         Transforms the method to an async method.
 

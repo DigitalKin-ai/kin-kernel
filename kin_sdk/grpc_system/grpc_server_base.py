@@ -80,7 +80,7 @@ class GRPCServerBase:
         self._server.add_insecure_port(
             address=f"[::]:{self.port}"  # , server_credentials=self._credentials
         )
-        logger.info("🤖 Service starting on port %s", self.port)
+        logger.info("🤖 Module starting on port %s", self.port)
         await self._server.start()
         await self._server.wait_for_termination()
 
@@ -88,7 +88,7 @@ class GRPCServerBase:
         """
         Stops the server.
         """
-        logger.info("🛑 Stopping service on port %s", self.port)
+        logger.info("🛑 Stopping module on from %s", self.port)
         await self._server.stop(grace)
 
     def asyncio_serve(self) -> None:

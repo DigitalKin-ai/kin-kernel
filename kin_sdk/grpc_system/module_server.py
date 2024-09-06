@@ -54,6 +54,7 @@ class ModuleServer(GRPCServerBase):
         self.module_type = module_class.get_type()
         self.registry_address = registry_address
         self._credentials = init_channel_credentials()
+        self._is_registered = False
         self.agent_management = AgentManagement(
             params_identity=ParamsModuleIdentity(
                 module_id=self.module_id,
@@ -97,9 +98,11 @@ class ModuleServer(GRPCServerBase):
             )
             response: RegisterResponse = await stub.RegisterModule(request)
             await channel.close()
+            self._is_registered = response.success
             return response.success
         except Exception as e:  # pylint: disable=broad-except
             logger.error("Error registering module: %s", e)
+            self._is_registered = False
             return False
 
     async def _deregister_module(self) -> bool:
@@ -114,11 +117,13 @@ class ModuleServer(GRPCServerBase):
             stub = ModuleRegistryServiceStub(channel)
             request = DeregisterRequest(module_id=self.module_id)
             response: DeregisterResponse = await stub.DeregisterModule(request)
+            self._is_registered = not response.success
             return response.success
         except Exception as e:  # pylint: disable=broad-except
             logger.error(
                 "Error deregistering module: %s, -  %s", self.module_port, str(e)
             )
+            self._is_registered = True
             return False
 
     def add_to_server(self, server: grpc.Server) -> None:
@@ -130,6 +135,19 @@ class ModuleServer(GRPCServerBase):
             ),
             server,
         )
+
+    async def stop(self, *args, **kwargs) -> None:
+        """
+        Stops the module server and deregisters the module from the Module Registry.
+        """
+        await super().stop(*args, **kwargs)
+        if self._is_registered:
+            await self._deregister_module()
+            logger.info(
+                "🔚 Module on port %s deregistered from %s.",
+                self.module_port,
+                self.registry_address,
+            )
 
     async def serve(self) -> None:
         """
@@ -143,6 +161,8 @@ class ModuleServer(GRPCServerBase):
                 await super().serve()
             else:
                 raise ModuleRegistrationException("Module registration failed.")
-        finally:
-            await self._deregister_module()
-            logger.info("Module deregistered.")
+        except Exception as e:  # pylint: disable=broad-except
+            logger.error("Error starting module server: %s", e)
+            if self._is_registered:
+                await self._deregister_module()
+                logger.info("Module deregistered.")

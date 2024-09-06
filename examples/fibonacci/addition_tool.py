@@ -1,6 +1,6 @@
 """TODO: Add a description here"""
 
-from typing import Callable, Tuple
+from typing import Awaitable, Callable, Tuple
 from pydantic import BaseModel, Field
 
 from kin_sdk.agent_module import BaseTool
@@ -33,29 +33,29 @@ class AdditionTool(BaseTool[AdditionInput, AdditionOutput, AdditionSetup]):
     output_format = AdditionOutput
     setup_format = AdditionSetup
 
-    def start(self, setup_id: str) -> None:
+    async def start(self, setup_id: str) -> None:
         """
         Start the module
         """
         print("Starting the module setup: ", setup_id)
 
-    def execute(
+    async def execute(
         self,
         input_data: AdditionInput,
         setup_id: str,
-        callback: Callable[[AdditionOutput], None],
+        callback: Callable[[AdditionOutput], Awaitable[None]],
     ) -> None:
         """
         Execute the addition tool
         """
         print(f"Execute the module with setup_id: {setup_id}")
-        callback(
+        await callback(
             AdditionOutput(
                 next_number=input_data.last_numbers[0] + input_data.last_numbers[1]
             )
         )
 
-    def stop(self) -> None:
+    async def stop(self) -> None:
         """
         Stop the module
         """
