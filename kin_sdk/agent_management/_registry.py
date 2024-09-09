@@ -272,10 +272,8 @@ class ModuleRegistry:
                 ("module_id", self._module_id),
                 ("module_role", module_role),
             ]
-            response_iterator = await stub.StartModule(
-                iter([request]), metadata=metadata
-            )
-            for response in response_iterator:
+            response_iterator = stub.StartModule(iter([request]), metadata=metadata)
+            async for response in response_iterator:
                 json_response = json_format.MessageToDict(
                     response,
                     preserving_proto_field_name=True,

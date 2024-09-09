@@ -68,13 +68,9 @@ class KinWorkflow(BaseKin):
 
     def __init__(
         self,
-        name: str,
-        description: str,
         *args,
         **kwargs,
     ):
-        self._name = name
-        self._description = description
         super().__init__(
             *args,
             **kwargs,
@@ -187,7 +183,7 @@ class KinWorkflow(BaseKin):
             Dict[str, Any]: The setup data.
         """
         setups = await self._db_storage.storage_load_setup(
-            kin_id=kin_id, setup_id=setup_id
+            kin_id=f"kins:{kin_id}", setup_id=setup_id
         )
         return setups
 
@@ -244,14 +240,16 @@ class KinWorkflow(BaseKin):
         async def module_callback(
             module_id: str, input_data: Dict[str, Any], node_id: str
         ) -> Dict[str, Any]:
-            response_iterator = await self.registry.start_module(
+            print("--" * 10)
+            response_iterator = self.registry.start_module(
                 module_id,
                 input_data,
                 setup_id=f"{setup_id}::nodes:{node_id}",
                 request_type="REQUEST_TYPE_VALIDATE",
             )
             result = {}
-            for response in response_iterator:
+            print("--" * 10)
+            async for response in response_iterator:
                 response_type = response.get("response_type", None)
                 print(f"response_type: {response_type}")
                 if (
@@ -261,6 +259,8 @@ class KinWorkflow(BaseKin):
                     output_response = response.get("output_response", {})
                     result = output_response.get("output", {})
                     break
+            print("--" * 10)
+            print(WorkflowOutput(done=False))
             await callback(WorkflowOutput(done=False))
             return result
 

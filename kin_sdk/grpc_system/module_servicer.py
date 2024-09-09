@@ -82,15 +82,19 @@ class ModuleServicer(ModuleServiceServicer):
             async def callback(output: BaseModel) -> None:
                 if not self.job_manager.update_job_status(job_id, JobStatus.PROCESSING):
                     raise ValueError(f"😵 Trigger {job_id} not found.")
+                print(
+                    f"==\ncallback:\n{output}\n==\n",
+                )
                 await module.send_output(output, module_ids)
-                await current_job.add_to_outputs(output)
+                # await current_job.add_to_outputs(output)
+                await current_job.outputs.put(
+                    output
+                )  # Ajoute l'élément dans la file d'attente
+                print("==" * 4)
+                print(current_job.outputs)
 
             # Execute the module
-            await module.execute(
-                input_data,
-                setup_id,
-                callback,
-            )
+            await module.execute(input_data, setup_id, callback)
             await self.__stop_job(job_id)
 
         except ValueError as e:
@@ -144,7 +148,12 @@ class ModuleServicer(ModuleServiceServicer):
                 module_ids,
                 self.__start_job,
             )
-            async for output in self.job_manager.get_outputs(job_id):
+
+            # Get the current job
+            current_job: Job = self.job_manager.get_job(job_id)
+
+            async for output in current_job.get_outputs():
+                print(f"output here: {output} {self.agent_management.identity.id}")
                 output_struct = json_format.Parse(
                     text=json.dumps(output.model_dump()),
                     message=struct_pb2.Struct(),  # pylint: disable=no-member

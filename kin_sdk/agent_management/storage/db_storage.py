@@ -84,8 +84,8 @@ class DBStorage(BaseStorage):
                 result = await db.query(
                     "RETURN (SELECT * FROM type::table('setups') WHERE kin_id=type::thing($kid) AND id=type::thing($setup))[0]",
                     {
-                        "setup": f"setups:{setup_id}",
-                        "kid": f"kins:{kin_id}",
+                        "setup": f"{setup_id}",
+                        "kid": f"{kin_id}",
                     },
                 )
                 result = result[0].get("result", None)

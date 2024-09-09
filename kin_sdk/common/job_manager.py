@@ -13,6 +13,7 @@ from enum import Enum
 from typing import (
     Annotated,
     Any,
+    AsyncGenerator,
     AsyncIterator,
     Callable,
     Coroutine,
@@ -21,7 +22,6 @@ from typing import (
     Optional,
     Union,
 )
-from concurrent.futures import ThreadPoolExecutor
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -109,10 +109,9 @@ class Job(BaseModel):
     status: JobStatus = Field(
         JobStatus.STARTING, description="The current status of the job"
     )
-    task: asyncio.Future = Field(default_factory=asyncio.Future)
-
+    task: Annotated[asyncio.Future, Field(default_factory=asyncio.Future)]
     outputs: Annotated[asyncio.Queue, Field(default_factory=asyncio.Queue)]
-    stop_event: threading.Event = Field(default_factory=threading.Event)
+    stop_event: Annotated[asyncio.Event, Field(default_factory=asyncio.Event)]
 
     async def add_to_outputs(self, item: BaseModel) -> Coroutine[Any, Any, None]:
         """
@@ -120,14 +119,15 @@ class Job(BaseModel):
 
         :param item: The item to be added to the outputs.
         """
+        print(f"Adding item to outputs: {item}")
         await self.outputs.put(item)  # pylint: disable=no-member
 
     async def stop_outputs(self) -> Coroutine[Any, Any, None]:
         """
         Signals the termination of the job's output stream.
         """
-        self.stop_event.set()  # pylint: disable=no-member
-        await self.outputs.put(None)  # pylint: disable=no-member # Sentinel value
+        self.stop_event.set()
+        await self.outputs.put(None)  # Sentinel value
 
     async def get_outputs(self) -> AsyncIterator[BaseModel]:
         """
@@ -135,8 +135,10 @@ class Job(BaseModel):
 
         :return: An iterator yielding output items.
         """
-        while not self.stop_event.is_set():  # pylint: disable=no-member
+        while not self.stop_event.is_set():
+            print("Waiting for outputs...")
             item: Union[BaseModel, None] = await self.outputs.get()
+            print(f"Got item from outputs: {item}")
             if item is None:  # Check for sentinel value
                 break
             yield item
@@ -151,7 +153,6 @@ class JobManager:
 
     def __init__(self, max_workers: int = 10):
         self.jobs: Dict[str, Job] = ConcurrentDict()
-        self.executor = ThreadPoolExecutor(max_workers=max_workers)
         self.lock = threading.Lock()
 
     async def start_job(
@@ -176,12 +177,12 @@ class JobManager:
         :return: The ID of the newly created job.
         """
         job_id = f"jobs:{uuid.uuid4().hex}"
-        start_event = threading.Event()
+        start_event = asyncio.Event()
 
         async def wrapped_func():
-            await asyncio.get_event_loop().run_in_executor(
-                None, start_event.wait
-            )  # Wait for the job to be stored
+            print("Waiting for start event...")
+            await start_event.wait()  # Wait for the job to be stored
+            print("Start event set, running job function...")
             return await func(job_id, *args, **kwargs)
 
         try:
@@ -193,7 +194,7 @@ class JobManager:
                 status=JobStatus.STARTING,
                 task=asyncio.create_task(wrapped_func()),
                 outputs=asyncio.Queue(),
-                stop_event=threading.Event(),
+                stop_event=asyncio.Event(),
             )
             self.jobs[job_id] = job
             start_event.set()  # Signaler que le job est stocké
@@ -210,18 +211,16 @@ class JobManager:
         """
         return self.jobs.get(job_id, None)
 
-    def get_outputs(self, job_id: str) -> AsyncIterator[BaseModel]:
+    async def get_outputs(self, job_id: str) -> AsyncGenerator[BaseModel, None]:
         """
-        Retrieves the outputs of a job by its ID.
+        Générateur asynchrone pour lire les éléments de la file d'attente des outputs d'un job.
 
-        :param job_id: The ID of the job.
-        :return: An iterator of job outputs.
-        :raises ValueError: If the job is not found.
+        :param job_id: L'ID du job.
+        :yield: Les éléments de la file d'attente des outputs.
         """
-        if job_id in self.jobs:
-            return self.jobs.get(job_id).get_outputs()
-        else:
-            raise ValueError(f"Job with id {job_id} not found")
+        job = self.get_job(job_id)
+        async for output in job.get_outputs():
+            yield output
 
     async def stop_outputs(self, job_id: str) -> Coroutine[Any, Any, None]:
         """
@@ -230,6 +229,7 @@ class JobManager:
         :param job_id: The ID of the job.
         :raises ValueError: If the job is not found.
         """
+        print("Stopping outputs...")
         if job_id in self.jobs:
             await self.jobs.get(job_id).stop_outputs()
             return None
@@ -284,6 +284,3 @@ class JobManager:
         if wait:
             # Wait for all jobs to complete
             await asyncio.gather(*(job.task for job in self.jobs.values()))
-
-        # Shutdown the executor
-        self.executor.shutdown(wait=wait)

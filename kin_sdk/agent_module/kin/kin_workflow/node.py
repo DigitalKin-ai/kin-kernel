@@ -8,7 +8,7 @@ updating data.
 
 import asyncio
 import datetime
-from typing import Any, Dict, List, Callable, Optional
+from typing import Any, Awaitable, Dict, List, Callable, Optional
 
 from pydantic import BaseModel, Field
 
@@ -153,7 +153,9 @@ class Node:
                 inputs[input_data.label] = input_data.value
         return inputs
 
-    async def execute(self, module_callback: Callable) -> Dict[str, OutputData]:
+    async def execute(
+        self, module_callback: Callable[[Dict[str, Any]], Awaitable[None]]
+    ) -> Dict[str, OutputData]:
         """
         Executes the node with the given input data.
 

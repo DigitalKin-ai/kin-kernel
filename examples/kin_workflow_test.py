@@ -3,10 +3,8 @@ TODO: sphinx docstring
 """
 
 # import json
-# from typing import Union
-import time
 from kin_sdk.agent_module import KinWorkflow
-from kin_sdk.agent_module.kin.kin_workflow.kin import WorkflowInput, WorkflowOutput
+from kin_sdk.grpc_system.module_server import ModuleServer
 
 
 # method to load json file from /examples/data/setup_example.json
@@ -19,9 +17,9 @@ from kin_sdk.agent_module.kin.kin_workflow.kin import WorkflowInput, WorkflowOut
 #         return None
 
 
-def callback(output: WorkflowOutput):
-    """TODO sphinx docstring"""
-    print("callback: ", output)
+# def callback(output: WorkflowOutput):
+#     """TODO sphinx docstring"""
+#     print("callback: ", output)
 
 
 def main():
@@ -37,21 +35,19 @@ def main():
     # print(test3)
     # print(test4)
 
-    # assert "a" == "b", "a is not equal to b"
-    kin_workflow = KinWorkflow(
-        name="First Kin Workflow",
-        description="This is the first Kin workflow.",
+    kin_server = ModuleServer(
+        module_class=KinWorkflow,
         module_id="fibonacci",
         module_address="localhost",
         module_port=50050,
         registry_address="localhost:50051",
     )
-    kin_workflow.start()
-    time.sleep(5)
-    input_data = WorkflowInput(trigger_id="fibonacci_trigger")
-    setup_id = "setups:fibonacci_setup"
+    kin_server.asyncio_serve()
 
-    kin_workflow.execute(input_data, setup_id, callback)
+    # input_data = WorkflowInput(trigger_id="fibonacci_trigger")
+    # setup_id = "setups:fibonacci_setup"
+
+    # kin_workflow.execute(input_data, setup_id, callback)
 
 
 if __name__ == "__main__":

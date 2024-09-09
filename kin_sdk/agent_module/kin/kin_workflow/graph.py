@@ -9,7 +9,7 @@ their inputs and outputs.
 import datetime
 import asyncio
 import threading
-from typing import Any, Dict, List, Callable, Union
+from typing import Any, Awaitable, Dict, List, Callable, Union
 from queue import Queue
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -240,7 +240,9 @@ class GraphExecutor:
             for input in input_data.values()
         )
 
-    async def async_execute_node(self, node_id: str, module_callback: Callable) -> None:
+    async def async_execute_node(
+        self, node_id: str, module_callback: Callable[[Dict[str, Any]], Awaitable[None]]
+    ) -> None:
         """
         Executes a single node and updates its successors.
 
@@ -320,7 +322,11 @@ class GraphExecutor:
         """
         asyncio.run(self.async_execute_node(*args, **kwargs))
 
-    def execute(self, initial_node: str, module_callback: Callable) -> None:
+    def execute(
+        self,
+        initial_node: str,
+        module_callback: Callable[[Dict[str, Any]], Awaitable[None]],
+    ) -> None:
         """
         Executes the graph starting from the initial node.
 
@@ -379,7 +385,7 @@ class GraphExecutor:
                         future.result()
                     except Exception as e:  # pylint: disable=broad-except
                         print(
-                            f"{datetime.datetime.now()} - Error executing node {node_id}: {e}"
+                            f"{datetime.datetime.now()} - Error executing node [{node_id}]: {e}"
                         )
                         self._error_occurred.set()
                         break
