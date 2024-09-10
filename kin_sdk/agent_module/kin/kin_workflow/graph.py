@@ -283,11 +283,11 @@ class GraphExecutor:
             if not initial_trigger and (
                 not all_values_are_valid or not any_value_has_been_updated
             ):
-                print(f"all_values_are_valid: {all_values_are_valid}")
-                print(f"any_value_has_been_updated: {any_value_has_been_updated}")
-                print(
-                    f"{datetime.datetime.now()} - Skipping node {node_id} due to input conditions."
-                )
+                # print(f"all_values_are_valid: {all_values_are_valid}")
+                # print(f"any_value_has_been_updated: {any_value_has_been_updated}")
+                # print(
+                #     f"{datetime.datetime.now()} - Skipping node {node_id} due to input conditions."
+                # )
                 return
 
             with self._lock:
@@ -296,7 +296,7 @@ class GraphExecutor:
 
                 # Propagate the output data to the successors
                 for successor in self._graph.successors(node_id):
-                    print(f"\t-> node_id: {node_id} has successor: {successor}")
+                    # print(f"\t-> node_id: {node_id} has successor: {successor}")
                     self.update_successor_inputs(
                         successor,
                         output_data,
@@ -306,7 +306,7 @@ class GraphExecutor:
                     )
                     # Automatically adding all successors to the execution queue
                     self._execution_queue.put(successor)
-                    print(f"\t\t- Adding successor {successor} to the execution queue.")
+                    # print(f"\t\t- Adding successor {successor} to the execution queue.")
 
         except Exception as e:  # pylint: disable=broad-except
             print(f"{datetime.datetime.now()} - Error executing node {node_id}: {e}")
@@ -336,9 +336,9 @@ class GraphExecutor:
         """
         # Start with the initial node
         self._execution_queue.put(initial_node)
-        print(
-            f"{datetime.datetime.now()} - Adding initial node {initial_node} to execution queue."
-        )
+        # print(
+        #     f"{datetime.datetime.now()} - Adding initial node {initial_node} to execution queue."
+        # )
 
         # Execute the nodes in parallel using a thread pool
         with ThreadPoolExecutor(max_workers=10) as executor:  # ! TODO thread number
@@ -364,19 +364,19 @@ class GraphExecutor:
                 while not self._execution_queue.empty():
                     # Get the next node to execute
                     node_id: Union[str, None] = self._execution_queue.get()
-                    print(
-                        f"{datetime.datetime.now()} - Getting node {node_id} from execution queue."
-                    )
+                    # print(
+                    #     f"{datetime.datetime.now()} - Getting node {node_id} from execution queue."
+                    # )
                     # Submit the node for execution
                     if node_id is not None:
                         future = executor.submit(
                             self.execute_node, node_id, module_callback
                         )
                         futures[future] = node_id
-                    print(
-                        f"{datetime.datetime.now()} - {node_id}",
-                        [f"{nid}: {self._nodes[nid].status}" for nid in self._nodes],
-                    )
+                    # print(
+                    #     f"{datetime.datetime.now()} - {node_id}",
+                    #     [f"{nid}: {self._nodes[nid].status}" for nid in self._nodes],
+                    # )
 
                 # Check completed futures
                 for future in as_completed(futures):

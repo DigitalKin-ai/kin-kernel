@@ -167,7 +167,7 @@ class Node:
         """
         try:
             self._status = "running"
-            print(f"Executing node {self._module_type}:{self._node_id}")
+            # print(f"Executing node {self._module_type}:{self._node_id}")
             module_response = await module_callback(
                 self._module_id, self.values, self._node_id
             )

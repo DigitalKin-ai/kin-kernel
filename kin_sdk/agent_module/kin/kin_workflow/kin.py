@@ -251,7 +251,7 @@ class KinWorkflow(BaseKin):
             print("--" * 10)
             async for response in response_iterator:
                 response_type = response.get("response_type", None)
-                print(f"response_type: {response_type}")
+                # print(f"response_type: {response_type}")
                 if (
                     response_type is not None
                     and response_type == "START_RESPONSE_TYPE_OUTPUT"
@@ -259,9 +259,9 @@ class KinWorkflow(BaseKin):
                     output_response = response.get("output_response", {})
                     result = output_response.get("output", {})
                     break
-            print("--" * 10)
             print(WorkflowOutput(done=False))
             await callback(WorkflowOutput(done=False))
+            print("--" * 10)
             return result
 
         self._graphs_executor.execute(initial_node, module_callback)

@@ -43,6 +43,10 @@ from kin_sdk.validation.grpc_decorators import (
 )
 
 
+class InitModel(BaseModel):
+    start: bool = False
+
+
 class ModuleServicer(ModuleServiceServicer):
     """TODO: Sphinx docstring"""
 
@@ -51,14 +55,14 @@ class ModuleServicer(ModuleServiceServicer):
     ):
         self.module_class = module_class
         self.agent_management = agent_management
-        self.job_manager = JobManager(max_workers=10)
+        self.job_manager = JobManager()
         self.rooms: Rooms = Rooms()  # ! TODO: remove expired rooms
         self.tracer = trace.get_tracer(self.module_class.__class__.__name__)
         self.lock = threading.Lock()
 
-    async def __start_job(
+    async def _start_job(
         self,
-        job_id: str,
+        job: Job,
     ) -> None:
         """
         Starts the job in a separate thread.
@@ -66,58 +70,58 @@ class ModuleServicer(ModuleServiceServicer):
 
         try:
             # Update job status to STARTING
-            self.job_manager.update_job_status(job_id, JobStatus.STARTING)
+            update_status = self.job_manager.update_status(job.id, JobStatus.STARTING)
+
+            if not update_status:
+                raise ValueError(f"😵 Trigger {job.id} not found.")
+            # self.job_manager.update_job_status(job_id, JobStatus.STARTING)
 
             # Get job information
-            current_job: Job = self.job_manager.get_job(job_id)
-            module = current_job.module
-            input_data = current_job.input_data
-            setup_id = current_job.setup_id
-            module_ids = current_job.module_ids
+            # current_job: Job = self.job_manager.get_job(job_id)
+            module = job.module
+            input_data = job.input_data
+            setup_id = job.setup_id
+            module_ids = job.module_ids
 
             # Start the module
-            await module.start(setup_id=setup_id)
+
+            await job.output_queue.put(InitModel(start=True))
 
             # Create a callback that captures the module_ids
             async def callback(output: BaseModel) -> None:
-                if not self.job_manager.update_job_status(job_id, JobStatus.PROCESSING):
-                    raise ValueError(f"😵 Trigger {job_id} not found.")
-                print(
-                    f"==\ncallback:\n{output}\n==\n",
-                )
+                if not self.job_manager.update_status(job.id, JobStatus.PROCESSING):
+                    raise ValueError(f"😵 Trigger {job.id} not found.")
                 await module.send_output(output, module_ids)
                 # await current_job.add_to_outputs(output)
-                await current_job.outputs.put(
+                await job.output_queue.put(
                     output
                 )  # Ajoute l'élément dans la file d'attente
-                print("==" * 4)
-                print(current_job.outputs)
 
             # Execute the module
             await module.execute(input_data, setup_id, callback)
-            await self.__stop_job(job_id)
+            await self._stop_job(job)
 
         except ValueError as e:
             logger.error("😵 Exception Error: %s", e)
-            self.job_manager.update_job_status(job_id, JobStatus.FAILED)
+            self.job_manager.update_status(job.id, JobStatus.FAILED)
 
-    async def __stop_job(
-        self, job_id: str, *args, **kwargs  # pylint: disable=unused-argument
+    async def _stop_job(
+        self, job: Job, *args, **kwargs  # pylint: disable=unused-argument
     ) -> None:
         try:
             # Retrieve the current job and module
-            current_job: Job = self.job_manager.get_job(job_id)
-            module = current_job.module
+            # current_job: Job = self.job_manager.get_job(job_id)
+            module = job.module
 
             # Stop the module
             await module.stop()
 
             # Update the job status
-            self.job_manager.update_job_status(job_id, JobStatus.STOPPED)
-            await self.job_manager.stop_outputs(job_id)
+            self.job_manager.update_status(job.id, JobStatus.STOPPED)
+            await self.job_manager.stop_job(job.id)
         except ValueError as e:
             logger.error("😵 Exception Error: %s", e)
-            self.job_manager.update_job_status(job_id, JobStatus.FAILED)
+            self.job_manager.update_status(job.id, JobStatus.FAILED)
 
     @validate_stream_request
     async def StartModule(  # pylint: disable=arguments-renamed
@@ -142,18 +146,24 @@ class ModuleServicer(ModuleServiceServicer):
 
             # Create and Start the job
             job_id = await self.job_manager.start_job(
-                self.module_class(agent_management=self.agent_management),
-                input_data,
-                setup_id,
-                module_ids,
-                self.__start_job,
+                module=self.module_class(agent_management=self.agent_management),
+                input_data=input_data,
+                setup_id=setup_id,
+                module_ids=module_ids,
+                function=self._start_job,
             )
 
             # Get the current job
-            current_job: Job = self.job_manager.get_job(job_id)
+            # current_job: Job = self.job_manager.get_job(job_id)
 
-            async for output in current_job.get_outputs():
+            async for output in self.job_manager.output(job_id):
+                # async for output in current_job.get_outputs():
+                # check if the output is a InitModel
                 print(f"output here: {output} {self.agent_management.identity.id}")
+                if isinstance(output, InitModel):
+                    print("InitModel")
+                    continue
+                print("yield")
                 output_struct = json_format.Parse(
                     text=json.dumps(output.model_dump()),
                     message=struct_pb2.Struct(),  # pylint: disable=no-member
@@ -170,7 +180,7 @@ class ModuleServicer(ModuleServiceServicer):
                     module_id=self.agent_management.identity.id,  # ? is there any other and better way to get the module id
                 )
             # Mark the job as completed
-            self.job_manager.update_job_status(job_id, JobStatus.SUCCESS)
+            self.job_manager.update_status(job_id, JobStatus.SUCCESS)
             return
         except ValueError as e:
             context.set_code(grpc.StatusCode.INTERNAL)

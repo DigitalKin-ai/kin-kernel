@@ -3,7 +3,6 @@
 import random
 import asyncio
 from typing import Any, Callable, Dict, Optional
-from queue import Queue
 from pydantic import BaseModel
 
 
@@ -16,7 +15,7 @@ class Task(BaseModel):
     function: Callable[..., Any]
     args: tuple
     kwargs: dict
-    output_queue: Queue
+    output_queue: asyncio.Queue
 
     class Config:
         """TODO"""
@@ -31,7 +30,6 @@ class TaskManager:
 
     def __init__(self):
         self.tasks: Dict[int, Task] = {}
-        self.loop = asyncio.get_event_loop()
         self.task_counter = 0
 
     async def start_task(self, function: Callable[..., Any], *args, **kwargs) -> int:
@@ -40,7 +38,7 @@ class TaskManager:
         """
         self.task_counter += 1
         task_id = self.task_counter
-        output_queue = Queue()
+        output_queue = asyncio.Queue()
         task = Task(
             id=task_id,
             function=function,
@@ -57,10 +55,9 @@ class TaskManager:
         """
         TODO: sphinx docstring
         """
-        print(f"task.args: {task.args}")
-        print(f"task.kwargs: {task.kwargs}")
-        await task.function(task.output_queue)
-        task.output_queue.put(None)  # Indicate task completion
+        await task.function(task, *task.args, **task.kwargs)
+        await task.output_queue.put(None)  # Indicate task completion
+        await self.delete_task(task.id)  # Delete task after completion
 
     async def stop_task(self, task_id: int):
         """
@@ -68,6 +65,15 @@ class TaskManager:
         """
         if task_id in self.tasks:
             del self.tasks[task_id]
+            self.task_counter -= 1
+
+    async def delete_task(self, task_id: int):
+        """
+        TODO: sphinx docstring
+        """
+        if task_id in self.tasks:
+            del self.tasks[task_id]
+            self.task_counter -= 1
 
     async def get_task(self, task_id: int) -> Optional[Task]:
         """
@@ -84,20 +90,22 @@ class TaskManager:
 
         output_queue = self.tasks[task_id].output_queue
         while True:
-            item = await self.loop.run_in_executor(None, output_queue.get)
+            item = await output_queue.get()
             if item is None:
                 break
             yield item
 
 
-async def example_function(output_queue: Queue, *args, **kwargs):
+async def example_function(task: Task, *args, **kwargs):
     """
     TODO: sphinx docstring
     """
     # loop random size between 3 and 7
     for i in range(random.randint(3, 7)):
         await asyncio.sleep(1)
-        output_queue.put(f"Output {i} from task with args: {args}, kwargs: {kwargs}")
+        await task.output_queue.put(
+            f"Output {i} from task with args: {args}, kwargs: {kwargs}"
+        )
 
 
 async def task_runner(manager: TaskManager, task_id: int):
@@ -116,8 +124,11 @@ async def main():
 
     # Start three tasks
     task_ids = []
-    for _ in range(3):
-        task_id = await manager.start_task(example_function, 1, 2, 3, key="value")
+    for i in range(3):
+        if i == 1:
+            task_id = await manager.start_task(example_function, 1, 2, 3)
+        else:
+            task_id = await manager.start_task(example_function, 1, 2, 3, key="value")
         print(f"Started task with id: {task_id}")
         task_ids.append(task_id)
 
