@@ -38,13 +38,8 @@ from kin_sdk.common.logger import logger
 from kin_sdk.common.job_manager import JobManager, Job, JobStatus
 from kin_sdk.models.rooms import Rooms
 from kin_sdk.validation.grpc_decorators import (
-    validate_stream_request,
     validate_grpc_request,
 )
-
-
-class InitModel(BaseModel):
-    start: bool = False
 
 
 class ModuleServicer(ModuleServiceServicer):

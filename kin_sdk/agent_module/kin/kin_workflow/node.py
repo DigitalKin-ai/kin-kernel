@@ -167,14 +167,12 @@ class Node:
         """
         try:
             self._status = "running"
-            # print(f"Executing node {self._module_type}:{self._node_id}")
             module_response = await module_callback(
                 self._module_id, self.values, self._node_id
             )
 
             # Simulate some work being done
             await asyncio.sleep(0.5)  # ! TODO: remove this line
-            print(f"\t - module_response: {module_response}")
             for label, value in module_response.items():
                 self.update_output(label, value)
 

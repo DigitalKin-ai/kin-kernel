@@ -1,5 +1,5 @@
 """
-Module for executing a directed graph of nodes.
+Module for executing a directed graph of nodes asynchronously.
 
 This module includes the GraphExecutor class, which represents a directed graph
 of nodes and provides methods for executing the nodes in parallel and updating
@@ -8,11 +8,8 @@ their inputs and outputs.
 
 import datetime
 import asyncio
-import threading
-from typing import Any, Awaitable, Dict, List, Callable, Union
+from typing import Any, Awaitable, Dict, List, Callable, Union, Tuple, Optional
 from queue import Queue
-
-# from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import networkx as nx
 
@@ -23,15 +20,16 @@ from kin_sdk.agent_module.kin.kin_workflow.node import InputData, Node, OutputDa
 
 class GraphExecutor:
     """
-    Executes a directed graph of nodes.
+    Executes a directed graph of nodes asynchronously.
     TODO: check all @property that I should remove to keep only the one that are really needed.
 
     Attributes:
-        graph (nx.DiGraph): The directed graph.
-        nodes (Dict[str, Node]): The nodes in the graph.
-        lock (threading.Lock): A lock to ensure thread safety.
-        error_occurred (threading.Event): An event to signal if an error occurred.
-        execution_queue (Queue): A queue to manage node execution order.
+        _graph (nx.DiGraph): The directed graph.
+        _nodes (Dict[str, Node]): The nodes in the graph.
+        _setups (Dict[str, Any]): The setups configuration.
+        _error_occurred (asyncio.Event): An event to signal if an error occurred.
+        _execution_queue (Queue): A queue to manage node execution order.
+        _lock (asyncio.Lock): A lock to ensure thread safety.
     """
 
     def __init__(self, graph: Dict[str, Any], setups: Dict[str, Any]):
@@ -40,7 +38,7 @@ class GraphExecutor:
         self._init_edges(graph["edges"])
         self._setups = setups
 
-        self._error_occurred = threading.Event()
+        self._error_occurred = asyncio.Event()
         self._execution_queue = Queue()
         self._lock = asyncio.Lock()
 
@@ -60,25 +58,15 @@ class GraphExecutor:
         return self._setups
 
     @property
-    def error_occurred(self) -> threading.Event:
-        """Get the error occurred event."""
-        return self._error_occurred
-
-    @property
     def execution_queue(self) -> Queue:
         """Get the execution queue."""
         return self._execution_queue
-
-    @property
-    def lock(self) -> threading.Lock:
-        """Get the lock for thread safety."""
-        return self._lock
 
     def _init_nodes(
         self, nodes: List[Dict[str, Any]], setups: Dict[str, Any]
     ) -> Dict[str, Node]:
         """
-        Initializes the nodes in the graph.
+        Initialize the nodes in the graph.
 
         Args:
             nodes (List[Dict[str, Any]]): The nodes to initialize.
@@ -86,6 +74,9 @@ class GraphExecutor:
 
         Returns:
             Dict[str, Node]: The initialized nodes.
+
+        Raises:
+            ValueError: If there's an error initializing nodes.
         """
         try:
             # Format the setups data
@@ -108,15 +99,17 @@ class GraphExecutor:
                 for node in nodes
             }
         except Exception as e:  # pylint: disable=broad-except
-            print(f"Error initializing nodes: {e}")
-            return {}
+            raise ValueError(f"Error initializing nodes: {e}") from e
 
     def _init_edges(self, edges: List[Dict[str, Any]]) -> None:
         """
-        Adds edges to the graph.
+        Add edges to the graph.
 
         Args:
             edges (List[Dict[str, Any]]): The edges to add.
+
+        Raises:
+            ValueError: If there's an error initializing edges.
         """
         try:
             for edge in edges:
@@ -141,17 +134,17 @@ class GraphExecutor:
                     ),
                 )
         except Exception as e:  # pylint: disable=broad-except
-            print(f"Error initializing edges: {e}")
+            raise ValueError(f"Error initializing edges: {e}") from e
 
-    def get_modules_nodes(self, module_type: ModuleType) -> List[str]:
+    def get_modules_nodes(self, module_type: ModuleType) -> List[Tuple[str, str]]:
         """
-        Returns nodes from a specific type from the graph.
+        Get nodes of a specific type from the graph.
 
         Args:
             module_type (ModuleType): The type of module to search for.
 
         Returns:
-            List[str]: The IDs of the found nodes.
+            List[Tuple[str, str]]: List of tuples containing node ID and module ID.
         """
         return [
             (node_id, node.module_id)
@@ -181,16 +174,17 @@ class GraphExecutor:
         edge_data_pred_succ: Union[Edge, None],
     ) -> None:
         """
-        Updates the inputs/target of a successor node based on the output/source of a predecessor node.
+        Update the inputs/target of a successor node based on the output/source of a predecessor node.
 
         Args:
             successor_id (str): The ID of the successor node.
             source_data (Dict[str, OutputData]): The output data from the predecessor node.
-            edge_data_pred_succ (Union[Edge, None]): The edge data connecting the predecessor node with successor.
+            edge_data_pred_succ (Optional[Edge]): The edge data connecting the predecessor node with successor.
         """
         if edge_data_pred_succ is None:
             print("No edge data")
             return
+
         successor: Union[Node, None] = self._nodes.get(successor_id, None)
         source_label = edge_data_pred_succ.get_source_label()
         target_label = edge_data_pred_succ.get_target_label()
@@ -203,9 +197,10 @@ class GraphExecutor:
                 successor.update_input(target_label, source_data[label].value)
                 break
 
-    def verify_input_values(self, input_data: Dict[str, InputData]) -> bool:
+    @staticmethod
+    def verify_input_values(input_data: Dict[str, InputData]) -> bool:
         """
-        Verifies if all inputs have values except for optional inputs.
+        Verify if all inputs have values except for optional inputs.
 
         Args:
             input_data (Dict[str, InputData]): The input data for the node.
@@ -217,17 +212,17 @@ class GraphExecutor:
             (input.value is not None or input.optional) for input in input_data.values()
         )
 
+    @staticmethod
     def verify_update_values(
-        self,
         input_data: Dict[str, InputData],
-        last_execution: Union[datetime.datetime, None],
+        last_execution: Optional[datetime.datetime],
     ) -> bool:
         """
-        Verifies if any nodes have been updated except for nodes that have never been executed.
+        Verify if any nodes have been updated except for nodes that have never been executed.
 
         Args:
             input_data (Dict[str, InputData]): The input data for the node.
-            last_execution (Union[datetime.datetime, None]): The timestamp of the last execution.
+            last_execution (Optional[datetime.datetime]): The timestamp of the last execution.
 
         Returns:
             bool: True if any nodes have been updated except for nodes that have never been executed, False otherwise.
@@ -245,68 +240,54 @@ class GraphExecutor:
         self, node_id: str, module_callback: Callable[[Dict[str, Any]], Awaitable[None]]
     ) -> None:
         """
-        Executes a single node and updates its successors.
+        Execute a single node and update its successors.
 
         Args:
             node_id (str): The ID of the node to execute.
             module_callback (Callable): The callback function to execute the module.
+
+        Raises:
+            ValueError: If the node is not found.
         """
-        node = self.nodes.get(node_id, None)
+        node = self._nodes.get(node_id, None)
         if node is None:
             raise ValueError(f"Node {node_id} not found.")
-        print(
-            f"\n\n----\n{datetime.datetime.now()} - Executing node {node.module_type}:{node_id}."
-        )
+
         # Construct input data
         input_data = {
             input.label: input for input in node.inputs if input.label is not None
         }
 
-        print("herer")
-
         # True if all inputs have values except for optional inputs, False otherwise.
         # Verify validity of inputs
         all_values_are_valid = self.verify_input_values(input_data)
-        print("herer2")
 
         # Verify if any nodes has been updated except for nodes that have never been executed
         # Verify if any change has occurred in the input data
         any_value_has_been_updated = self.verify_update_values(
             input_data, node.last_execution
         )
-        print("herer3")
 
         # Verify if it is the initial trigger node
         initial_trigger = (
             node.module_type == ModuleType.TRIGGER and node.last_execution is None
         )  # ! TODO: improve that
-        print("herer4")
 
         try:
             # Verify if it is not the initial trigger and if all inputs have values except for optional inputs
             # and if all nodes have been updated except for nodes that have never been executed
             # if not, skip the node
-            print("herer5")
             if not initial_trigger and (
                 not all_values_are_valid or not any_value_has_been_updated
             ):
-                print(f"all_values_are_valid: {all_values_are_valid}")
-                print(f"any_value_has_been_updated: {any_value_has_been_updated}")
-                print(
-                    f"{datetime.datetime.now()} - Skipping node {node_id} due to input conditions."
-                )
                 return
 
             async with self._lock:
-                print("herer6")
                 # Launch the node execution in a thread-safe manner and retrieve the output data
                 output_data = await node.execute(module_callback)
-                print("herer7")
 
                 # Propagate the output data to the successors
                 for successor in self._graph.successors(node_id):
-                    print("herer8")
-                    # print(f"\t-> node_id: {node_id} has successor: {successor}")
                     self.update_successor_inputs(
                         successor,
                         output_data,
@@ -315,23 +296,11 @@ class GraphExecutor:
                         ),
                     )
                     # Automatically adding all successors to the execution queue
-                    print("herer9")
                     self._execution_queue.put(successor)
-                    print(f"\t\t- Adding successor {successor} to the execution queue.")
 
         except Exception as e:  # pylint: disable=broad-except
             print(f"{datetime.datetime.now()} - Error executing node {node_id}: {e}")
             self._error_occurred.set()
-
-    def execute_node(self, *args, **kwargs) -> None:
-        """
-        Executes a single node.
-
-        Args:
-            *args: Variable length argument list.
-            **kwargs: Arbitrary keyword arguments.
-        """
-        asyncio.run(self.async_execute_node(*args, **kwargs))
 
     async def execute(
         self,
@@ -339,7 +308,7 @@ class GraphExecutor:
         module_callback: Callable[[Dict[str, Any]], Awaitable[None]],
     ) -> None:
         """
-        Executes the graph starting from the initial node.
+        Execute the graph starting from the initial node.
 
         Args:
             initial_node (str): The ID of the initial node to start execution from.
@@ -355,15 +324,13 @@ class GraphExecutor:
             # Check if an error occurred during execution
             if self._error_occurred.is_set():
                 break
-            print(
-                f"{datetime.datetime.now()} - max_concurrent_tasks: {len(tasks)}/{max_concurrent_tasks}"
-            )
+
             # Start new tasks if there's room and nodes in the queue
             while (
                 len(tasks) < max_concurrent_tasks and not self._execution_queue.empty()
             ):
                 node_id: Union[str, None] = self._execution_queue.get()
-                print(f"{datetime.datetime.now()} - node_id: {node_id}")
+                # print(f"{datetime.datetime.now()} - node_id: {node_id}")
                 if node_id is not None:
                     task = asyncio.create_task(
                         self.async_execute_node(node_id, module_callback)
