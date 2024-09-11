@@ -43,6 +43,13 @@ class ModuleServiceStub(object):
             GetModuleStatusRequest.SerializeToString, response_deserializer
             =digitalkin_dot_module_dot_v1_dot_monitoring__pb2.
             GetModuleStatusResponse.FromString)
+        self.GetModuleJobs = channel.unary_unary(
+            '/digitalkin.module.v1.ModuleService/GetModuleJobs',
+            request_serializer=
+            digitalkin_dot_module_dot_v1_dot_monitoring__pb2.
+            GetModuleJobsRequest.SerializeToString, response_deserializer=
+            digitalkin_dot_module_dot_v1_dot_monitoring__pb2.
+            GetModuleJobsResponse.FromString)
         self.GetModuleInput = channel.unary_unary(
             '/digitalkin.module.v1.ModuleService/GetModuleInput',
             request_serializer=
@@ -98,6 +105,13 @@ class ModuleServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    async def GetModuleJobs(self, request, context):
+        """GetModuleJobs
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     async def GetModuleInput(self, request, context):
         """GetModuleInput
         """
@@ -139,7 +153,13 @@ def add_ModuleServiceServicer_to_server(servicer, server):
         digitalkin_dot_module_dot_v1_dot_monitoring__pb2.
         GetModuleStatusRequest.FromString, response_serializer=
         digitalkin_dot_module_dot_v1_dot_monitoring__pb2.
-        GetModuleStatusResponse.SerializeToString), 'GetModuleInput': grpc.
+        GetModuleStatusResponse.SerializeToString), 'GetModuleJobs': grpc.
+        unary_unary_rpc_method_handler(servicer.GetModuleJobs,
+        request_deserializer=
+        digitalkin_dot_module_dot_v1_dot_monitoring__pb2.
+        GetModuleJobsRequest.FromString, response_serializer=
+        digitalkin_dot_module_dot_v1_dot_monitoring__pb2.
+        GetModuleJobsResponse.SerializeToString), 'GetModuleInput': grpc.
         unary_unary_rpc_method_handler(servicer.GetModuleInput,
         request_deserializer=
         digitalkin_dot_module_dot_v1_dot_information__pb2.
@@ -212,6 +232,19 @@ class ModuleService(object):
             GetModuleStatusResponse.FromString, options,
             channel_credentials, insecure, call_credentials, compression,
             wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    async def GetModuleJobs(request, target, options=(),
+        channel_credentials=None, call_credentials=None, insecure=False,
+        compression=None, wait_for_ready=None, timeout=None, metadata=None):
+        return grpc.experimental.unary_unary(request, target,
+            '/digitalkin.module.v1.ModuleService/GetModuleJobs',
+            digitalkin_dot_module_dot_v1_dot_monitoring__pb2.
+            GetModuleJobsRequest.SerializeToString,
+            digitalkin_dot_module_dot_v1_dot_monitoring__pb2.
+            GetModuleJobsResponse.FromString, options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready,
+            timeout, metadata)
 
     @staticmethod
     async def GetModuleInput(request, target, options=(),

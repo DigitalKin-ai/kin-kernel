@@ -83,20 +83,20 @@ class StartModuleResponse(_message.Message):
     def __init__(self, success: bool = ..., response_type: _Optional[_Union[StartResponseType, str]] = ..., connection: _Optional[_Union[ConnectionResponse, _Mapping]] = ..., input_response: _Optional[_Union[InputDataResponse, _Mapping]] = ..., output_response: _Optional[_Union[OutputDataResponse, _Mapping]] = ..., error: _Optional[_Union[ErrorResponse, _Mapping]] = ..., module_id: _Optional[str] = ...) -> None: ...
 
 class StopModuleRequest(_message.Message):
-    __slots__ = ["module_id"]
-    MODULE_ID_FIELD_NUMBER: _ClassVar[int]
-    module_id: str
-    def __init__(self, module_id: _Optional[str] = ...) -> None: ...
+    __slots__ = ["job_id"]
+    JOB_ID_FIELD_NUMBER: _ClassVar[int]
+    job_id: str
+    def __init__(self, job_id: _Optional[str] = ...) -> None: ...
 
 class StopModuleResponse(_message.Message):
-    __slots__ = ["message", "module_id", "success"]
+    __slots__ = ["job_id", "message", "success"]
+    JOB_ID_FIELD_NUMBER: _ClassVar[int]
     MESSAGE_FIELD_NUMBER: _ClassVar[int]
-    MODULE_ID_FIELD_NUMBER: _ClassVar[int]
     SUCCESS_FIELD_NUMBER: _ClassVar[int]
+    job_id: str
     message: str
-    module_id: str
     success: bool
-    def __init__(self, success: bool = ..., message: _Optional[str] = ..., module_id: _Optional[str] = ...) -> None: ...
+    def __init__(self, success: bool = ..., message: _Optional[str] = ..., job_id: _Optional[str] = ...) -> None: ...
 
 class RequestType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = []

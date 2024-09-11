@@ -106,6 +106,7 @@ def main():
                     "GetModuleInput",
                     "GetModuleOutput",
                     "GetModuleSetup",
+                    "GetModuleJobs",
                 ],
                 f"{base_path}/module_registry/v1/module_registry_service_pb2_grpc.py": [
                     "RegisterModule",

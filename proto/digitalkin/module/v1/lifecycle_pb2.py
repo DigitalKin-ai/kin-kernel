@@ -15,7 +15,7 @@ from google.protobuf import struct_pb2 as google_dot_protobuf_dot_struct__pb2
 from proto.validate import validate_pb2 as validate_dot_validate__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n$digitalkin/module/v1/lifecycle.proto\x12\x14\x64igitalkin.module.v1\x1a\x1cgoogle/protobuf/struct.proto\x1a\x17validate/validate.proto\"\x83\x02\n\x12StartModuleRequest\x12\x37\n\x05input\x18\x01 \x01(\x0b\x32\x17.google.protobuf.StructB\x08\xfa\x42\x05\xa2\x01\x02\x08\x01R\x05input\x12+\n\x08setup_id\x18\x02 \x01(\tB\x10\xfa\x42\rr\x0b\x10\x01:\x07setups:R\x07setupId\x12\x37\n\nmodule_ids\x18\x03 \x03(\tB\x18\xfa\x42\x15\x92\x01\x12\x08\x00\"\x0er\x0c\x10\x01:\x08modules:R\tmoduleIds\x12N\n\x0crequest_type\x18\x04 \x01(\x0e\x32!.digitalkin.module.v1.RequestTypeB\x08\xfa\x42\x05\x82\x01\x02\x10\x01R\x0brequestType\"C\n\x11StopModuleRequest\x12.\n\tmodule_id\x18\x01 \x01(\tB\x11\xfa\x42\x0er\x0c\x10\x01:\x08modules:R\x08moduleId\"j\n\x12\x43onnectionResponse\x12!\n\x07message\x18\x02 \x01(\tB\x07\xfa\x42\x04r\x02\x10\x01R\x07message\x12%\n\x07room_id\x18\x03 \x01(\tB\x07\xfa\x42\x04r\x02\x10\x01H\x00R\x06roomId\x88\x01\x01\x42\n\n\x08_room_id\"o\n\x11InputDataResponse\x12!\n\x07message\x18\x02 \x01(\tB\x07\xfa\x42\x04r\x02\x10\x01R\x07message\x12\x37\n\x05input\x18\x01 \x01(\x0b\x32\x17.google.protobuf.StructB\x08\xfa\x42\x05\xa2\x01\x02\x08\x01R\x05input\"\x99\x01\n\x12OutputDataResponse\x12!\n\x07message\x18\x02 \x01(\tB\x07\xfa\x42\x04r\x02\x10\x01R\x07message\x12\x39\n\x06output\x18\x01 \x01(\x0b\x32\x17.google.protobuf.StructB\x08\xfa\x42\x05\xa2\x01\x02\x08\x01R\x06output\x12%\n\x06job_id\x18\x03 \x01(\tB\x0e\xfa\x42\x0br\t\x10\x01:\x05jobs:R\x05jobId\"S\n\rErrorResponse\x12!\n\x07message\x18\x02 \x01(\tB\x07\xfa\x42\x04r\x02\x10\x01R\x07message\x12\x1f\n\x07\x64\x65tails\x18\x03 \x01(\tB\x05\xfa\x42\x02r\x00R\x07\x64\x65tails\"\x83\x04\n\x13StartModuleResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\x12V\n\rresponse_type\x18\x02 \x01(\x0e\x32\'.digitalkin.module.v1.StartResponseTypeB\x08\xfa\x42\x05\x82\x01\x02\x10\x01R\x0cresponseType\x12J\n\nconnection\x18\x03 \x01(\x0b\x32(.digitalkin.module.v1.ConnectionResponseH\x00R\nconnection\x12P\n\x0einput_response\x18\x04 \x01(\x0b\x32\'.digitalkin.module.v1.InputDataResponseH\x00R\rinputResponse\x12S\n\x0foutput_response\x18\x05 \x01(\x0b\x32(.digitalkin.module.v1.OutputDataResponseH\x00R\x0eoutputResponse\x12;\n\x05\x65rror\x18\x06 \x01(\x0b\x32#.digitalkin.module.v1.ErrorResponseH\x00R\x05\x65rror\x12\x31\n\tmodule_id\x18\x07 \x01(\tB\x0f\xfa\x42\x0cr\n:\x08modules:H\x01R\x08moduleId\x88\x01\x01\x42\t\n\x07\x63ontentB\x0c\n\n_module_id\"\x92\x01\n\x12StopModuleResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\x12!\n\x07message\x18\x02 \x01(\tB\x07\xfa\x42\x04r\x02\x10\x01R\x07message\x12\x31\n\tmodule_id\x18\x03 \x01(\tB\x0f\xfa\x42\x0cr\n:\x08modules:H\x00R\x08moduleId\x88\x01\x01\x42\x0c\n\n_module_id*\x8a\x01\n\x0bRequestType\x12\x18\n\x14REQUEST_TYPE_UNKNOWN\x10\x00\x12\x15\n\x11REQUEST_TYPE_SEND\x10\x01\x12\x15\n\x11REQUEST_TYPE_EXIT\x10\x02\x12\x19\n\x15REQUEST_TYPE_VALIDATE\x10\x03\x12\x18\n\x14REQUEST_TYPE_DESTROY\x10\x04*\xb6\x01\n\x11StartResponseType\x12\x1f\n\x1bSTART_RESPONSE_TYPE_UNKNOWN\x10\x00\x12\"\n\x1eSTART_RESPONSE_TYPE_CONNECTION\x10\x01\x12\x1d\n\x19START_RESPONSE_TYPE_INPUT\x10\x02\x12\x1e\n\x1aSTART_RESPONSE_TYPE_OUTPUT\x10\x03\x12\x1d\n\x19START_RESPONSE_TYPE_ERROR\x10\x04\x42\x9e\x01\n\x18\x63om.digitalkin.module.v1B\x0eLifecycleProtoH\x02P\x01\xa2\x02\x03\x44MX\xaa\x02\x14\x44igitalkin.Module.V1\xca\x02\x14\x44igitalkin\\Module\\V1\xe2\x02 Digitalkin\\Module\\V1\\GPBMetadata\xea\x02\x16\x44igitalkin::Module::V1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n$digitalkin/module/v1/lifecycle.proto\x12\x14\x64igitalkin.module.v1\x1a\x1cgoogle/protobuf/struct.proto\x1a\x17validate/validate.proto\"\x83\x02\n\x12StartModuleRequest\x12\x37\n\x05input\x18\x01 \x01(\x0b\x32\x17.google.protobuf.StructB\x08\xfa\x42\x05\xa2\x01\x02\x08\x01R\x05input\x12+\n\x08setup_id\x18\x02 \x01(\tB\x10\xfa\x42\rr\x0b\x10\x01:\x07setups:R\x07setupId\x12\x37\n\nmodule_ids\x18\x03 \x03(\tB\x18\xfa\x42\x15\x92\x01\x12\x08\x00\"\x0er\x0c\x10\x01:\x08modules:R\tmoduleIds\x12N\n\x0crequest_type\x18\x04 \x01(\x0e\x32!.digitalkin.module.v1.RequestTypeB\x08\xfa\x42\x05\x82\x01\x02\x10\x01R\x0brequestType\":\n\x11StopModuleRequest\x12%\n\x06job_id\x18\x01 \x01(\tB\x0e\xfa\x42\x0br\t\x10\x01:\x05jobs:R\x05jobId\"j\n\x12\x43onnectionResponse\x12!\n\x07message\x18\x02 \x01(\tB\x07\xfa\x42\x04r\x02\x10\x01R\x07message\x12%\n\x07room_id\x18\x03 \x01(\tB\x07\xfa\x42\x04r\x02\x10\x01H\x00R\x06roomId\x88\x01\x01\x42\n\n\x08_room_id\"o\n\x11InputDataResponse\x12!\n\x07message\x18\x02 \x01(\tB\x07\xfa\x42\x04r\x02\x10\x01R\x07message\x12\x37\n\x05input\x18\x01 \x01(\x0b\x32\x17.google.protobuf.StructB\x08\xfa\x42\x05\xa2\x01\x02\x08\x01R\x05input\"\x99\x01\n\x12OutputDataResponse\x12!\n\x07message\x18\x02 \x01(\tB\x07\xfa\x42\x04r\x02\x10\x01R\x07message\x12\x39\n\x06output\x18\x01 \x01(\x0b\x32\x17.google.protobuf.StructB\x08\xfa\x42\x05\xa2\x01\x02\x08\x01R\x06output\x12%\n\x06job_id\x18\x03 \x01(\tB\x0e\xfa\x42\x0br\t\x10\x01:\x05jobs:R\x05jobId\"S\n\rErrorResponse\x12!\n\x07message\x18\x02 \x01(\tB\x07\xfa\x42\x04r\x02\x10\x01R\x07message\x12\x1f\n\x07\x64\x65tails\x18\x03 \x01(\tB\x05\xfa\x42\x02r\x00R\x07\x64\x65tails\"\x83\x04\n\x13StartModuleResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\x12V\n\rresponse_type\x18\x02 \x01(\x0e\x32\'.digitalkin.module.v1.StartResponseTypeB\x08\xfa\x42\x05\x82\x01\x02\x10\x01R\x0cresponseType\x12J\n\nconnection\x18\x03 \x01(\x0b\x32(.digitalkin.module.v1.ConnectionResponseH\x00R\nconnection\x12P\n\x0einput_response\x18\x04 \x01(\x0b\x32\'.digitalkin.module.v1.InputDataResponseH\x00R\rinputResponse\x12S\n\x0foutput_response\x18\x05 \x01(\x0b\x32(.digitalkin.module.v1.OutputDataResponseH\x00R\x0eoutputResponse\x12;\n\x05\x65rror\x18\x06 \x01(\x0b\x32#.digitalkin.module.v1.ErrorResponseH\x00R\x05\x65rror\x12\x31\n\tmodule_id\x18\x07 \x01(\tB\x0f\xfa\x42\x0cr\n:\x08modules:H\x01R\x08moduleId\x88\x01\x01\x42\t\n\x07\x63ontentB\x0c\n\n_module_id\"\x86\x01\n\x12StopModuleResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\x12!\n\x07message\x18\x02 \x01(\tB\x07\xfa\x42\x04r\x02\x10\x01R\x07message\x12(\n\x06job_id\x18\x03 \x01(\tB\x0c\xfa\x42\tr\x07:\x05jobs:H\x00R\x05jobId\x88\x01\x01\x42\t\n\x07_job_id*\x8a\x01\n\x0bRequestType\x12\x18\n\x14REQUEST_TYPE_UNKNOWN\x10\x00\x12\x15\n\x11REQUEST_TYPE_SEND\x10\x01\x12\x15\n\x11REQUEST_TYPE_EXIT\x10\x02\x12\x19\n\x15REQUEST_TYPE_VALIDATE\x10\x03\x12\x18\n\x14REQUEST_TYPE_DESTROY\x10\x04*\xb6\x01\n\x11StartResponseType\x12\x1f\n\x1bSTART_RESPONSE_TYPE_UNKNOWN\x10\x00\x12\"\n\x1eSTART_RESPONSE_TYPE_CONNECTION\x10\x01\x12\x1d\n\x19START_RESPONSE_TYPE_INPUT\x10\x02\x12\x1e\n\x1aSTART_RESPONSE_TYPE_OUTPUT\x10\x03\x12\x1d\n\x19START_RESPONSE_TYPE_ERROR\x10\x04\x42\x9e\x01\n\x18\x63om.digitalkin.module.v1B\x0eLifecycleProtoH\x02P\x01\xa2\x02\x03\x44MX\xaa\x02\x14\x44igitalkin.Module.V1\xca\x02\x14\x44igitalkin\\Module\\V1\xe2\x02 Digitalkin\\Module\\V1\\GPBMetadata\xea\x02\x16\x44igitalkin::Module::V1b\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'digitalkin.module.v1.lifecycle_pb2', globals())
@@ -31,8 +31,8 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _STARTMODULEREQUEST.fields_by_name['module_ids']._serialized_options = b'\372B\025\222\001\022\010\000\"\016r\014\020\001:\010modules:'
   _STARTMODULEREQUEST.fields_by_name['request_type']._options = None
   _STARTMODULEREQUEST.fields_by_name['request_type']._serialized_options = b'\372B\005\202\001\002\020\001'
-  _STOPMODULEREQUEST.fields_by_name['module_id']._options = None
-  _STOPMODULEREQUEST.fields_by_name['module_id']._serialized_options = b'\372B\016r\014\020\001:\010modules:'
+  _STOPMODULEREQUEST.fields_by_name['job_id']._options = None
+  _STOPMODULEREQUEST.fields_by_name['job_id']._serialized_options = b'\372B\013r\t\020\001:\005jobs:'
   _CONNECTIONRESPONSE.fields_by_name['message']._options = None
   _CONNECTIONRESPONSE.fields_by_name['message']._serialized_options = b'\372B\004r\002\020\001'
   _CONNECTIONRESPONSE.fields_by_name['room_id']._options = None
@@ -57,26 +57,26 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _STARTMODULERESPONSE.fields_by_name['module_id']._serialized_options = b'\372B\014r\n:\010modules:'
   _STOPMODULERESPONSE.fields_by_name['message']._options = None
   _STOPMODULERESPONSE.fields_by_name['message']._serialized_options = b'\372B\004r\002\020\001'
-  _STOPMODULERESPONSE.fields_by_name['module_id']._options = None
-  _STOPMODULERESPONSE.fields_by_name['module_id']._serialized_options = b'\372B\014r\n:\010modules:'
-  _REQUESTTYPE._serialized_start=1578
-  _REQUESTTYPE._serialized_end=1716
-  _STARTRESPONSETYPE._serialized_start=1719
-  _STARTRESPONSETYPE._serialized_end=1901
+  _STOPMODULERESPONSE.fields_by_name['job_id']._options = None
+  _STOPMODULERESPONSE.fields_by_name['job_id']._serialized_options = b'\372B\tr\007:\005jobs:'
+  _REQUESTTYPE._serialized_start=1557
+  _REQUESTTYPE._serialized_end=1695
+  _STARTRESPONSETYPE._serialized_start=1698
+  _STARTRESPONSETYPE._serialized_end=1880
   _STARTMODULEREQUEST._serialized_start=118
   _STARTMODULEREQUEST._serialized_end=377
   _STOPMODULEREQUEST._serialized_start=379
-  _STOPMODULEREQUEST._serialized_end=446
-  _CONNECTIONRESPONSE._serialized_start=448
-  _CONNECTIONRESPONSE._serialized_end=554
-  _INPUTDATARESPONSE._serialized_start=556
-  _INPUTDATARESPONSE._serialized_end=667
-  _OUTPUTDATARESPONSE._serialized_start=670
-  _OUTPUTDATARESPONSE._serialized_end=823
-  _ERRORRESPONSE._serialized_start=825
-  _ERRORRESPONSE._serialized_end=908
-  _STARTMODULERESPONSE._serialized_start=911
-  _STARTMODULERESPONSE._serialized_end=1426
-  _STOPMODULERESPONSE._serialized_start=1429
-  _STOPMODULERESPONSE._serialized_end=1575
+  _STOPMODULEREQUEST._serialized_end=437
+  _CONNECTIONRESPONSE._serialized_start=439
+  _CONNECTIONRESPONSE._serialized_end=545
+  _INPUTDATARESPONSE._serialized_start=547
+  _INPUTDATARESPONSE._serialized_end=658
+  _OUTPUTDATARESPONSE._serialized_start=661
+  _OUTPUTDATARESPONSE._serialized_end=814
+  _ERRORRESPONSE._serialized_start=816
+  _ERRORRESPONSE._serialized_end=899
+  _STARTMODULERESPONSE._serialized_start=902
+  _STARTMODULERESPONSE._serialized_end=1417
+  _STOPMODULERESPONSE._serialized_start=1420
+  _STOPMODULERESPONSE._serialized_end=1554
 # @@protoc_insertion_point(module_scope)

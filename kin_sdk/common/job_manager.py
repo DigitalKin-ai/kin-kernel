@@ -29,13 +29,26 @@ class JobStatus(Enum):
     Enumeration of possible job statuses.
     """
 
-    STARTING = 0
-    PROCESSING = 1
-    CANCELED = 2
-    FAILED = 3
-    EXPIRED = 4
-    SUCCESS = 5
-    STOPPED = 6
+    UNKNOWN = 0
+    STARTING = 1
+    PROCESSING = 2
+    CANCELED = 3
+    FAILED = 4
+    EXPIRED = 5
+    SUCCESS = 6
+    STOPPED = 7
+
+
+class JobInfo(BaseModel):
+    """
+    Represents the status of a job.
+
+    :param job_id: The ID of the job.
+    :param job_status: The status of the job.
+    """
+
+    job_id: str
+    job_status: JobStatus
 
 
 class Job(BaseModel):
@@ -131,15 +144,48 @@ class JobManager:
         """
         await job.function(job, *job.args, **job.kwargs)
         await job.output_queue.put(None)  # Indicate task completion
-        await self.stop_job(job.id)  # Delete task after completion
+        try:
+            await self.stop_job(job.id)  # Delete task after completion
+        except ValueError:
+            pass
 
-    async def stop_job(self, job_id: str):
+    async def stop_job(self, job_id: str) -> Coroutine[Any, Any, None]:
         """
-        TODO: sphinx docstring
+        Stop and delete a processing job.
+
+        This method stop an async task associated to the job, update its status to STOPPED,
+        and remove it from the job list.
+
+        :param job_id: Unique ID of the job to stop.
+        :type job_id: str
+        :raises ValueError: If the job with the specified ID does not exist.
+        :return: None
         """
-        if job_id in self.jobs:
-            del self.jobs[job_id]
-            self.job_counter -= 1
+        if job_id not in self.jobs:
+            raise ValueError(f"Job with id {job_id} does not exist")
+
+        job = self.jobs[job_id]
+
+        # retrieve the current task
+        task = asyncio.current_task()
+        if task:
+            # cancel the task
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                # The task was successfully cancelled
+                pass
+
+        # Update the status of the job to STOPPED
+        job.update_status(JobStatus.STOPPED)
+
+        # Add a None element to the output queue to indicate the end of the output stream
+        await job.output_queue.put(None)
+
+        # Remove the job from the job list
+        del self.jobs[job_id]
+        self.job_counter -= 1
 
     def get_job(self, job_id: str) -> Optional[Job]:
         """
@@ -181,3 +227,14 @@ class JobManager:
             job.update_status(status)
             return True
         return False
+
+    def get_jobs_list(self) -> List[JobInfo]:
+        """
+        Retrieves a list of ids and status of all jobs.
+
+        :return: A dictionary containing the ids and status of all jobs.
+        """
+        return [
+            JobInfo(job_id=job_id, job_status=job.status)
+            for job_id, job in self.jobs.items()
+        ]

@@ -25,6 +25,9 @@ from proto.digitalkin.module.v1.lifecycle_pb2 import (
 from proto.digitalkin.module.v1.monitoring_pb2 import (
     GetModuleStatusRequest,
     GetModuleStatusResponse,
+    GetModuleJobsRequest,
+    GetModuleJobsResponse,
+    JobInfo,
 )
 from proto.digitalkin.module.v1.information_pb2 import (
     GetModuleInputRequest,
@@ -39,6 +42,7 @@ from kin_sdk.common.job_manager import JobManager, Job, JobStatus
 from kin_sdk.models.rooms import Rooms
 from kin_sdk.validation.grpc_decorators import (
     validate_grpc_request,
+    validate_stream_request,
 )
 
 
@@ -85,7 +89,6 @@ class ModuleServicer(ModuleServiceServicer):
 
             # Create a callback that captures the module_ids
             async def callback(output: BaseModel) -> None:
-                print(f"received output: {output}")
                 if not self.job_manager.update_status(job.id, JobStatus.PROCESSING):
                     raise ValueError(f"😵 Trigger {job.id} not found.")
                 await module.send_output(output, module_ids)
@@ -93,12 +96,9 @@ class ModuleServicer(ModuleServiceServicer):
                 await job.output_queue.put(
                     output
                 )  # Ajoute l'élément dans la file d'attente
-                print(f"output added to queue: {output}")
 
-            print(f"🚀 Starting the module {module.name}")
             # Execute the module
             await module.execute(input_data, setup_id, callback)
-            print(f"🛑 Stopping the module {module.name}")
             await self._stop_job(job)
 
         except ValueError as e:
@@ -123,19 +123,14 @@ class ModuleServicer(ModuleServiceServicer):
             logger.error("😵 Exception Error: %s", e)
             self.job_manager.update_status(job.id, JobStatus.FAILED)
 
-    # @validate_stream_request
+    @validate_stream_request
     async def StartModule(  # pylint: disable=arguments-renamed
-        self, request_iterator: StartModuleRequest, context: grpc.aio.ServicerContext
+        self, request: StartModuleRequest, context: grpc.aio.ServicerContext
     ) -> AsyncGenerator[StartModuleResponse, Any]:
         """
         https://medium.com/@iamdeepaksinghh/create-a-real-time-chat-service-using-grpc-in-python-fc63127d570c
         """
         try:
-            request = None
-            async for req in request_iterator:
-                print(f"req: {req}")
-                request = req
-                break
 
             # Convert the request to a dictionary
             json_request = json_format.MessageToDict(
@@ -163,13 +158,6 @@ class ModuleServicer(ModuleServiceServicer):
             # current_job: Job = self.job_manager.get_job(job_id)
 
             async for output in self.job_manager.output(job_id):
-                # async for output in current_job.get_outputs():
-                # check if the output is a InitModel
-                print(f"output here: {output} {self.agent_management.identity.id}")
-                # if isinstance(output, InitModel):
-                #     print("InitModel")
-                #     continue
-                # print("yield")
                 output_struct = json_format.Parse(
                     text=json.dumps(output.model_dump()),
                     message=struct_pb2.Struct(),  # pylint: disable=no-member
@@ -201,10 +189,42 @@ class ModuleServicer(ModuleServiceServicer):
             )
             return
 
+    @validate_grpc_request
     async def StopModule(
         self, request: StopModuleRequest, context: grpc.aio.ServicerContext
     ) -> StopModuleResponse:
-        logger.info("Stop module Not implemented")
+        try:
+            # Extract the job_id from the request
+            job_id = request.job_id
+
+            # Validate the job_id
+            if not job_id:
+                raise ValueError("😵 Job ID is required.")
+
+            # Get the current job
+            current_job = self.job_manager.get_job(job_id)
+            # Check if the job is not found
+            if current_job is None:
+                raise ValueError("😵 Job ID is not found.")
+
+            # Stop the job
+            await self._stop_job(current_job)
+            return StopModuleResponse(
+                success=True,
+                message=f"Job ID {job_id} has been stopped.",
+                job_id=job_id,
+            )
+
+        except ValueError as e:
+            logger.error("Exception Error: %s", e)
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(f"😵 Impossible to stop the job: {str(e)}")
+
+            return StopModuleResponse(
+                success=False,
+                message=f"😵 Impossible to stop the job: {str(e)}",
+                job_id=job_id,
+            )
 
     @validate_grpc_request
     async def GetModuleStatus(
@@ -243,6 +263,43 @@ class ModuleServicer(ModuleServiceServicer):
                 success=False,
                 status=JobStatus.FAILED.name,
                 job_id=None,
+            )
+
+    @validate_grpc_request
+    async def GetModuleJobs(
+        self,
+        _request: GetModuleJobsRequest,
+        context: grpc.aio.ServicerContext,
+    ) -> GetModuleJobsResponse:
+        try:
+
+            # Retrieve the job
+            jobs = self.job_manager.get_jobs_list()
+            print(f"jobs: {jobs}")
+            if len(jobs) > 0:
+                print(f"jobs: {jobs[0].job_id}")
+                print(f"jobs: {jobs[0].job_status}")
+                print(f"jobs: {jobs[0].job_status.value}")
+                print(f"jobs: {jobs[0].job_status.name}")
+            response_jobs = [
+                JobInfo(job_id=job.job_id, job_status=job.job_status.value)
+                for job in jobs
+            ]
+
+            # Return the job status
+            return GetModuleJobsResponse(
+                success=True,
+                jobs=response_jobs,
+            )
+
+        except ValueError as e:
+            logger.error("Exception Error: %s", e)
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(str(e))
+
+            return GetModuleJobsResponse(
+                success=False,
+                jobs=[],
             )
 
     async def GetModuleInput(
