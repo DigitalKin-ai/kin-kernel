@@ -11,8 +11,7 @@ import asyncio
 import threading
 from typing import Any, Awaitable, Dict, List, Callable, Union
 from queue import Queue
-
-# from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import networkx as nx
 
@@ -42,7 +41,7 @@ class GraphExecutor:
 
         self._error_occurred = threading.Event()
         self._execution_queue = Queue()
-        self._lock = asyncio.Lock()
+        self._lock = threading.Lock()
 
     @property
     def graph(self) -> nx.DiGraph:
@@ -262,50 +261,41 @@ class GraphExecutor:
             input.label: input for input in node.inputs if input.label is not None
         }
 
-        print("herer")
-
         # True if all inputs have values except for optional inputs, False otherwise.
         # Verify validity of inputs
         all_values_are_valid = self.verify_input_values(input_data)
-        print("herer2")
 
         # Verify if any nodes has been updated except for nodes that have never been executed
         # Verify if any change has occurred in the input data
         any_value_has_been_updated = self.verify_update_values(
             input_data, node.last_execution
         )
-        print("herer3")
 
         # Verify if it is the initial trigger node
         initial_trigger = (
             node.module_type == ModuleType.TRIGGER and node.last_execution is None
         )  # ! TODO: improve that
-        print("herer4")
 
         try:
             # Verify if it is not the initial trigger and if all inputs have values except for optional inputs
             # and if all nodes have been updated except for nodes that have never been executed
             # if not, skip the node
-            print("herer5")
             if not initial_trigger and (
                 not all_values_are_valid or not any_value_has_been_updated
             ):
-                print(f"all_values_are_valid: {all_values_are_valid}")
-                print(f"any_value_has_been_updated: {any_value_has_been_updated}")
-                print(
-                    f"{datetime.datetime.now()} - Skipping node {node_id} due to input conditions."
-                )
+                # print(f"all_values_are_valid: {all_values_are_valid}")
+                # print(f"any_value_has_been_updated: {any_value_has_been_updated}")
+                # print(
+                #     f"{datetime.datetime.now()} - Skipping node {node_id} due to input conditions."
+                # )
                 return
 
-            async with self._lock:
-                print("herer6")
+            with self._lock:
                 # Launch the node execution in a thread-safe manner and retrieve the output data
                 output_data = await node.execute(module_callback)
-                print("herer7")
 
                 # Propagate the output data to the successors
                 for successor in self._graph.successors(node_id):
-                    print("herer8")
                     # print(f"\t-> node_id: {node_id} has successor: {successor}")
                     self.update_successor_inputs(
                         successor,
@@ -315,9 +305,8 @@ class GraphExecutor:
                         ),
                     )
                     # Automatically adding all successors to the execution queue
-                    print("herer9")
                     self._execution_queue.put(successor)
-                    print(f"\t\t- Adding successor {successor} to the execution queue.")
+                    # print(f"\t\t- Adding successor {successor} to the execution queue.")
 
         except Exception as e:  # pylint: disable=broad-except
             print(f"{datetime.datetime.now()} - Error executing node {node_id}: {e}")
@@ -333,7 +322,7 @@ class GraphExecutor:
         """
         asyncio.run(self.async_execute_node(*args, **kwargs))
 
-    async def execute(
+    def execute(
         self,
         initial_node: str,
         module_callback: Callable[[Dict[str, Any]], Awaitable[None]],
@@ -347,52 +336,60 @@ class GraphExecutor:
         """
         # Start with the initial node
         self._execution_queue.put(initial_node)
+        # print(
+        #     f"{datetime.datetime.now()} - Adding initial node {initial_node} to execution queue."
+        # )
 
-        tasks = set()
-        max_concurrent_tasks = 10  # Adjust this value as needed
-
-        while not self._execution_queue.empty() or tasks:
-            # Check if an error occurred during execution
-            if self._error_occurred.is_set():
-                break
-            print(
-                f"{datetime.datetime.now()} - max_concurrent_tasks: {len(tasks)}/{max_concurrent_tasks}"
-            )
-            # Start new tasks if there's room and nodes in the queue
+        # Execute the nodes in parallel using a thread pool
+        with ThreadPoolExecutor(max_workers=10) as executor:  # ! TODO thread number
+            futures = {}
+            # Keep executing nodes until the execution queue is empty and all nodes have completed
             while (
-                len(tasks) < max_concurrent_tasks and not self._execution_queue.empty()
-            ):
-                node_id: Union[str, None] = self._execution_queue.get()
-                print(f"{datetime.datetime.now()} - node_id: {node_id}")
-                if node_id is not None:
-                    task = asyncio.create_task(
-                        self.async_execute_node(node_id, module_callback)
+                not (
+                    self._execution_queue.empty()
+                    and not any(
+                        self._nodes[node_id].status == "running"
+                        for node_id in self._nodes
                     )
-                    tasks.add(task)
-
-            # Wait for at least one task to complete
-            if tasks:
-                done, tasks = await asyncio.wait(
-                    tasks, return_when=asyncio.FIRST_COMPLETED
                 )
+                or futures
+            ):  # ! This entire condition seem wrong
+                # Check if an error occurred during execution
+                if self._error_occurred.is_set():
+                    break
 
-                for task in done:
+                # While the execution queue is not empty, submit nodes for execution
+                # Iterate over the node_id execution queue and store them inside futures
+                # in order to execute them in parallel
+                while not self._execution_queue.empty():
+                    # Get the next node to execute
+                    node_id: Union[str, None] = self._execution_queue.get()
+                    # print(
+                    #     f"{datetime.datetime.now()} - Getting node {node_id} from execution queue."
+                    # )
+                    # Submit the node for execution
+                    if node_id is not None:
+                        future = executor.submit(
+                            self.execute_node, node_id, module_callback
+                        )
+                        futures[future] = node_id
+                    # print(
+                    #     f"{datetime.datetime.now()} - {node_id}",
+                    #     [f"{nid}: {self._nodes[nid].status}" for nid in self._nodes],
+                    # )
+
+                # Check completed futures
+                for future in as_completed(futures):
+                    node_id = futures.pop(future)
                     try:
-                        await task
+                        future.result()
                     except Exception as e:  # pylint: disable=broad-except
-                        print(f"{datetime.datetime.now()} - Error executing node: {e}")
+                        print(
+                            f"{datetime.datetime.now()} - Error executing node [{node_id}]: {e}"
+                        )
                         self._error_occurred.set()
                         break
-
-            # Break the loop if an error occurred
-            if self._error_occurred.is_set():
-                break
-
-            await asyncio.sleep(0.1)  # Small delay to prevent busy-waiting
-
-        # Cancel any remaining tasks
-        for task in tasks:
-            task.cancel()
+                print()
 
         if self._error_occurred.is_set():
             print(f"{datetime.datetime.now()} - Execution stopped due to an error.")

@@ -84,11 +84,13 @@ class ModuleServicer(ModuleServiceServicer):
             module_ids = job.module_ids
 
             # Start the module
+            await module.start(setup_id=setup_id)
 
-            await job.output_queue.put(InitModel(start=True))
+            # await job.output_queue.put(InitModel(start=True))
 
             # Create a callback that captures the module_ids
             async def callback(output: BaseModel) -> None:
+                print(f"received output: {output}")
                 if not self.job_manager.update_status(job.id, JobStatus.PROCESSING):
                     raise ValueError(f"😵 Trigger {job.id} not found.")
                 await module.send_output(output, module_ids)
@@ -96,9 +98,12 @@ class ModuleServicer(ModuleServiceServicer):
                 await job.output_queue.put(
                     output
                 )  # Ajoute l'élément dans la file d'attente
+                print(f"output added to queue: {output}")
 
+            print(f"🚀 Starting the module {module.name}")
             # Execute the module
             await module.execute(input_data, setup_id, callback)
+            print(f"🛑 Stopping the module {module.name}")
             await self._stop_job(job)
 
         except ValueError as e:
@@ -123,14 +128,20 @@ class ModuleServicer(ModuleServiceServicer):
             logger.error("😵 Exception Error: %s", e)
             self.job_manager.update_status(job.id, JobStatus.FAILED)
 
-    @validate_stream_request
+    # @validate_stream_request
     async def StartModule(  # pylint: disable=arguments-renamed
-        self, request: StartModuleRequest, context: grpc.aio.ServicerContext
+        self, request_iterator: StartModuleRequest, context: grpc.aio.ServicerContext
     ) -> AsyncGenerator[StartModuleResponse, Any]:
         """
         https://medium.com/@iamdeepaksinghh/create-a-real-time-chat-service-using-grpc-in-python-fc63127d570c
         """
         try:
+            request = None
+            async for req in request_iterator:
+                print(f"req: {req}")
+                request = req
+                break
+
             # Convert the request to a dictionary
             json_request = json_format.MessageToDict(
                 request,
@@ -160,10 +171,10 @@ class ModuleServicer(ModuleServiceServicer):
                 # async for output in current_job.get_outputs():
                 # check if the output is a InitModel
                 print(f"output here: {output} {self.agent_management.identity.id}")
-                if isinstance(output, InitModel):
-                    print("InitModel")
-                    continue
-                print("yield")
+                # if isinstance(output, InitModel):
+                #     print("InitModel")
+                #     continue
+                # print("yield")
                 output_struct = json_format.Parse(
                     text=json.dumps(output.model_dump()),
                     message=struct_pb2.Struct(),  # pylint: disable=no-member

@@ -96,7 +96,12 @@ class TaskManager:
             yield item
 
 
-async def example_function(task: Task, *args, **kwargs):
+async def execute(callback, *args, **kwargs):
+    await asyncio.sleep(1)
+    await callback(*args, **kwargs)
+
+
+async def example_function_init(task: Task, *args, **kwargs):
     """
     TODO: sphinx docstring
     """
@@ -106,6 +111,21 @@ async def example_function(task: Task, *args, **kwargs):
         await task.output_queue.put(
             f"Output {i} from task with args: {args}, kwargs: {kwargs}"
         )
+
+
+async def example_function(task: Task, *args, **kwargs):
+    """
+    TODO: sphinx docstring
+    """
+    # loop random size between 3 and 7
+    for i in range(random.randint(3, 7)):
+
+        async def callback(*args, **kwargs) -> None:
+            await task.output_queue.put(
+                f"Output {i} from task with args: {args}, kwargs: {kwargs}"
+            )
+
+        await execute(callback, *args, **kwargs)
 
 
 async def task_runner(manager: TaskManager, task_id: int):

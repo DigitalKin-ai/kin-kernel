@@ -6,6 +6,7 @@ methods for registering modules, loading workflows, starting and stopping workfl
 and executing specific nodes.
 """
 
+import asyncio
 from typing import Awaitable, Callable, Dict, List, Any, Tuple, Union
 from pydantic import BaseModel, Field
 
@@ -196,6 +197,7 @@ class KinWorkflow(BaseKin):
             setups_id (str): The setups_id of the workflow.
         """
         try:
+            logger.info("🚀 Starting workflow...")
             # Load workflow from db
             workflow = await self._load_workflow(kin_id=self.identity.id)
 
@@ -233,6 +235,7 @@ class KinWorkflow(BaseKin):
             setup_id (str): The setup ID for the workflow.
             callback (Callable[[WorkflowOutput], None]): The callback function to handle the output.
         """
+        logger.info("🚀 Executing Kin Workflow...")
         initial_node = self._graphs_executor.get_node_id_by_module_id(
             input_data.trigger_id
         )
@@ -251,7 +254,7 @@ class KinWorkflow(BaseKin):
             print("--" * 10)
             async for response in response_iterator:
                 response_type = response.get("response_type", None)
-                # print(f"response_type: {response_type}")
+                print(f"response_type: {response_type}")
                 if (
                     response_type is not None
                     and response_type == "START_RESPONSE_TYPE_OUTPUT"
@@ -260,11 +263,13 @@ class KinWorkflow(BaseKin):
                     result = output_response.get("output", {})
                     break
             print(WorkflowOutput(done=False))
+            await asyncio.sleep(1)
             await callback(WorkflowOutput(done=False))
+            await asyncio.sleep(1)
             print("--" * 10)
             return result
 
-        self._graphs_executor.execute(initial_node, module_callback)
+        await self._graphs_executor.execute(initial_node, module_callback)
         print("Executing Kin Workflow...")
         await callback(WorkflowOutput(done=True))
 

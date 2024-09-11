@@ -1,5 +1,10 @@
-# import time
+"""
+TODO: Add description here
+"""
+
 # import random
+# import asyncio
+# import time
 from typing import Awaitable, Callable, Tuple
 from pydantic import BaseModel, Field
 
@@ -35,6 +40,10 @@ class CronFibonacciSetup(BaseModel):
 class CronTrigger(
     BaseTrigger[CronFibonacciInput, CronFibonacciOutput, CronFibonacciSetup]
 ):
+    """
+    TODO: Add a description here
+    """
+
     name = "Cron Multiplier"
     description = "A simple cron that execute multiplier tool"
     input_format = CronFibonacciInput
@@ -59,9 +68,9 @@ class CronTrigger(
         # while counter < 10:
         #     # Implémentez la logique spécifique de l'outil ici
         #     exec_result = {"initial_numbers": [1, 1]}
-        #     callback(CronFibonacciOutput(**exec_result))
+        #     await callback(CronFibonacciOutput(**exec_result))
         #     counter += 1
-        #     time.sleep(1)
+        #     # await asyncio.sleep(1)
         #     print("here")
 
     async def stop(self) -> None:
