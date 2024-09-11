@@ -113,6 +113,7 @@ def main():
                     "DeregisterModule",
                     "DiscoverModule",
                     "UpdateModuleStatus",
+                    "GetAllModules",
                 ],
             }
             add_async_to_methods(file_methods_dict)

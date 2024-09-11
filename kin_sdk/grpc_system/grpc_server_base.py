@@ -3,6 +3,7 @@
 import asyncio
 import signal
 from concurrent import futures
+from typing import NoReturn
 import grpc
 from grpc.aio._server import Server
 
@@ -91,27 +92,55 @@ class GRPCServerBase:
         logger.info("🛑 Stopping module on from %s", self.port)
         await self._server.stop(grace)
 
-    def asyncio_serve(self) -> None:
+    def asyncio_serve(self) -> NoReturn:
         """
-        Synchronous method to start the server.
+        Synchronous method to start the server and handle graceful shutdown.
+
+        This method sets up signal handlers for graceful shutdown and runs
+        the server in an asyncio event loop.
+
+        Raises:
+            KeyboardInterrupt: If the server is stopped by a keyboard interrupt.
         """
 
-        async def main():
+        async def main() -> None:
+            """
+            Main coroutine to run the server and handle shutdown.
+            """
             loop = asyncio.get_running_loop()
 
-            # Define a signal handler to stop the server
-            def signal_handler():
-                loop.create_task(self.stop())
-
-            # Register the signal handler for SIGINT (Ctrl+C)
-            loop.add_signal_handler(signal.SIGINT, signal_handler)
+            # Set up signal handlers
+            for sig in (signal.SIGTERM, signal.SIGINT):
+                loop.add_signal_handler(
+                    sig, lambda s=sig: asyncio.create_task(shutdown(s))
+                )
 
             try:
                 await self.serve()
             except asyncio.CancelledError:
                 pass
 
-        asyncio.run(main())
+        async def shutdown(sig: signal.Signals) -> None:
+            """
+            Coroutine to handle graceful shutdown of the server.
+
+            Args:
+                sig (signal.Signals): The signal that triggered the shutdown.
+            """
+            logger.info("Received exit signal %s", sig.name)
+            logger.info("Shutting down server")
+            await self.stop()
+            tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+            for task in tasks:
+                task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
+            loop = asyncio.get_running_loop()
+            loop.stop()
+
+        try:
+            asyncio.run(main())
+        except KeyboardInterrupt:
+            pass
 
     def add_to_server(self, server: grpc.aio.Server) -> None:
         """

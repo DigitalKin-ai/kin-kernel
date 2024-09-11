@@ -275,12 +275,6 @@ class ModuleServicer(ModuleServiceServicer):
 
             # Retrieve the job
             jobs = self.job_manager.get_jobs_list()
-            print(f"jobs: {jobs}")
-            if len(jobs) > 0:
-                print(f"jobs: {jobs[0].job_id}")
-                print(f"jobs: {jobs[0].job_status}")
-                print(f"jobs: {jobs[0].job_status.value}")
-                print(f"jobs: {jobs[0].job_status.name}")
             response_jobs = [
                 JobInfo(job_id=job.job_id, job_status=job.job_status.value)
                 for job in jobs

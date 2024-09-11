@@ -140,7 +140,6 @@ class ModuleServer(GRPCServerBase):
         """
         Stops the module server and deregisters the module from the Module Registry.
         """
-        await super().stop(*args, **kwargs)
         if self._is_registered:
             await self._deregister_module()
             logger.info(
@@ -148,6 +147,7 @@ class ModuleServer(GRPCServerBase):
                 self.module_port,
                 self.registry_address,
             )
+        await super().stop(*args, **kwargs)
 
     async def serve(self) -> None:
         """

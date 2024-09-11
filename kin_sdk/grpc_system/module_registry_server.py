@@ -14,6 +14,13 @@ import proto.digitalkin.module_registry.v1.registration_pb2 as registration_pb2
 import proto.digitalkin.module_registry.v1.action_pb2 as action_pb2
 
 
+from proto.digitalkin.module_registry.v1.monitoring_pb2 import (
+    ModuleInfo,
+    GetAllModulesRequest,
+    GetAllModulesResponse,
+)
+
+
 class ModuleRegistry(module_registry_pb2_grpc.ModuleRegistryServiceServicer):
     """
     ModuleRegistry service for registering, deregistering, discovering, and updating modules.
@@ -113,6 +120,32 @@ class ModuleRegistry(module_registry_pb2_grpc.ModuleRegistryServiceServicer):
             self.modules[request.module_id]["status"] = request.status
             return action_pb2.UpdateStatusResponse(success=True)
         return action_pb2.UpdateStatusResponse(success=False)
+
+    @validate_grpc_request
+    async def GetAllModules(
+        self,
+        _request: GetAllModulesRequest,
+        context: grpc.aio.ServicerContext,
+    ) -> GetAllModulesResponse:
+        """
+        Retrieves all registered modules.
+
+        :param request: The request to get all modules.
+        :type request: GetAllModulesRequest
+        :param context: The gRPC context.
+        :return: The response containing all registered modules.
+        :rtype: GetAllModulesResponse
+        """
+        try:
+            modules = [
+                ModuleInfo(module_id=module_id, module_status=module["status"])
+                for module_id, module in self.modules.items()
+            ]
+            return GetAllModulesResponse(success=True, modules=modules)
+        except Exception as e:  # pylint: disable=broad-except
+            context.set_code(grpc.StatusCode.INTERNAL)
+            context.set_details(f"Error getting modules: {str(e)}")
+            return GetAllModulesResponse(success=False, modules=None)
 
 
 class ModuleRegistryServer(GRPCServerBase):

@@ -1,6 +1,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 from proto.digitalkin.module_registry.v1 import action_pb2 as digitalkin_dot_module__registry_dot_v1_dot_action__pb2
+from proto.digitalkin.module_registry.v1 import monitoring_pb2 as digitalkin_dot_module__registry_dot_v1_dot_monitoring__pb2
 from proto.digitalkin.module_registry.v1 import registration_pb2 as digitalkin_dot_module__registry_dot_v1_dot_registration__pb2
 
 
@@ -47,6 +48,13 @@ class ModuleRegistryServiceStub(object):
             UpdateStatusRequest.SerializeToString, response_deserializer=
             digitalkin_dot_module__registry_dot_v1_dot_action__pb2.
             UpdateStatusResponse.FromString)
+        self.GetAllModules = channel.unary_unary(
+            '/digitalkin.module_registry.v1.ModuleRegistryService/GetAllModules'
+            , request_serializer=
+            digitalkin_dot_module__registry_dot_v1_dot_monitoring__pb2.
+            GetAllModulesRequest.SerializeToString, response_deserializer=
+            digitalkin_dot_module__registry_dot_v1_dot_monitoring__pb2.
+            GetAllModulesResponse.FromString)
 
 
 class ModuleRegistryServiceServicer(object):
@@ -86,6 +94,13 @@ class ModuleRegistryServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    async def GetAllModules(self, request, context):
+        """GetAllModules
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_ModuleRegistryServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {'RegisterModule': grpc.
@@ -112,7 +127,13 @@ def add_ModuleRegistryServiceServicer_to_server(servicer, server):
         digitalkin_dot_module__registry_dot_v1_dot_action__pb2.
         UpdateStatusRequest.FromString, response_serializer=
         digitalkin_dot_module__registry_dot_v1_dot_action__pb2.
-        UpdateStatusResponse.SerializeToString)}
+        UpdateStatusResponse.SerializeToString), 'GetAllModules': grpc.
+        unary_unary_rpc_method_handler(servicer.GetAllModules,
+        request_deserializer=
+        digitalkin_dot_module__registry_dot_v1_dot_monitoring__pb2.
+        GetAllModulesRequest.FromString, response_serializer=
+        digitalkin_dot_module__registry_dot_v1_dot_monitoring__pb2.
+        GetAllModulesResponse.SerializeToString)}
     generic_handler = grpc.method_handlers_generic_handler(
         'digitalkin.module_registry.v1.ModuleRegistryService',
         rpc_method_handlers)
@@ -177,5 +198,18 @@ class ModuleRegistryService(object):
             UpdateStatusRequest.SerializeToString,
             digitalkin_dot_module__registry_dot_v1_dot_action__pb2.
             UpdateStatusResponse.FromString, options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready,
+            timeout, metadata)
+
+    @staticmethod
+    async def GetAllModules(request, target, options=(),
+        channel_credentials=None, call_credentials=None, insecure=False,
+        compression=None, wait_for_ready=None, timeout=None, metadata=None):
+        return grpc.experimental.unary_unary(request, target,
+            '/digitalkin.module_registry.v1.ModuleRegistryService/GetAllModules'
+            , digitalkin_dot_module__registry_dot_v1_dot_monitoring__pb2.
+            GetAllModulesRequest.SerializeToString,
+            digitalkin_dot_module__registry_dot_v1_dot_monitoring__pb2.
+            GetAllModulesResponse.FromString, options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready,
             timeout, metadata)
