@@ -7,49 +7,49 @@ from typing import ClassVar as _ClassVar, Mapping as _Mapping, Optional as _Opti
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class GetModuleInputRequest(_message.Message):
-    __slots__ = ["llm_format", "module_id"]
-    LLM_FORMAT_FIELD_NUMBER: _ClassVar[int]
+    __slots__ = ("module_id", "llm_format")
     MODULE_ID_FIELD_NUMBER: _ClassVar[int]
-    llm_format: bool
+    LLM_FORMAT_FIELD_NUMBER: _ClassVar[int]
     module_id: str
+    llm_format: bool
+    def __init__(self, module_id: _Optional[str] = ..., llm_format: bool = ...) -> None: ...
+
+class GetModuleOutputRequest(_message.Message):
+    __slots__ = ("module_id", "llm_format")
+    MODULE_ID_FIELD_NUMBER: _ClassVar[int]
+    LLM_FORMAT_FIELD_NUMBER: _ClassVar[int]
+    module_id: str
+    llm_format: bool
+    def __init__(self, module_id: _Optional[str] = ..., llm_format: bool = ...) -> None: ...
+
+class GetModuleSetupRequest(_message.Message):
+    __slots__ = ("module_id", "llm_format")
+    MODULE_ID_FIELD_NUMBER: _ClassVar[int]
+    LLM_FORMAT_FIELD_NUMBER: _ClassVar[int]
+    module_id: str
+    llm_format: bool
     def __init__(self, module_id: _Optional[str] = ..., llm_format: bool = ...) -> None: ...
 
 class GetModuleInputResponse(_message.Message):
-    __slots__ = ["input_schema", "success"]
-    INPUT_SCHEMA_FIELD_NUMBER: _ClassVar[int]
+    __slots__ = ("success", "input_schema")
     SUCCESS_FIELD_NUMBER: _ClassVar[int]
-    input_schema: _struct_pb2.Struct
+    INPUT_SCHEMA_FIELD_NUMBER: _ClassVar[int]
     success: bool
+    input_schema: _struct_pb2.Struct
     def __init__(self, success: bool = ..., input_schema: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ...) -> None: ...
 
-class GetModuleOutputRequest(_message.Message):
-    __slots__ = ["llm_format", "module_id"]
-    LLM_FORMAT_FIELD_NUMBER: _ClassVar[int]
-    MODULE_ID_FIELD_NUMBER: _ClassVar[int]
-    llm_format: bool
-    module_id: str
-    def __init__(self, module_id: _Optional[str] = ..., llm_format: bool = ...) -> None: ...
-
 class GetModuleOutputResponse(_message.Message):
-    __slots__ = ["output_schema", "success"]
-    OUTPUT_SCHEMA_FIELD_NUMBER: _ClassVar[int]
+    __slots__ = ("success", "output_schema")
     SUCCESS_FIELD_NUMBER: _ClassVar[int]
-    output_schema: _struct_pb2.Struct
+    OUTPUT_SCHEMA_FIELD_NUMBER: _ClassVar[int]
     success: bool
+    output_schema: _struct_pb2.Struct
     def __init__(self, success: bool = ..., output_schema: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ...) -> None: ...
 
-class GetModuleSetupRequest(_message.Message):
-    __slots__ = ["llm_format", "module_id"]
-    LLM_FORMAT_FIELD_NUMBER: _ClassVar[int]
-    MODULE_ID_FIELD_NUMBER: _ClassVar[int]
-    llm_format: bool
-    module_id: str
-    def __init__(self, module_id: _Optional[str] = ..., llm_format: bool = ...) -> None: ...
-
 class GetModuleSetupResponse(_message.Message):
-    __slots__ = ["setup_schema", "success"]
-    SETUP_SCHEMA_FIELD_NUMBER: _ClassVar[int]
+    __slots__ = ("success", "setup_schema")
     SUCCESS_FIELD_NUMBER: _ClassVar[int]
-    setup_schema: _struct_pb2.Struct
+    SETUP_SCHEMA_FIELD_NUMBER: _ClassVar[int]
     success: bool
+    setup_schema: _struct_pb2.Struct
     def __init__(self, success: bool = ..., setup_schema: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ...) -> None: ...

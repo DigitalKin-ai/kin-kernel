@@ -28,49 +28,49 @@ class ModuleServiceStub(object):
             digitalkin_dot_module_dot_v1_dot_lifecycle__pb2.
             StartModuleRequest.SerializeToString, response_deserializer=
             digitalkin_dot_module_dot_v1_dot_lifecycle__pb2.
-            StartModuleResponse.FromString)
+            StartModuleResponse.FromString, _registered_method=True)
         self.StopModule = channel.unary_unary(
             '/digitalkin.module.v1.ModuleService/StopModule',
             request_serializer=
             digitalkin_dot_module_dot_v1_dot_lifecycle__pb2.
             StopModuleRequest.SerializeToString, response_deserializer=
             digitalkin_dot_module_dot_v1_dot_lifecycle__pb2.
-            StopModuleResponse.FromString)
+            StopModuleResponse.FromString, _registered_method=True)
         self.GetModuleStatus = channel.unary_unary(
             '/digitalkin.module.v1.ModuleService/GetModuleStatus',
             request_serializer=
             digitalkin_dot_module_dot_v1_dot_monitoring__pb2.
             GetModuleStatusRequest.SerializeToString, response_deserializer
             =digitalkin_dot_module_dot_v1_dot_monitoring__pb2.
-            GetModuleStatusResponse.FromString)
+            GetModuleStatusResponse.FromString, _registered_method=True)
         self.GetModuleJobs = channel.unary_unary(
             '/digitalkin.module.v1.ModuleService/GetModuleJobs',
             request_serializer=
             digitalkin_dot_module_dot_v1_dot_monitoring__pb2.
             GetModuleJobsRequest.SerializeToString, response_deserializer=
             digitalkin_dot_module_dot_v1_dot_monitoring__pb2.
-            GetModuleJobsResponse.FromString)
+            GetModuleJobsResponse.FromString, _registered_method=True)
         self.GetModuleInput = channel.unary_unary(
             '/digitalkin.module.v1.ModuleService/GetModuleInput',
             request_serializer=
             digitalkin_dot_module_dot_v1_dot_information__pb2.
             GetModuleInputRequest.SerializeToString, response_deserializer=
             digitalkin_dot_module_dot_v1_dot_information__pb2.
-            GetModuleInputResponse.FromString)
+            GetModuleInputResponse.FromString, _registered_method=True)
         self.GetModuleOutput = channel.unary_unary(
             '/digitalkin.module.v1.ModuleService/GetModuleOutput',
             request_serializer=
             digitalkin_dot_module_dot_v1_dot_information__pb2.
             GetModuleOutputRequest.SerializeToString, response_deserializer
             =digitalkin_dot_module_dot_v1_dot_information__pb2.
-            GetModuleOutputResponse.FromString)
+            GetModuleOutputResponse.FromString, _registered_method=True)
         self.GetModuleSetup = channel.unary_unary(
             '/digitalkin.module.v1.ModuleService/GetModuleSetup',
             request_serializer=
             digitalkin_dot_module_dot_v1_dot_information__pb2.
             GetModuleSetupRequest.SerializeToString, response_deserializer=
             digitalkin_dot_module_dot_v1_dot_information__pb2.
-            GetModuleSetupResponse.FromString)
+            GetModuleSetupResponse.FromString, _registered_method=True)
 
 
 class ModuleServiceServicer(object):
@@ -181,6 +181,8 @@ def add_ModuleServiceServicer_to_server(servicer, server):
     generic_handler = grpc.method_handlers_generic_handler(
         'digitalkin.module.v1.ModuleService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers('digitalkin.module.v1.ModuleService',
+        rpc_method_handlers)
 
 
 class ModuleService(object):
@@ -205,7 +207,7 @@ class ModuleService(object):
             digitalkin_dot_module_dot_v1_dot_lifecycle__pb2.
             StartModuleResponse.FromString, options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready,
-            timeout, metadata)
+            timeout, metadata, _registered_method=True)
 
     @staticmethod
     async def StopModule(request, target, options=(), channel_credentials=
@@ -218,7 +220,7 @@ class ModuleService(object):
             digitalkin_dot_module_dot_v1_dot_lifecycle__pb2.
             StopModuleResponse.FromString, options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready,
-            timeout, metadata)
+            timeout, metadata, _registered_method=True)
 
     @staticmethod
     async def GetModuleStatus(request, target, options=(),
@@ -231,7 +233,7 @@ class ModuleService(object):
             digitalkin_dot_module_dot_v1_dot_monitoring__pb2.
             GetModuleStatusResponse.FromString, options,
             channel_credentials, insecure, call_credentials, compression,
-            wait_for_ready, timeout, metadata)
+            wait_for_ready, timeout, metadata, _registered_method=True)
 
     @staticmethod
     async def GetModuleJobs(request, target, options=(),
@@ -244,7 +246,7 @@ class ModuleService(object):
             digitalkin_dot_module_dot_v1_dot_monitoring__pb2.
             GetModuleJobsResponse.FromString, options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready,
-            timeout, metadata)
+            timeout, metadata, _registered_method=True)
 
     @staticmethod
     async def GetModuleInput(request, target, options=(),
@@ -257,7 +259,7 @@ class ModuleService(object):
             digitalkin_dot_module_dot_v1_dot_information__pb2.
             GetModuleInputResponse.FromString, options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready,
-            timeout, metadata)
+            timeout, metadata, _registered_method=True)
 
     @staticmethod
     async def GetModuleOutput(request, target, options=(),
@@ -270,7 +272,7 @@ class ModuleService(object):
             digitalkin_dot_module_dot_v1_dot_information__pb2.
             GetModuleOutputResponse.FromString, options,
             channel_credentials, insecure, call_credentials, compression,
-            wait_for_ready, timeout, metadata)
+            wait_for_ready, timeout, metadata, _registered_method=True)
 
     @staticmethod
     async def GetModuleSetup(request, target, options=(),
@@ -283,4 +285,4 @@ class ModuleService(object):
             digitalkin_dot_module_dot_v1_dot_information__pb2.
             GetModuleSetupResponse.FromString, options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready,
-            timeout, metadata)
+            timeout, metadata, _registered_method=True)

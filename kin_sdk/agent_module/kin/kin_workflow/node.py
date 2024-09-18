@@ -6,7 +6,6 @@ the components of a graph node and provide methods for executing operations and
 updating data.
 """
 
-import asyncio
 import datetime
 from typing import Any, Awaitable, Dict, List, Callable, Optional
 
@@ -172,7 +171,6 @@ class Node:
             )
 
             # Simulate some work being done
-            await asyncio.sleep(0.5)  # ! TODO: remove this line
             for label, value in module_response.items():
                 self.update_output(label, value)
 

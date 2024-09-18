@@ -26,35 +26,35 @@ class ModuleRegistryServiceStub(object):
             digitalkin_dot_module__registry_dot_v1_dot_registration__pb2.
             RegisterRequest.SerializeToString, response_deserializer=
             digitalkin_dot_module__registry_dot_v1_dot_registration__pb2.
-            RegisterResponse.FromString)
+            RegisterResponse.FromString, _registered_method=True)
         self.DeregisterModule = channel.unary_unary(
             '/digitalkin.module_registry.v1.ModuleRegistryService/DeregisterModule'
             , request_serializer=
             digitalkin_dot_module__registry_dot_v1_dot_registration__pb2.
             DeregisterRequest.SerializeToString, response_deserializer=
             digitalkin_dot_module__registry_dot_v1_dot_registration__pb2.
-            DeregisterResponse.FromString)
+            DeregisterResponse.FromString, _registered_method=True)
         self.DiscoverModule = channel.unary_unary(
             '/digitalkin.module_registry.v1.ModuleRegistryService/DiscoverModule'
             , request_serializer=
             digitalkin_dot_module__registry_dot_v1_dot_action__pb2.
             DiscoverRequest.SerializeToString, response_deserializer=
             digitalkin_dot_module__registry_dot_v1_dot_action__pb2.
-            DiscoverResponse.FromString)
+            DiscoverResponse.FromString, _registered_method=True)
         self.UpdateModuleStatus = channel.unary_unary(
             '/digitalkin.module_registry.v1.ModuleRegistryService/UpdateModuleStatus'
             , request_serializer=
             digitalkin_dot_module__registry_dot_v1_dot_action__pb2.
             UpdateStatusRequest.SerializeToString, response_deserializer=
             digitalkin_dot_module__registry_dot_v1_dot_action__pb2.
-            UpdateStatusResponse.FromString)
+            UpdateStatusResponse.FromString, _registered_method=True)
         self.GetAllModules = channel.unary_unary(
             '/digitalkin.module_registry.v1.ModuleRegistryService/GetAllModules'
             , request_serializer=
             digitalkin_dot_module__registry_dot_v1_dot_monitoring__pb2.
             GetAllModulesRequest.SerializeToString, response_deserializer=
             digitalkin_dot_module__registry_dot_v1_dot_monitoring__pb2.
-            GetAllModulesResponse.FromString)
+            GetAllModulesResponse.FromString, _registered_method=True)
 
 
 class ModuleRegistryServiceServicer(object):
@@ -138,6 +138,9 @@ def add_ModuleRegistryServiceServicer_to_server(servicer, server):
         'digitalkin.module_registry.v1.ModuleRegistryService',
         rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers(
+        'digitalkin.module_registry.v1.ModuleRegistryService',
+        rpc_method_handlers)
 
 
 class ModuleRegistryService(object):
@@ -160,7 +163,7 @@ class ModuleRegistryService(object):
             digitalkin_dot_module__registry_dot_v1_dot_registration__pb2.
             RegisterResponse.FromString, options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready,
-            timeout, metadata)
+            timeout, metadata, _registered_method=True)
 
     @staticmethod
     async def DeregisterModule(request, target, options=(),
@@ -173,7 +176,7 @@ class ModuleRegistryService(object):
             digitalkin_dot_module__registry_dot_v1_dot_registration__pb2.
             DeregisterResponse.FromString, options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready,
-            timeout, metadata)
+            timeout, metadata, _registered_method=True)
 
     @staticmethod
     async def DiscoverModule(request, target, options=(),
@@ -186,7 +189,7 @@ class ModuleRegistryService(object):
             digitalkin_dot_module__registry_dot_v1_dot_action__pb2.
             DiscoverResponse.FromString, options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready,
-            timeout, metadata)
+            timeout, metadata, _registered_method=True)
 
     @staticmethod
     async def UpdateModuleStatus(request, target, options=(),
@@ -199,7 +202,7 @@ class ModuleRegistryService(object):
             digitalkin_dot_module__registry_dot_v1_dot_action__pb2.
             UpdateStatusResponse.FromString, options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready,
-            timeout, metadata)
+            timeout, metadata, _registered_method=True)
 
     @staticmethod
     async def GetAllModules(request, target, options=(),
@@ -212,4 +215,4 @@ class ModuleRegistryService(object):
             digitalkin_dot_module__registry_dot_v1_dot_monitoring__pb2.
             GetAllModulesResponse.FromString, options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready,
-            timeout, metadata)
+            timeout, metadata, _registered_method=True)

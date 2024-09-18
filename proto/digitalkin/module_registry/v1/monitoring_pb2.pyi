@@ -6,22 +6,22 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
-class GetAllModulesRequest(_message.Message):
-    __slots__ = []
-    def __init__(self) -> None: ...
-
-class GetAllModulesResponse(_message.Message):
-    __slots__ = ["modules", "success"]
-    MODULES_FIELD_NUMBER: _ClassVar[int]
-    SUCCESS_FIELD_NUMBER: _ClassVar[int]
-    modules: _containers.RepeatedCompositeFieldContainer[ModuleInfo]
-    success: bool
-    def __init__(self, success: bool = ..., modules: _Optional[_Iterable[_Union[ModuleInfo, _Mapping]]] = ...) -> None: ...
-
 class ModuleInfo(_message.Message):
-    __slots__ = ["module_id", "module_status"]
+    __slots__ = ("module_id", "module_status")
     MODULE_ID_FIELD_NUMBER: _ClassVar[int]
     MODULE_STATUS_FIELD_NUMBER: _ClassVar[int]
     module_id: str
     module_status: bool
     def __init__(self, module_id: _Optional[str] = ..., module_status: bool = ...) -> None: ...
+
+class GetAllModulesRequest(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class GetAllModulesResponse(_message.Message):
+    __slots__ = ("success", "modules")
+    SUCCESS_FIELD_NUMBER: _ClassVar[int]
+    MODULES_FIELD_NUMBER: _ClassVar[int]
+    success: bool
+    modules: _containers.RepeatedCompositeFieldContainer[ModuleInfo]
+    def __init__(self, success: bool = ..., modules: _Optional[_Iterable[_Union[ModuleInfo, _Mapping]]] = ...) -> None: ...

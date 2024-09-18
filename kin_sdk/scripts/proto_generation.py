@@ -64,10 +64,11 @@ def main():
     proto_paths: List[str] = [
         f"{proto_dir}/digitalkin/module",
         f"{proto_dir}/digitalkin/module_registry",
-        f"{proto_dir}/google",
+        f"{proto_dir}/digitalkin/project",
+        f"{proto_dir}/digitalkin/setup",
     ]
     paths_option = " ".join(f"--path {path}" for path in proto_paths)
-    command = f"buf generate {proto_dir} --template {proto_dir}/{buf_file} --include-imports -o {output_dir} {paths_option}"
+    command = f"buf generate {proto_dir} --template {proto_dir}/{buf_file} -o {output_dir} {paths_option}"
 
     print(f"\nCommand: [\n\t- {command}\n]\n")
 
@@ -114,6 +115,13 @@ def main():
                     "DiscoverModule",
                     "UpdateModuleStatus",
                     "GetAllModules",
+                ],
+                f"{base_path}/project/v1/project_service_pb2_grpc.py": [
+                    "ReadWorkflow",
+                ],
+                f"{base_path}/setup/v2/setup_service_pb2_grpc.py": [
+                    "ReadSetup",
+                    "GetNodeSetup",
                 ],
             }
             add_async_to_methods(file_methods_dict)
