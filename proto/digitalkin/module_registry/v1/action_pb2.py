@@ -22,10 +22,10 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
-from proto.validate import validate_pb2 as validate_dot_validate__pb2
+from buf.validate import validate_pb2 as buf_dot_validate_dot_validate__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n*digitalkin/module_registry/v1/action.proto\x12\x1d\x64igitalkin.module_registry.v1\x1a\x17validate/validate.proto\"7\n\x0f\x44iscoverRequest\x12$\n\tmodule_id\x18\x01 \x01(\tB\x07\xfa\x42\x04r\x02\x10\x01R\x08moduleId\"\xb0\x01\n\x10\x44iscoverResponse\x12@\n\x0bmodule_type\x18\x01 \x01(\tB\x1f\xfa\x42\x1cr\x1aR\x07triggerR\x04toolR\x03kinR\x04viewR\nmoduleType\x12!\n\x07\x61\x64\x64ress\x18\x02 \x01(\tB\x07\xfa\x42\x04r\x02\x10\x01R\x07\x61\x64\x64ress\x12\x1f\n\x04port\x18\x03 \x01(\x05\x42\x0b\xfa\x42\x08\x1a\x06\x18\xff\xff\x03(\x01R\x04port\x12\x16\n\x06status\x18\x04 \x01(\x08R\x06status\"S\n\x13UpdateStatusRequest\x12$\n\tmodule_id\x18\x01 \x01(\tB\x07\xfa\x42\x04r\x02\x10\x01R\x08moduleId\x12\x16\n\x06status\x18\x02 \x01(\x08R\x06status\"0\n\x14UpdateStatusResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07successB\xc4\x01\n!com.digitalkin.module_registry.v1B\x0b\x41\x63tionProtoH\x02P\x01\xa2\x02\x03\x44MX\xaa\x02\x1c\x44igitalkin.ModuleRegistry.V1\xca\x02\x1c\x44igitalkin\\ModuleRegistry\\V1\xe2\x02(Digitalkin\\ModuleRegistry\\V1\\GPBMetadata\xea\x02\x1e\x44igitalkin::ModuleRegistry::V1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n*digitalkin/module_registry/v1/action.proto\x12\x1d\x64igitalkin.module_registry.v1\x1a\x1b\x62uf/validate/validate.proto\":\n\x0f\x44iscoverRequest\x12\'\n\tmodule_id\x18\x01 \x01(\tB\n\xbaH\x07r\x02\x10\x01\xc8\x01\x01R\x08moduleId\"\xb9\x01\n\x10\x44iscoverResponse\x12\x43\n\x0bmodule_type\x18\x01 \x01(\tB\"\xbaH\x1fr\x1aR\x07triggerR\x04toolR\x03kinR\x04view\xc8\x01\x01R\nmoduleType\x12$\n\x07\x61\x64\x64ress\x18\x02 \x01(\tB\n\xbaH\x07r\x02\x10\x01\xc8\x01\x01R\x07\x61\x64\x64ress\x12\"\n\x04port\x18\x03 \x01(\x05\x42\x0e\xbaH\x0b\"\x06\x18\xff\xff\x03(\x01\xc8\x01\x01R\x04port\x12\x16\n\x06status\x18\x04 \x01(\x08R\x06status\"V\n\x13UpdateStatusRequest\x12\'\n\tmodule_id\x18\x01 \x01(\tB\n\xbaH\x07r\x02\x10\x01\xc8\x01\x01R\x08moduleId\x12\x16\n\x06status\x18\x02 \x01(\x08R\x06status\"0\n\x14UpdateStatusResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07successB\xc4\x01\n!com.digitalkin.module_registry.v1B\x0b\x41\x63tionProtoH\x02P\x01\xa2\x02\x03\x44MX\xaa\x02\x1c\x44igitalkin.ModuleRegistry.V1\xca\x02\x1c\x44igitalkin\\ModuleRegistry\\V1\xe2\x02(Digitalkin\\ModuleRegistry\\V1\\GPBMetadata\xea\x02\x1e\x44igitalkin::ModuleRegistry::V1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -34,21 +34,21 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'\n!com.digitalkin.module_registry.v1B\013ActionProtoH\002P\001\242\002\003DMX\252\002\034Digitalkin.ModuleRegistry.V1\312\002\034Digitalkin\\ModuleRegistry\\V1\342\002(Digitalkin\\ModuleRegistry\\V1\\GPBMetadata\352\002\036Digitalkin::ModuleRegistry::V1'
   _globals['_DISCOVERREQUEST'].fields_by_name['module_id']._loaded_options = None
-  _globals['_DISCOVERREQUEST'].fields_by_name['module_id']._serialized_options = b'\372B\004r\002\020\001'
+  _globals['_DISCOVERREQUEST'].fields_by_name['module_id']._serialized_options = b'\272H\007r\002\020\001\310\001\001'
   _globals['_DISCOVERRESPONSE'].fields_by_name['module_type']._loaded_options = None
-  _globals['_DISCOVERRESPONSE'].fields_by_name['module_type']._serialized_options = b'\372B\034r\032R\007triggerR\004toolR\003kinR\004view'
+  _globals['_DISCOVERRESPONSE'].fields_by_name['module_type']._serialized_options = b'\272H\037r\032R\007triggerR\004toolR\003kinR\004view\310\001\001'
   _globals['_DISCOVERRESPONSE'].fields_by_name['address']._loaded_options = None
-  _globals['_DISCOVERRESPONSE'].fields_by_name['address']._serialized_options = b'\372B\004r\002\020\001'
+  _globals['_DISCOVERRESPONSE'].fields_by_name['address']._serialized_options = b'\272H\007r\002\020\001\310\001\001'
   _globals['_DISCOVERRESPONSE'].fields_by_name['port']._loaded_options = None
-  _globals['_DISCOVERRESPONSE'].fields_by_name['port']._serialized_options = b'\372B\010\032\006\030\377\377\003(\001'
+  _globals['_DISCOVERRESPONSE'].fields_by_name['port']._serialized_options = b'\272H\013\"\006\030\377\377\003(\001\310\001\001'
   _globals['_UPDATESTATUSREQUEST'].fields_by_name['module_id']._loaded_options = None
-  _globals['_UPDATESTATUSREQUEST'].fields_by_name['module_id']._serialized_options = b'\372B\004r\002\020\001'
-  _globals['_DISCOVERREQUEST']._serialized_start=102
-  _globals['_DISCOVERREQUEST']._serialized_end=157
-  _globals['_DISCOVERRESPONSE']._serialized_start=160
-  _globals['_DISCOVERRESPONSE']._serialized_end=336
-  _globals['_UPDATESTATUSREQUEST']._serialized_start=338
-  _globals['_UPDATESTATUSREQUEST']._serialized_end=421
-  _globals['_UPDATESTATUSRESPONSE']._serialized_start=423
-  _globals['_UPDATESTATUSRESPONSE']._serialized_end=471
+  _globals['_UPDATESTATUSREQUEST'].fields_by_name['module_id']._serialized_options = b'\272H\007r\002\020\001\310\001\001'
+  _globals['_DISCOVERREQUEST']._serialized_start=106
+  _globals['_DISCOVERREQUEST']._serialized_end=164
+  _globals['_DISCOVERRESPONSE']._serialized_start=167
+  _globals['_DISCOVERRESPONSE']._serialized_end=352
+  _globals['_UPDATESTATUSREQUEST']._serialized_start=354
+  _globals['_UPDATESTATUSREQUEST']._serialized_end=440
+  _globals['_UPDATESTATUSRESPONSE']._serialized_start=442
+  _globals['_UPDATESTATUSRESPONSE']._serialized_end=490
 # @@protoc_insertion_point(module_scope)

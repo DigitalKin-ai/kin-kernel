@@ -1,5 +1,5 @@
-from proto.digitalkin.project.v1 import edge_pb2 as _edge_pb2
-from proto.digitalkin.project.v1 import node_pb2 as _node_pb2
+from digitalkin.project.v1 import edge_pb2 as _edge_pb2
+from digitalkin.project.v1 import node_pb2 as _node_pb2
 from google.api import field_behavior_pb2 as _field_behavior_pb2
 from google.protobuf.internal import containers as _containers
 from google.protobuf import descriptor as _descriptor

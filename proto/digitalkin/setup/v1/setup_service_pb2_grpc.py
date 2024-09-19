@@ -2,9 +2,9 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-from proto.digitalkin.setup.v1 import assistant_pb2 as digitalkin_dot_setup_dot_v1_dot_assistant__pb2
-from proto.digitalkin.setup.v1 import setup_pb2 as digitalkin_dot_setup_dot_v1_dot_setup__pb2
-from proto.digitalkin.setup.v1 import tool_pb2 as digitalkin_dot_setup_dot_v1_dot_tool__pb2
+from digitalkin.setup.v1 import assistant_pb2 as digitalkin_dot_setup_dot_v1_dot_assistant__pb2
+from digitalkin.setup.v1 import setup_pb2 as digitalkin_dot_setup_dot_v1_dot_setup__pb2
+from digitalkin.setup.v1 import tool_pb2 as digitalkin_dot_setup_dot_v1_dot_tool__pb2
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 

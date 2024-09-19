@@ -22,7 +22,7 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
-from proto.digitalkin.setup.v1 import assistant_pb2 as digitalkin_dot_setup_dot_v1_dot_assistant__pb2
+from digitalkin.setup.v1 import assistant_pb2 as digitalkin_dot_setup_dot_v1_dot_assistant__pb2
 from google.api import field_behavior_pb2 as google_dot_api_dot_field__behavior__pb2
 from google.protobuf import any_pb2 as google_dot_protobuf_dot_any__pb2
 

@@ -22,9 +22,9 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
-from proto.digitalkin.module.v1 import information_pb2 as digitalkin_dot_module_dot_v1_dot_information__pb2
-from proto.digitalkin.module.v1 import lifecycle_pb2 as digitalkin_dot_module_dot_v1_dot_lifecycle__pb2
-from proto.digitalkin.module.v1 import monitoring_pb2 as digitalkin_dot_module_dot_v1_dot_monitoring__pb2
+from digitalkin.module.v1 import information_pb2 as digitalkin_dot_module_dot_v1_dot_information__pb2
+from digitalkin.module.v1 import lifecycle_pb2 as digitalkin_dot_module_dot_v1_dot_lifecycle__pb2
+from digitalkin.module.v1 import monitoring_pb2 as digitalkin_dot_module_dot_v1_dot_monitoring__pb2
 
 
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n)digitalkin/module/v1/module_service.proto\x12\x14\x64igitalkin.module.v1\x1a&digitalkin/module/v1/information.proto\x1a$digitalkin/module/v1/lifecycle.proto\x1a%digitalkin/module/v1/monitoring.proto2\xfc\x05\n\rModuleService\x12\x66\n\x0bStartModule\x12(.digitalkin.module.v1.StartModuleRequest\x1a).digitalkin.module.v1.StartModuleResponse(\x01\x30\x01\x12_\n\nStopModule\x12\'.digitalkin.module.v1.StopModuleRequest\x1a(.digitalkin.module.v1.StopModuleResponse\x12n\n\x0fGetModuleStatus\x12,.digitalkin.module.v1.GetModuleStatusRequest\x1a-.digitalkin.module.v1.GetModuleStatusResponse\x12h\n\rGetModuleJobs\x12*.digitalkin.module.v1.GetModuleJobsRequest\x1a+.digitalkin.module.v1.GetModuleJobsResponse\x12k\n\x0eGetModuleInput\x12+.digitalkin.module.v1.GetModuleInputRequest\x1a,.digitalkin.module.v1.GetModuleInputResponse\x12n\n\x0fGetModuleOutput\x12,.digitalkin.module.v1.GetModuleOutputRequest\x1a-.digitalkin.module.v1.GetModuleOutputResponse\x12k\n\x0eGetModuleSetup\x12+.digitalkin.module.v1.GetModuleSetupRequest\x1a,.digitalkin.module.v1.GetModuleSetupResponseB\xa2\x01\n\x18\x63om.digitalkin.module.v1B\x12ModuleServiceProtoH\x02P\x01\xa2\x02\x03\x44MX\xaa\x02\x14\x44igitalkin.Module.V1\xca\x02\x14\x44igitalkin\\Module\\V1\xe2\x02 Digitalkin\\Module\\V1\\GPBMetadata\xea\x02\x16\x44igitalkin::Module::V1b\x06proto3')

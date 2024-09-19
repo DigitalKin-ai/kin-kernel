@@ -3,9 +3,11 @@ TODO: sphinx docstring
 """
 
 import uuid
-from typing import Optional, Literal, Dict, Any
+from typing import Optional, Dict, Any
 from pydantic import BaseModel, Field, model_validator
 from pydantic_core import PydanticUndefinedType
+
+from kin_sdk.common.types import ModuleRole
 
 
 class Metadata(BaseModel):
@@ -20,7 +22,7 @@ class Metadata(BaseModel):
     module_id: str = Field(
         ..., description="The unique identifier of the module that send the request"
     )
-    module_role: Literal["owner", "member"] = Field(
+    module_role: ModuleRole = Field(
         default="member", description="The role of the module that send the request"
     )
     room_id: Optional[uuid.UUID] = Field(

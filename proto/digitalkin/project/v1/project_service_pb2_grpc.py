@@ -1,13 +1,13 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
-from proto.digitalkin.common.v1 import common_pb2 as digitalkin_dot_common_dot_v1_dot_common__pb2
-from proto.digitalkin.project.v1 import activity_pb2 as digitalkin_dot_project_dot_v1_dot_activity__pb2
-from proto.digitalkin.project.v1 import edge_pb2 as digitalkin_dot_project_dot_v1_dot_edge__pb2
-from proto.digitalkin.project.v1 import kin_pb2 as digitalkin_dot_project_dot_v1_dot_kin__pb2
-from proto.digitalkin.project.v1 import message_pb2 as digitalkin_dot_project_dot_v1_dot_message__pb2
-from proto.digitalkin.project.v1 import node_pb2 as digitalkin_dot_project_dot_v1_dot_node__pb2
-from proto.digitalkin.project.v1 import thread_pb2 as digitalkin_dot_project_dot_v1_dot_thread__pb2
-from proto.digitalkin.project.v1 import workflow_pb2 as digitalkin_dot_project_dot_v1_dot_workflow__pb2
+from digitalkin.common.v1 import common_pb2 as digitalkin_dot_common_dot_v1_dot_common__pb2
+from digitalkin.project.v1 import activity_pb2 as digitalkin_dot_project_dot_v1_dot_activity__pb2
+from digitalkin.project.v1 import edge_pb2 as digitalkin_dot_project_dot_v1_dot_edge__pb2
+from digitalkin.project.v1 import kin_pb2 as digitalkin_dot_project_dot_v1_dot_kin__pb2
+from digitalkin.project.v1 import message_pb2 as digitalkin_dot_project_dot_v1_dot_message__pb2
+from digitalkin.project.v1 import node_pb2 as digitalkin_dot_project_dot_v1_dot_node__pb2
+from digitalkin.project.v1 import thread_pb2 as digitalkin_dot_project_dot_v1_dot_thread__pb2
+from digitalkin.project.v1 import workflow_pb2 as digitalkin_dot_project_dot_v1_dot_workflow__pb2
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 

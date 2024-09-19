@@ -22,10 +22,10 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
-from proto.validate import validate_pb2 as validate_dot_validate__pb2
+from buf.validate import validate_pb2 as buf_dot_validate_dot_validate__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n.digitalkin/module_registry/v1/monitoring.proto\x12\x1d\x64igitalkin.module_registry.v1\x1a\x17validate/validate.proto\"h\n\nModuleInfo\x12.\n\tmodule_id\x18\x01 \x01(\tB\x11\xfa\x42\x0er\x0c\x10\x01:\x08modules:R\x08moduleId\x12*\n\rmodule_status\x18\x02 \x01(\x08\x42\x05\xfa\x42\x02j\x00R\x0cmoduleStatus\"\x16\n\x14GetAllModulesRequest\"v\n\x15GetAllModulesResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\x12\x43\n\x07modules\x18\x02 \x03(\x0b\x32).digitalkin.module_registry.v1.ModuleInfoR\x07modulesB\xc8\x01\n!com.digitalkin.module_registry.v1B\x0fMonitoringProtoH\x02P\x01\xa2\x02\x03\x44MX\xaa\x02\x1c\x44igitalkin.ModuleRegistry.V1\xca\x02\x1c\x44igitalkin\\ModuleRegistry\\V1\xe2\x02(Digitalkin\\ModuleRegistry\\V1\\GPBMetadata\xea\x02\x1e\x44igitalkin::ModuleRegistry::V1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n.digitalkin/module_registry/v1/monitoring.proto\x12\x1d\x64igitalkin.module_registry.v1\x1a\x1b\x62uf/validate/validate.proto\"d\n\nModuleInfo\x12\x31\n\tmodule_id\x18\x01 \x01(\tB\x14\xbaH\x11r\x0c\x10\x01:\x08modules:\xc8\x01\x01R\x08moduleId\x12#\n\rmodule_status\x18\x02 \x01(\x08R\x0cmoduleStatus\"\x16\n\x14GetAllModulesRequest\"v\n\x15GetAllModulesResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\x12\x43\n\x07modules\x18\x02 \x03(\x0b\x32).digitalkin.module_registry.v1.ModuleInfoR\x07modulesB\xc8\x01\n!com.digitalkin.module_registry.v1B\x0fMonitoringProtoH\x02P\x01\xa2\x02\x03\x44MX\xaa\x02\x1c\x44igitalkin.ModuleRegistry.V1\xca\x02\x1c\x44igitalkin\\ModuleRegistry\\V1\xe2\x02(Digitalkin\\ModuleRegistry\\V1\\GPBMetadata\xea\x02\x1e\x44igitalkin::ModuleRegistry::V1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -34,10 +34,8 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'\n!com.digitalkin.module_registry.v1B\017MonitoringProtoH\002P\001\242\002\003DMX\252\002\034Digitalkin.ModuleRegistry.V1\312\002\034Digitalkin\\ModuleRegistry\\V1\342\002(Digitalkin\\ModuleRegistry\\V1\\GPBMetadata\352\002\036Digitalkin::ModuleRegistry::V1'
   _globals['_MODULEINFO'].fields_by_name['module_id']._loaded_options = None
-  _globals['_MODULEINFO'].fields_by_name['module_id']._serialized_options = b'\372B\016r\014\020\001:\010modules:'
-  _globals['_MODULEINFO'].fields_by_name['module_status']._loaded_options = None
-  _globals['_MODULEINFO'].fields_by_name['module_status']._serialized_options = b'\372B\002j\000'
-  _globals['_MODULEINFO']._serialized_start=106
+  _globals['_MODULEINFO'].fields_by_name['module_id']._serialized_options = b'\272H\021r\014\020\001:\010modules:\310\001\001'
+  _globals['_MODULEINFO']._serialized_start=110
   _globals['_MODULEINFO']._serialized_end=210
   _globals['_GETALLMODULESREQUEST']._serialized_start=212
   _globals['_GETALLMODULESREQUEST']._serialized_end=234

@@ -8,40 +8,71 @@ from threading import Lock
 
 import grpc
 from pydantic import BaseModel
+from protovalidate import Violations
 
 from proto.digitalkin.module.v1.lifecycle_pb2 import (
+    MODULE_ROLE_MEMBRE,
+    MODULE_ROLE_UNKNOWN,
+    REQUEST_TYPE_CONNECTION,
+    RequestType as RequestTypePB,
+    StartModuleRequest,
     StartModuleResponse,
     ErrorResponse,
+    ModuleRole as ModuleRolePB,
 )
+from kin_sdk.common.types import ModuleRole
 from kin_sdk.common.logger import logger
 from kin_sdk.models.metadata import Metadata
 
 
-def get_metadata(context: grpc.ServicerContext) -> Metadata:
+def get_metadata(
+    request: StartModuleRequest, context: grpc.aio.ServicerContext
+) -> Metadata:
     """
-    Extract metadata from the gRPC context.
+    Extract metadata from the gRPC request.
 
+    :param request: The gRPC request object
     :param context: The gRPC context object
     :return: A Metadata object containing the extracted metadata
     :raises ValueError: If required metadata is missing or invalid
     """
     try:
-        metadata = dict(context.invocation_metadata())
-        module_id = metadata.get("module_id", None)
-        module_role = metadata.get("module_role", None)
-        room_id = metadata.get("room_id", None)
+        int_request_type = request.request_type
+        request_type = RequestTypePB.Name(
+            str(int_request_type) if int_request_type else None
+        )
+
+        if request_type != REQUEST_TYPE_CONNECTION:
+            raise ValueError(
+                "Request type should be `REQUEST_TYPE_CONNECTION` for the first connection to a room."
+            )
+
+        connection_request = request.connection_request
+
+        if connection_request is None:
+            raise ValueError("Connection request is missing.")
+
+        module_id = connection_request.module_id
+        int_module_role = connection_request.module_role
+        module_role = (
+            ModuleRolePB.Name(int_module_role) if int_module_role is not None else None
+        )
+        room_id = connection_request.room_id
 
         if not module_id:
-            raise ValueError("Module ID metadata is required.")
+            raise ValueError("Module ID is missing.")
 
-        if (module_role is None or module_role == "member") and not room_id:
+        if module_role is None or module_role is MODULE_ROLE_UNKNOWN:
+            raise ValueError("Module role is missing.")
+
+        if module_role == MODULE_ROLE_MEMBRE and not room_id:
             raise ValueError(
-                "Module role metadata should be `owner` if there is no `room_id` or should be `member` with a `room_id`."
+                "Module role should be `MODULE_ROLE_OWNER` if there is no `room_id` or should be `MODULE_ROLE_MEMBRE` with a `room_id`."
             )
 
         return Metadata(
             module_id=module_id,
-            module_role=module_role,
+            module_role=ModuleRole.get(str(module_role)),
             room_id=uuid.UUID(room_id) if room_id else None,
         )
 
@@ -109,6 +140,30 @@ def check_required_attributes(instance: Any) -> None:
         raise TypeError(
             f"The 'module_class' attribute must be a subclass of BaseModule, got {instance.module_class.__name__}."
         )
+
+
+def format_violations(violations_message: Violations):
+    """
+    Format the violations message.
+
+    :param violations_message: The Violations message object.
+    :return: A formatted string containing the violations.
+    """
+    violations = violations_message.violations
+
+    formatted_output = []
+
+    for v in violations:  # Ignorer le premier élément vide
+        field_path = v.field_path
+        constraint_id = v.constraint_id
+        message = v.message
+
+        # Formater chaque violation
+        formatted_violation = f"{field_path}" f"[{constraint_id}]: " f"{message}"
+        formatted_output.append(formatted_violation)
+
+    # Joindre toutes les violations formatées avec une ligne de séparation
+    return "\n".join(formatted_output)
 
 
 def handle_start_error(context, code, message, details):

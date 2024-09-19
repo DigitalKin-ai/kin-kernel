@@ -1,8 +1,8 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
-from proto.digitalkin.module.v1 import information_pb2 as digitalkin_dot_module_dot_v1_dot_information__pb2
-from proto.digitalkin.module.v1 import lifecycle_pb2 as digitalkin_dot_module_dot_v1_dot_lifecycle__pb2
-from proto.digitalkin.module.v1 import monitoring_pb2 as digitalkin_dot_module_dot_v1_dot_monitoring__pb2
+from digitalkin.module.v1 import information_pb2 as digitalkin_dot_module_dot_v1_dot_information__pb2
+from digitalkin.module.v1 import lifecycle_pb2 as digitalkin_dot_module_dot_v1_dot_lifecycle__pb2
+from digitalkin.module.v1 import monitoring_pb2 as digitalkin_dot_module_dot_v1_dot_monitoring__pb2
 
 
 class ModuleServiceStub(object):

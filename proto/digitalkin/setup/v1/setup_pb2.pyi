@@ -1,4 +1,4 @@
-from proto.digitalkin.setup.v1 import assistant_pb2 as _assistant_pb2
+from digitalkin.setup.v1 import assistant_pb2 as _assistant_pb2
 from google.api import field_behavior_pb2 as _field_behavior_pb2
 from google.protobuf import any_pb2 as _any_pb2
 from google.protobuf.internal import containers as _containers

@@ -22,8 +22,8 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
-from proto.digitalkin.common.v1 import common_pb2 as digitalkin_dot_common_dot_v1_dot_common__pb2
-from proto.digitalkin.project.v1 import response_pb2 as digitalkin_dot_project_dot_v1_dot_response__pb2
+from digitalkin.common.v1 import common_pb2 as digitalkin_dot_common_dot_v1_dot_common__pb2
+from digitalkin.project.v1 import response_pb2 as digitalkin_dot_project_dot_v1_dot_response__pb2
 from google.api import field_behavior_pb2 as google_dot_api_dot_field__behavior__pb2
 
 

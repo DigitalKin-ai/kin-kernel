@@ -22,10 +22,10 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
-from proto.validate import validate_pb2 as validate_dot_validate__pb2
+from buf.validate import validate_pb2 as buf_dot_validate_dot_validate__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n%digitalkin/module/v1/monitoring.proto\x12\x14\x64igitalkin.module.v1\x1a\x17validate/validate.proto\"}\n\x07JobInfo\x12%\n\x06job_id\x18\x01 \x01(\tB\x0e\xfa\x42\x0br\t\x10\x01:\x05jobs:R\x05jobId\x12K\n\njob_status\x18\x02 \x01(\x0e\x32\".digitalkin.module.v1.ModuleStatusB\x08\xfa\x42\x05\x82\x01\x02\x10\x01R\tjobStatus\"?\n\x16GetModuleStatusRequest\x12%\n\x06job_id\x18\x01 \x01(\tB\x0e\xfa\x42\x0br\t\x10\x01:\x05jobs:R\x05jobId\"\xa0\x01\n\x17GetModuleStatusResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\x12\x44\n\x06status\x18\x02 \x01(\x0e\x32\".digitalkin.module.v1.ModuleStatusB\x08\xfa\x42\x05\x82\x01\x02\x10\x01R\x06status\x12%\n\x06job_id\x18\x03 \x01(\tB\x0e\xfa\x42\x0br\t\x10\x01:\x05jobs:R\x05jobId\"\x16\n\x14GetModuleJobsRequest\"d\n\x15GetModuleJobsResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\x12\x31\n\x04jobs\x18\x03 \x03(\x0b\x32\x1d.digitalkin.module.v1.JobInfoR\x04jobs*\xea\x01\n\x0cModuleStatus\x12\x19\n\x15MODULE_STATUS_UNKNOWN\x10\x00\x12\x1a\n\x16MODULE_STATUS_STARTING\x10\x01\x12\x1c\n\x18MODULE_STATUS_PROCESSING\x10\x02\x12\x1a\n\x16MODULE_STATUS_CANCELED\x10\x03\x12\x18\n\x14MODULE_STATUS_FAILED\x10\x04\x12\x19\n\x15MODULE_STATUS_EXPIRED\x10\x05\x12\x19\n\x15MODULE_STATUS_SUCCESS\x10\x06\x12\x19\n\x15MODULE_STATUS_STOPPED\x10\x07\x42\x9f\x01\n\x18\x63om.digitalkin.module.v1B\x0fMonitoringProtoH\x02P\x01\xa2\x02\x03\x44MX\xaa\x02\x14\x44igitalkin.Module.V1\xca\x02\x14\x44igitalkin\\Module\\V1\xe2\x02 Digitalkin\\Module\\V1\\GPBMetadata\xea\x02\x16\x44igitalkin::Module::V1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n%digitalkin/module/v1/monitoring.proto\x12\x14\x64igitalkin.module.v1\x1a\x1b\x62uf/validate/validate.proto\"\x83\x01\n\x07JobInfo\x12(\n\x06job_id\x18\x01 \x01(\tB\x11\xbaH\x0er\t\x10\x01:\x05jobs:\xc8\x01\x01R\x05jobId\x12N\n\njob_status\x18\x02 \x01(\x0e\x32\".digitalkin.module.v1.ModuleStatusB\x0b\xbaH\x08\x82\x01\x02\x10\x01\xc8\x01\x01R\tjobStatus\"B\n\x16GetModuleStatusRequest\x12(\n\x06job_id\x18\x01 \x01(\tB\x11\xbaH\x0er\t\x10\x01:\x05jobs:\xc8\x01\x01R\x05jobId\"\xa6\x01\n\x17GetModuleStatusResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\x12G\n\x06status\x18\x02 \x01(\x0e\x32\".digitalkin.module.v1.ModuleStatusB\x0b\xbaH\x08\x82\x01\x02\x10\x01\xc8\x01\x01R\x06status\x12(\n\x06job_id\x18\x03 \x01(\tB\x11\xbaH\x0er\t\x10\x01:\x05jobs:\xc8\x01\x01R\x05jobId\"\x16\n\x14GetModuleJobsRequest\"d\n\x15GetModuleJobsResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\x12\x31\n\x04jobs\x18\x03 \x03(\x0b\x32\x1d.digitalkin.module.v1.JobInfoR\x04jobs*\xea\x01\n\x0cModuleStatus\x12\x19\n\x15MODULE_STATUS_UNKNOWN\x10\x00\x12\x1a\n\x16MODULE_STATUS_STARTING\x10\x01\x12\x1c\n\x18MODULE_STATUS_PROCESSING\x10\x02\x12\x1a\n\x16MODULE_STATUS_CANCELED\x10\x03\x12\x18\n\x14MODULE_STATUS_FAILED\x10\x04\x12\x19\n\x15MODULE_STATUS_EXPIRED\x10\x05\x12\x19\n\x15MODULE_STATUS_SUCCESS\x10\x06\x12\x19\n\x15MODULE_STATUS_STOPPED\x10\x07\x42\x9f\x01\n\x18\x63om.digitalkin.module.v1B\x0fMonitoringProtoH\x02P\x01\xa2\x02\x03\x44MX\xaa\x02\x14\x44igitalkin.Module.V1\xca\x02\x14\x44igitalkin\\Module\\V1\xe2\x02 Digitalkin\\Module\\V1\\GPBMetadata\xea\x02\x16\x44igitalkin::Module::V1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -34,25 +34,25 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'\n\030com.digitalkin.module.v1B\017MonitoringProtoH\002P\001\242\002\003DMX\252\002\024Digitalkin.Module.V1\312\002\024Digitalkin\\Module\\V1\342\002 Digitalkin\\Module\\V1\\GPBMetadata\352\002\026Digitalkin::Module::V1'
   _globals['_JOBINFO'].fields_by_name['job_id']._loaded_options = None
-  _globals['_JOBINFO'].fields_by_name['job_id']._serialized_options = b'\372B\013r\t\020\001:\005jobs:'
+  _globals['_JOBINFO'].fields_by_name['job_id']._serialized_options = b'\272H\016r\t\020\001:\005jobs:\310\001\001'
   _globals['_JOBINFO'].fields_by_name['job_status']._loaded_options = None
-  _globals['_JOBINFO'].fields_by_name['job_status']._serialized_options = b'\372B\005\202\001\002\020\001'
+  _globals['_JOBINFO'].fields_by_name['job_status']._serialized_options = b'\272H\010\202\001\002\020\001\310\001\001'
   _globals['_GETMODULESTATUSREQUEST'].fields_by_name['job_id']._loaded_options = None
-  _globals['_GETMODULESTATUSREQUEST'].fields_by_name['job_id']._serialized_options = b'\372B\013r\t\020\001:\005jobs:'
+  _globals['_GETMODULESTATUSREQUEST'].fields_by_name['job_id']._serialized_options = b'\272H\016r\t\020\001:\005jobs:\310\001\001'
   _globals['_GETMODULESTATUSRESPONSE'].fields_by_name['status']._loaded_options = None
-  _globals['_GETMODULESTATUSRESPONSE'].fields_by_name['status']._serialized_options = b'\372B\005\202\001\002\020\001'
+  _globals['_GETMODULESTATUSRESPONSE'].fields_by_name['status']._serialized_options = b'\272H\010\202\001\002\020\001\310\001\001'
   _globals['_GETMODULESTATUSRESPONSE'].fields_by_name['job_id']._loaded_options = None
-  _globals['_GETMODULESTATUSRESPONSE'].fields_by_name['job_id']._serialized_options = b'\372B\013r\t\020\001:\005jobs:'
-  _globals['_MODULESTATUS']._serialized_start=570
-  _globals['_MODULESTATUS']._serialized_end=804
-  _globals['_JOBINFO']._serialized_start=88
-  _globals['_JOBINFO']._serialized_end=213
-  _globals['_GETMODULESTATUSREQUEST']._serialized_start=215
-  _globals['_GETMODULESTATUSREQUEST']._serialized_end=278
-  _globals['_GETMODULESTATUSRESPONSE']._serialized_start=281
-  _globals['_GETMODULESTATUSRESPONSE']._serialized_end=441
-  _globals['_GETMODULEJOBSREQUEST']._serialized_start=443
-  _globals['_GETMODULEJOBSREQUEST']._serialized_end=465
-  _globals['_GETMODULEJOBSRESPONSE']._serialized_start=467
-  _globals['_GETMODULEJOBSRESPONSE']._serialized_end=567
+  _globals['_GETMODULESTATUSRESPONSE'].fields_by_name['job_id']._serialized_options = b'\272H\016r\t\020\001:\005jobs:\310\001\001'
+  _globals['_MODULESTATUS']._serialized_start=590
+  _globals['_MODULESTATUS']._serialized_end=824
+  _globals['_JOBINFO']._serialized_start=93
+  _globals['_JOBINFO']._serialized_end=224
+  _globals['_GETMODULESTATUSREQUEST']._serialized_start=226
+  _globals['_GETMODULESTATUSREQUEST']._serialized_end=292
+  _globals['_GETMODULESTATUSRESPONSE']._serialized_start=295
+  _globals['_GETMODULESTATUSRESPONSE']._serialized_end=461
+  _globals['_GETMODULEJOBSREQUEST']._serialized_start=463
+  _globals['_GETMODULEJOBSREQUEST']._serialized_end=485
+  _globals['_GETMODULEJOBSRESPONSE']._serialized_start=487
+  _globals['_GETMODULEJOBSRESPONSE']._serialized_end=587
 # @@protoc_insertion_point(module_scope)

@@ -68,7 +68,7 @@ def main():
         f"{proto_dir}/digitalkin/setup",
     ]
     paths_option = " ".join(f"--path {path}" for path in proto_paths)
-    command = f"buf generate {proto_dir} --template {proto_dir}/{buf_file} -o {output_dir} {paths_option}"
+    command = f"buf generate {proto_dir} --template {proto_dir}/{buf_file} --include-imports -o {output_dir} {paths_option}"
 
     print(f"\nCommand: [\n\t- {command}\n]\n")
 
@@ -91,8 +91,7 @@ def main():
 
             # Add import prefix
             import_prefix = "proto"  # Define the prefix here
-            add_import_prefix(output_dir, import_prefix, "digitalkin")
-            add_import_prefix(output_dir, import_prefix, "validate")
+            # add_import_prefix(output_dir, import_prefix, "digitalkin")
             print(
                 f"Added import prefix '{import_prefix}' to all Python files in {output_dir}"
             )
@@ -129,6 +128,19 @@ def main():
         else:
             print("Command failed with the following error:")
             print(result.stderr)
+    except subprocess.CalledProcessError as e:
+        print("Subprocess error", e.stderr)
+    except Exception as e:  # pylint: disable=broad-except
+        print("Error", str(e))
+
+    try:
+        # Exclude remove proto/google directory
+        command = f"rm -Rf {output_dir}google"
+        # Use subprocess.run to execute the command
+        result = subprocess.run(
+            command, shell=True, text=True, capture_output=True, check=True
+        )
+        print(result)
     except subprocess.CalledProcessError as e:
         print("Subprocess error", e.stderr)
     except Exception as e:  # pylint: disable=broad-except

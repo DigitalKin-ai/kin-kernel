@@ -1,6 +1,6 @@
+from buf.validate import validate_pb2 as _validate_pb2
 from google.api import field_behavior_pb2 as _field_behavior_pb2
 from google.protobuf import struct_pb2 as _struct_pb2
-from proto.validate import validate_pb2 as _validate_pb2
 from google.protobuf.internal import containers as _containers
 from google.protobuf.internal import enum_type_wrapper as _enum_type_wrapper
 from google.protobuf import descriptor as _descriptor
@@ -12,6 +12,7 @@ DESCRIPTOR: _descriptor.FileDescriptor
 class RequestType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = ()
     REQUEST_TYPE_UNKNOWN: _ClassVar[RequestType]
+    REQUEST_TYPE_CONNECTION: _ClassVar[RequestType]
     REQUEST_TYPE_SEND: _ClassVar[RequestType]
     REQUEST_TYPE_EXIT: _ClassVar[RequestType]
     REQUEST_TYPE_VALIDATE: _ClassVar[RequestType]
@@ -31,6 +32,7 @@ class ModuleRole(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     MODULE_ROLE_OWNER: _ClassVar[ModuleRole]
     MODULE_ROLE_MEMBRE: _ClassVar[ModuleRole]
 REQUEST_TYPE_UNKNOWN: RequestType
+REQUEST_TYPE_CONNECTION: RequestType
 REQUEST_TYPE_SEND: RequestType
 REQUEST_TYPE_EXIT: RequestType
 REQUEST_TYPE_VALIDATE: RequestType
@@ -44,23 +46,35 @@ MODULE_ROLE_UNKNOWN: ModuleRole
 MODULE_ROLE_OWNER: ModuleRole
 MODULE_ROLE_MEMBRE: ModuleRole
 
-class StartModuleRequest(_message.Message):
-    __slots__ = ("input", "setup_id", "module_ids", "request_type", "room_id", "module_id", "module_role")
-    INPUT_FIELD_NUMBER: _ClassVar[int]
-    SETUP_ID_FIELD_NUMBER: _ClassVar[int]
-    MODULE_IDS_FIELD_NUMBER: _ClassVar[int]
-    REQUEST_TYPE_FIELD_NUMBER: _ClassVar[int]
+class ConnectionRequest(_message.Message):
+    __slots__ = ("room_id", "module_id", "module_role")
     ROOM_ID_FIELD_NUMBER: _ClassVar[int]
     MODULE_ID_FIELD_NUMBER: _ClassVar[int]
     MODULE_ROLE_FIELD_NUMBER: _ClassVar[int]
-    input: _struct_pb2.Struct
-    setup_id: str
-    module_ids: _containers.RepeatedScalarFieldContainer[str]
-    request_type: RequestType
     room_id: str
     module_id: str
     module_role: ModuleRole
-    def __init__(self, input: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., setup_id: _Optional[str] = ..., module_ids: _Optional[_Iterable[str]] = ..., request_type: _Optional[_Union[RequestType, str]] = ..., room_id: _Optional[str] = ..., module_id: _Optional[str] = ..., module_role: _Optional[_Union[ModuleRole, str]] = ...) -> None: ...
+    def __init__(self, room_id: _Optional[str] = ..., module_id: _Optional[str] = ..., module_role: _Optional[_Union[ModuleRole, str]] = ...) -> None: ...
+
+class InputDataRequest(_message.Message):
+    __slots__ = ("input", "setup_id", "module_ids")
+    INPUT_FIELD_NUMBER: _ClassVar[int]
+    SETUP_ID_FIELD_NUMBER: _ClassVar[int]
+    MODULE_IDS_FIELD_NUMBER: _ClassVar[int]
+    input: _struct_pb2.Struct
+    setup_id: str
+    module_ids: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, input: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., setup_id: _Optional[str] = ..., module_ids: _Optional[_Iterable[str]] = ...) -> None: ...
+
+class StartModuleRequest(_message.Message):
+    __slots__ = ("request_type", "connection_request", "input_request")
+    REQUEST_TYPE_FIELD_NUMBER: _ClassVar[int]
+    CONNECTION_REQUEST_FIELD_NUMBER: _ClassVar[int]
+    INPUT_REQUEST_FIELD_NUMBER: _ClassVar[int]
+    request_type: RequestType
+    connection_request: ConnectionRequest
+    input_request: InputDataRequest
+    def __init__(self, request_type: _Optional[_Union[RequestType, str]] = ..., connection_request: _Optional[_Union[ConnectionRequest, _Mapping]] = ..., input_request: _Optional[_Union[InputDataRequest, _Mapping]] = ...) -> None: ...
 
 class StopModuleRequest(_message.Message):
     __slots__ = ("job_id",)

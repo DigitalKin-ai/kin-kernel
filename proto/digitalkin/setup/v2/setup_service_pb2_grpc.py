@@ -1,6 +1,6 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
-from proto.digitalkin.setup.v2 import setup_pb2 as digitalkin_dot_setup_dot_v2_dot_setup__pb2
+from digitalkin.setup.v2 import setup_pb2 as digitalkin_dot_setup_dot_v2_dot_setup__pb2
 
 
 class SetupServiceStub(object):

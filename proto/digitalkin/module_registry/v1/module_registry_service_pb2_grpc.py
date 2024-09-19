@@ -1,8 +1,8 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
-from proto.digitalkin.module_registry.v1 import action_pb2 as digitalkin_dot_module__registry_dot_v1_dot_action__pb2
-from proto.digitalkin.module_registry.v1 import monitoring_pb2 as digitalkin_dot_module__registry_dot_v1_dot_monitoring__pb2
-from proto.digitalkin.module_registry.v1 import registration_pb2 as digitalkin_dot_module__registry_dot_v1_dot_registration__pb2
+from digitalkin.module_registry.v1 import action_pb2 as digitalkin_dot_module__registry_dot_v1_dot_action__pb2
+from digitalkin.module_registry.v1 import monitoring_pb2 as digitalkin_dot_module__registry_dot_v1_dot_monitoring__pb2
+from digitalkin.module_registry.v1 import registration_pb2 as digitalkin_dot_module__registry_dot_v1_dot_registration__pb2
 
 
 class ModuleRegistryServiceStub(object):

@@ -8,7 +8,7 @@ from collections import defaultdict
 from typing import Any, Callable, Coroutine, DefaultDict, Union
 
 from kin_sdk.common.merge_dicts import merge_dicts
-from kin_sdk.common.types import RequestType
+from kin_sdk.common.types import ModuleRole, RequestType
 from kin_sdk.exception import (
     RoomLockedException,
     InvalidModuleRoleException,
@@ -69,15 +69,21 @@ class Room:
         """
         return self.__expires_at
 
-    def get_modules(self, module_role: str) -> set:
+    def get_modules(self, module_role: ModuleRole) -> set:
         """
         Get the modules in the room
         """
-        if module_role == "owner":
+        if module_role == ModuleRole.MODULE_ROLE_OWNER:
             return self.owners
-        if module_role == "member":
+        if module_role == ModuleRole.MODULE_ROLE_MEMBRE:
             return self.members
         raise InvalidModuleRoleException("Invalid module role")
+
+    def lock_the_room(self) -> None:
+        """
+        Lock the room
+        """
+        self.__lock = True
 
     def get_number_of_modules(self) -> int:
         """
@@ -92,6 +98,10 @@ class Room:
         """
         if self.__lock:
             raise RoomLockedException("Room is locked")
+
+        # check that there is only one owner
+        if len(self.__owners) > 0:
+            raise ValueError("Room already has an owner")
 
         self.__owners.add(module_id)
         self.__subscribers[module_id] = None
@@ -150,24 +160,26 @@ class Room:
         """
         self.__expires_at = None
 
-    def add_module(self, module_id: str, module_role: str) -> None:
+    def add_module(self, module_id: str, module_role: ModuleRole) -> None:
         """
         Add a module to the room
         """
-        if module_role == "owner":
+        if module_role == ModuleRole.MODULE_ROLE_OWNER:
             self.add_owner(module_id)
-        elif module_role == "member":
+        elif module_role == ModuleRole.MODULE_ROLE_MEMBRE:
             self.add_member(module_id)
         else:
-            raise InvalidModuleRoleException("Invalid module role")
+            raise InvalidModuleRoleException(
+                "Invalid module role: " + str(module_role.value)
+            )
 
-    def remove_module(self, module_id: str, module_role: str) -> None:
+    def remove_module(self, module_id: str, module_role: ModuleRole) -> None:
         """
         Remove a module from the room
         """
-        if module_role == "owner":
+        if module_role == ModuleRole.MODULE_ROLE_OWNER:
             self.remove_owner(module_id)
-        elif module_role == "member":
+        elif module_role == ModuleRole.MODULE_ROLE_MEMBRE:
             self.remove_member(module_id)
         else:
             raise InvalidModuleRoleException("Invalid module role")
@@ -242,7 +254,7 @@ class Rooms:
         self.__rooms.pop(room_id)
 
     def add_module_to_room(
-        self, room_id: UUID, module_id: str, module_role: str
+        self, room_id: UUID, module_id: str, module_role: ModuleRole
     ) -> None:
         """
         Add a module to a room
@@ -253,7 +265,7 @@ class Rooms:
             raise KeyError("Room not found") from exc
 
     def remove_module_from_room(
-        self, room_id: UUID, module_id: str, module_role: str
+        self, room_id: UUID, module_id: str, module_role: ModuleRole
     ) -> None:
         """
         Remove a module from a room
@@ -299,7 +311,7 @@ class Rooms:
         except KeyError as exc:
             raise KeyError("Room not found") from exc
 
-    def get_modules_in_room(self, room_id: UUID, module_role: str) -> set:
+    def get_modules_in_room(self, room_id: UUID, module_role: ModuleRole) -> set:
         """
         Get the modules in a room
         """

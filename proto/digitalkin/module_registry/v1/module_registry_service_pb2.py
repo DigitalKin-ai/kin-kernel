@@ -22,9 +22,9 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
-from proto.digitalkin.module_registry.v1 import action_pb2 as digitalkin_dot_module__registry_dot_v1_dot_action__pb2
-from proto.digitalkin.module_registry.v1 import monitoring_pb2 as digitalkin_dot_module__registry_dot_v1_dot_monitoring__pb2
-from proto.digitalkin.module_registry.v1 import registration_pb2 as digitalkin_dot_module__registry_dot_v1_dot_registration__pb2
+from digitalkin.module_registry.v1 import action_pb2 as digitalkin_dot_module__registry_dot_v1_dot_action__pb2
+from digitalkin.module_registry.v1 import monitoring_pb2 as digitalkin_dot_module__registry_dot_v1_dot_monitoring__pb2
+from digitalkin.module_registry.v1 import registration_pb2 as digitalkin_dot_module__registry_dot_v1_dot_registration__pb2
 
 
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n;digitalkin/module_registry/v1/module_registry_service.proto\x12\x1d\x64igitalkin.module_registry.v1\x1a*digitalkin/module_registry/v1/action.proto\x1a.digitalkin/module_registry/v1/monitoring.proto\x1a\x30\x64igitalkin/module_registry/v1/registration.proto2\xfb\x04\n\x15ModuleRegistryService\x12s\n\x0eRegisterModule\x12..digitalkin.module_registry.v1.RegisterRequest\x1a/.digitalkin.module_registry.v1.RegisterResponse\"\x00\x12y\n\x10\x44\x65registerModule\x12\x30.digitalkin.module_registry.v1.DeregisterRequest\x1a\x31.digitalkin.module_registry.v1.DeregisterResponse\"\x00\x12s\n\x0e\x44iscoverModule\x12..digitalkin.module_registry.v1.DiscoverRequest\x1a/.digitalkin.module_registry.v1.DiscoverResponse\"\x00\x12\x7f\n\x12UpdateModuleStatus\x12\x32.digitalkin.module_registry.v1.UpdateStatusRequest\x1a\x33.digitalkin.module_registry.v1.UpdateStatusResponse\"\x00\x12|\n\rGetAllModules\x12\x33.digitalkin.module_registry.v1.GetAllModulesRequest\x1a\x34.digitalkin.module_registry.v1.GetAllModulesResponse\"\x00\x42\xd3\x01\n!com.digitalkin.module_registry.v1B\x1aModuleRegistryServiceProtoH\x02P\x01\xa2\x02\x03\x44MX\xaa\x02\x1c\x44igitalkin.ModuleRegistry.V1\xca\x02\x1c\x44igitalkin\\ModuleRegistry\\V1\xe2\x02(Digitalkin\\ModuleRegistry\\V1\\GPBMetadata\xea\x02\x1e\x44igitalkin::ModuleRegistry::V1b\x06proto3')

@@ -9,10 +9,10 @@ pydantic = "==2.9.1"
 pydantic-settings = "==2.5.2"
 opentelemetry-api = "==1.21.0"
 opentelemetry-sdk = "==1.21.0"
-protoc-gen-validate = "==1.1.0"
+protovalidate = "==0.4.0"
 grpcio = "==1.66.1"
-surrealdb = "==0.3.2"
 googleapis-common-protos = "==1.65.0"
+surrealdb = "==0.3.2"
 networkx = "==3.3"
 
 [dev-packages]
