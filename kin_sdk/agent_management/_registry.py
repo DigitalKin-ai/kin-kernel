@@ -4,7 +4,7 @@ TODO: sphinx documentation
 
 from dataclasses import dataclass
 import json
-from typing import Any, AsyncGenerator, Dict, List, Literal, Optional, Union
+from typing import Any, AsyncGenerator, Dict, List, Optional, Union
 
 import grpc
 from google.protobuf import json_format, struct_pb2
@@ -16,7 +16,11 @@ from proto.digitalkin.module_registry.v1.action_pb2 import DiscoverRequest
 from proto.digitalkin.module_registry.v1.module_registry_service_pb2_grpc import (
     ModuleRegistryServiceStub,
 )
-from proto.digitalkin.module.v1.lifecycle_pb2 import StartModuleRequest
+from proto.digitalkin.module.v1.lifecycle_pb2 import (
+    ConnectionRequest,
+    StartModuleRequest,
+    InputDataRequest,
+)
 from proto.digitalkin.module.v1.information_pb2 import (
     GetModuleInputRequest,
     GetModuleInputResponse,
@@ -230,11 +234,7 @@ class ModuleRegistry:
     async def start_module(
         self,
         module_id: str,
-        input_data: Dict[str, Any],
-        setup_id: str,
-        module_ids: Optional[List[str]] = None,
-        request_type: str = "SEND",
-        module_role: Literal["owner", "member"] = "owner",
+        messages: List[Dict[str, Dict[str, Any]]],
     ) -> AsyncGenerator[Optional[dict], None]:
         """
         Get the input of a module.
@@ -258,22 +258,44 @@ class ModuleRegistry:
                 f"{module_model.address}:{module_model.port}"
             )
             stub = ModuleServiceStub(channel)
-            request = StartModuleRequest(
-                input=json_format.Parse(
-                    text=json.dumps(input_data),
-                    message=struct_pb2.Struct(),  # pylint: disable=no-member
-                    ignore_unknown_fields=True,
-                ),
-                setup_id=setup_id,
-                module_ids=[] if module_ids is None else module_ids,
-                request_type=request_type,
-            )
-            metadata = [
-                ("module_id", self._module_id),
-                ("module_role", module_role),
-            ]
-            response_iterator = stub.StartModule(iter([request]), metadata=metadata)
+            requests = []
+            for message in messages:
+                message_type, message_value = list(message.items())[0]
+                print("message_type", message_type, "message_value", message_value)
+                if message_type == "connection_request":
+                    request = StartModuleRequest(
+                        request_type=message_value.get(
+                            "request_type", "REQUEST_TYPE_UNKNOWN"
+                        ),
+                        connection_request=ConnectionRequest(
+                            module_id=self._module_id,
+                            module_role=message_value.get(
+                                "module_role", "MODULE_ROLE_UNKNOWN"
+                            ),
+                        ),
+                    )
+                elif message_type == "input_request":
+                    request = StartModuleRequest(
+                        request_type=message_value.get(
+                            "request_type", "REQUEST_TYPE_UNKNOWN"
+                        ),
+                        input_request=InputDataRequest(
+                            module_ids=message_value.get("module_ids", []),
+                            setup_id=message_value.get("setup_id", None),
+                            input=json_format.Parse(
+                                text=json.dumps(message_value.get("input_data", {})),
+                                message=struct_pb2.Struct(),  # pylint: disable=no-member
+                                ignore_unknown_fields=True,
+                            ),
+                        ),
+                    )
+                else:
+                    raise ValueError("The message is not recognized")
+                requests.append(request)
+
+            response_iterator = stub.StartModule(iter(requests))  # , metadata=metadata)
             async for response in response_iterator:
+                print("response", response)
                 json_response = json_format.MessageToDict(
                     response,
                     preserving_proto_field_name=True,

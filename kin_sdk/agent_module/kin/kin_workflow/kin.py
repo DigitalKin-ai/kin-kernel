@@ -245,10 +245,22 @@ class KinWorkflow(BaseKin):
         ) -> Dict[str, Any]:
             print("--" * 10)
             response_iterator = self.registry.start_module(
-                module_id,
-                input_data,
-                setup_id=f"{setup_id}::nodes:{node_id}",
-                request_type="REQUEST_TYPE_VALIDATE",
+                module_id=module_id,
+                messages=[
+                    {
+                        "connection_request": {
+                            "request_type": "REQUEST_TYPE_CONNECTION",
+                            "module_role": "MODULE_ROLE_OWNER",
+                        }
+                    },
+                    {
+                        "input_request": {
+                            "input_data": input_data,
+                            "setup_id": f"{setup_id}::nodes:{node_id}",
+                            "request_type": "REQUEST_TYPE_VALIDATE",
+                        }
+                    },
+                ],
             )
             result = {}
             print("--" * 10)
