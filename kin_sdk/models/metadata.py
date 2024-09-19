@@ -23,7 +23,8 @@ class Metadata(BaseModel):
         ..., description="The unique identifier of the module that send the request"
     )
     module_role: ModuleRole = Field(
-        default="member", description="The role of the module that send the request"
+        default=ModuleRole.MODULE_ROLE_MEMBRE,
+        description="The role of the module that send the request",
     )
     room_id: Optional[uuid.UUID] = Field(
         None,

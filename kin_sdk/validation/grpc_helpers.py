@@ -4,7 +4,7 @@ TODO: sphinx docstring
 
 import uuid
 from typing import Dict, Any
-from threading import Lock
+from asyncio import Lock
 
 import grpc
 from pydantic import BaseModel
@@ -14,7 +14,6 @@ from proto.digitalkin.module.v1.lifecycle_pb2 import (
     MODULE_ROLE_MEMBRE,
     MODULE_ROLE_UNKNOWN,
     REQUEST_TYPE_CONNECTION,
-    RequestType as RequestTypePB,
     StartModuleRequest,
     StartModuleResponse,
     ErrorResponse,
@@ -37,43 +36,44 @@ def get_metadata(
     :raises ValueError: If required metadata is missing or invalid
     """
     try:
-        int_request_type = request.request_type
-        request_type = RequestTypePB.Name(
-            str(int_request_type) if int_request_type else None
-        )
-
+        request_type = request.request_type
         if request_type != REQUEST_TYPE_CONNECTION:
             raise ValueError(
                 "Request type should be `REQUEST_TYPE_CONNECTION` for the first connection to a room."
             )
 
-        connection_request = request.connection_request
-
-        if connection_request is None:
+        connection_request = (
+            request.connection_request
+            if request.HasField("connection_request")
+            else None
+        )
+        if connection_request is None or not connection_request:
             raise ValueError("Connection request is missing.")
 
-        module_id = connection_request.module_id
-        int_module_role = connection_request.module_role
-        module_role = (
-            ModuleRolePB.Name(int_module_role) if int_module_role is not None else None
+        module_id = (
+            connection_request.module_id if connection_request.module_id else None
         )
-        room_id = connection_request.room_id
+        int_module_role = connection_request.module_role
+        room_id = connection_request.room_id if connection_request.room_id else None
 
         if not module_id:
             raise ValueError("Module ID is missing.")
 
-        if module_role is None or module_role is MODULE_ROLE_UNKNOWN:
+        if int_module_role is None or int_module_role is MODULE_ROLE_UNKNOWN:
             raise ValueError("Module role is missing.")
 
-        if module_role == MODULE_ROLE_MEMBRE and not room_id:
+        if int_module_role == MODULE_ROLE_MEMBRE and not room_id:
             raise ValueError(
                 "Module role should be `MODULE_ROLE_OWNER` if there is no `room_id` or should be `MODULE_ROLE_MEMBRE` with a `room_id`."
             )
 
+        module_role = (
+            ModuleRolePB.Name(int_module_role) if int_module_role is not None else None
+        )
         return Metadata(
             module_id=module_id,
             module_role=ModuleRole.get(str(module_role)),
-            room_id=uuid.UUID(room_id) if room_id else None,
+            room_id=uuid.UUID(room_id) if room_id and room_id is not None else None,
         )
 
     except grpc.RpcError as e:
@@ -89,10 +89,12 @@ def pydantic_validation(request: Dict[str, Any], model: BaseModel) -> None:
     """
     TODO: sphinx docstring
     """
-    input_data = request.get("input", None)
+    input_data = request.get("input_request", {}).get("input", None)
 
     if input_data is None:
-        raise ValueError("Input data is missing.")
+        raise ValueError(
+            "The parameter 'input' is missing, it should be in the 'input_request' field."
+        )
 
     model.model_validate(input_data)
 

@@ -19,6 +19,7 @@ from google.protobuf import json_format, struct_pb2
 from protovalidate import validate, ValidationError as ValidationFailed
 
 from proto.digitalkin.module.v1.lifecycle_pb2 import (
+    RequestType as RequestTypePB,
     StartModuleRequest,
     StartModuleResponse,
     ConnectionResponse,
@@ -153,11 +154,23 @@ async def handle_incoming_messages(
                     if metadata.module_role == ModuleRole.MODULE_ROLE_OWNER
                     else RequestType.REQUEST_TYPE_SEND
                 )
+                print("**" * 50)
+                print("request_type", request_type)
+                print(
+                    {
+                        **request_dict,
+                        "request_type": RequestTypePB.Value(request_type.value),
+                    }
+                )
+                print("**" * 50)
 
                 await self.rooms.publish_to_room(
                     metadata.room_id,
                     metadata.module_id,
-                    request_dict,
+                    {
+                        **request_dict,
+                        "request_type": RequestTypePB.Value(request_type.value),
+                    },
                     request_type,
                 )
 
@@ -195,9 +208,8 @@ async def setup_room(
     # Create room if not exists
     if not metadata.room_id:
         metadata.room_id = uuid.uuid4()
-        with self.lock:
+        async with self.lock:
             self.rooms.create_room(metadata.room_id)
-
     # Check if room exists before adding module and raising an error if it doesn't
     if not self.rooms.get_room(metadata.room_id):
         raise ValueError(f"Room {metadata.room_id} does not exist.")
@@ -278,7 +290,9 @@ async def process_messages(
             request_type,
             request,
         )
-
+        print("request", request)
+        print("request_type", request_type)
+        print("RequestType.REQUEST_TYPE_EXIT", RequestType.REQUEST_TYPE_EXIT)
         # Note that only owner can publish other type than send in a room
         if request is None or request_type == RequestType.REQUEST_TYPE_EXIT:
             logger.info("Module %s disconnected", metadata.module_id)
@@ -299,10 +313,11 @@ async def process_messages(
             break
 
         input_data = json_format.Parse(
-            text=json.dumps(request.get("input", {})),
+            text=json.dumps(request.get("input_request", {}).get("input", {})),
             message=struct_pb2.Struct(),  # pylint: disable=no-member
             ignore_unknown_fields=True,
         )
+        print("input_data", input_data)
         # yield the message to the client
         yield StartModuleResponse(
             success=True,
@@ -405,7 +420,7 @@ async def handle_validation_error(
     return StartModuleResponse(
         success=False,
         response_type=StartResponseType.START_RESPONSE_TYPE_ERROR,
-        error=error_message,
+        error={"message": error_message},
     )
 
 
@@ -507,6 +522,7 @@ def validate_stream_request(func: Callable):
             # Check required attributes
             check_required_attributes(self)
             metadata = await setup_room(self, request_iterator, context)
+            print("metadatas", metadata)
             # Create a queue to handle incoming messages from the room
             message_queue: asyncio.Queue = asyncio.Queue()
 
@@ -533,6 +549,7 @@ def validate_stream_request(func: Callable):
                 async for response in validate_and_process_request(
                     self, metadata, func, context
                 ):
+                    print("response", response)
                     yield response
 
             logger.info("Stopping module for %s", metadata.module_id)
@@ -548,7 +565,9 @@ def validate_stream_request(func: Callable):
         except Exception as e:  # pylint: disable=broad-except
             yield await handle_unexpected_error(e, context)
         finally:
-            await cleanup(self, metadata)
+            # check if metadata is declared and not None
+            if "metadata" in locals() and metadata is not None:
+                await cleanup(self, metadata)
         # Stop the generator and close the gRPC connection if it hasn't been closed already
         return
 

@@ -3,7 +3,7 @@ TODO: sphinx docstring
 """
 
 import json
-import threading
+import asyncio
 from typing import Any, AsyncGenerator, Type
 
 import grpc
@@ -18,7 +18,6 @@ from proto.digitalkin.module.v1.lifecycle_pb2 import (
     StartModuleRequest,
     StartModuleResponse,
     OutputDataResponse,
-    ErrorResponse,
     StopModuleRequest,
     StopModuleResponse,
 )
@@ -57,7 +56,7 @@ class ModuleServicer(ModuleServiceServicer):
         self.job_manager = JobManager()
         self.rooms: Rooms = Rooms()  # ! TODO: remove expired rooms
         self.tracer = trace.get_tracer(self.module_class.__class__.__name__)
-        self.lock = threading.Lock()
+        self.lock = asyncio.Lock()
 
     async def _start_job(
         self,
@@ -136,7 +135,7 @@ class ModuleServicer(ModuleServiceServicer):
             json_request = json_format.MessageToDict(
                 request,
                 preserving_proto_field_name=True,
-            )
+            ).get("input_request", {})
             # Extract data from the request
             input_param = json_request.get("input", None)
             module_ids = json_request.get("module_ids", [])
@@ -144,7 +143,7 @@ class ModuleServicer(ModuleServiceServicer):
 
             # Validate the input_param data
             input_data = self.module_class.validate_format(input_param, "input")
-
+            print("input_data", input_data)
             # Create and Start the job
             job_id = await self.job_manager.start_job(
                 module=self.module_class(agent_management=self.agent_management),
@@ -177,17 +176,19 @@ class ModuleServicer(ModuleServiceServicer):
             self.job_manager.update_status(job_id, JobStatus.SUCCESS)
             return
         except ValueError as e:
-            context.set_code(grpc.StatusCode.INTERNAL)
-            context.set_details(str(e))
-            yield StartModuleResponse(
-                success=False,
-                response_type="START_RESPONSE_TYPE_ERROR",
-                error=ErrorResponse(
-                    message="An error occurred while starting the module",
-                    details=str(e),
-                ),
-            )
-            return
+            logger.error("😵 Exception Error in StartModule: %s", e)
+            # context.set_code(grpc.StatusCode.INTERNAL)
+            # context.set_details(str(e))
+            raise e
+            # yield StartModuleResponse(
+            #     success=False,
+            #     response_type="START_RESPONSE_TYPE_ERROR",
+            #     error=ErrorResponse(
+            #         message="An error occurred while starting the module",
+            #         details=str(e),
+            #     ),
+            # )
+            # return
 
     @validate_grpc_request
     async def StopModule(
