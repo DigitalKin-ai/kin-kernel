@@ -1,5 +1,11 @@
 """
-TODO: sphinx documentation
+This module contains the ModuleRegistry class, which allows communication with other modules.
+The ModuleRegistry class is used to search for modules in the Module Registry, and to get the input, output, and setup schemas of a module.
+The ModuleRegistry class also allows
+- to start a new module with the given input data,
+- to get the input data of a module,
+- to get the output data of a module,
+- to get the setup data of a module.
 """
 
 from dataclasses import dataclass
@@ -241,6 +247,7 @@ class ModuleRegistry:
 
         Args:
             module_id (str): Unique identifier for the module.
+            messages (List[Dict[str, Dict[str, Any]]]): List of messages to send to the module.
 
         Returns:
             bool: True if the module is found, False otherwise.

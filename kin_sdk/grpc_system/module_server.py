@@ -19,6 +19,7 @@ from proto.digitalkin.module_registry.v1.registration_pb2 import (
 
 from kin_sdk.agent_management._registry import ParamsModuleRegistry
 from kin_sdk.agent_management._identity import ParamsModuleIdentity
+from kin_sdk.agent_management._database import ParamsModuleDatabase
 from kin_sdk.agent_management.base import AgentManagement
 from kin_sdk.agent_module._module.base import BaseModule
 from kin_sdk.grpc_system.module_servicer import ModuleServicer
@@ -41,6 +42,7 @@ class ModuleServer(GRPCServerBase):
         module_address: str,
         module_port: int,
         registry_address: str,
+        database_address: str,
         max_workers: int = 10,
     ):
         super().__init__(
@@ -53,6 +55,7 @@ class ModuleServer(GRPCServerBase):
         self.module_port = module_port
         self.module_type = module_class.get_type()
         self.registry_address = registry_address
+        self.database_address = database_address
         self._credentials = init_channel_credentials()
         self._is_registered = False
         self.agent_management = AgentManagement(
@@ -65,6 +68,9 @@ class ModuleServer(GRPCServerBase):
             params_registry=ParamsModuleRegistry(
                 module_id=self.module_id,
                 registry_address=self.registry_address,
+            ),
+            params_database=ParamsModuleDatabase(
+                database_address=self.database_address,
             ),
         )
 

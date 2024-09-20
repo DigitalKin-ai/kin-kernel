@@ -67,6 +67,7 @@ def main():
         module_port=50052,
         registry_address="localhost:50051",
         max_workers=10,
+        database_address="localhost:50040",
     )
     tool_server.asyncio_serve()
 

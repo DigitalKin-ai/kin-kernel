@@ -41,6 +41,7 @@ def main():
         module_address="localhost",
         module_port=50050,
         registry_address="localhost:50051",
+        database_address="localhost:50040",
     )
     kin_server.asyncio_serve()
 

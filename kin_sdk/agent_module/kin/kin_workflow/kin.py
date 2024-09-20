@@ -164,13 +164,11 @@ class KinWorkflow(BaseKin):
         Returns:
             Union[List[Dict[str, Any]], None]: The workflow.
         """
-        workflows = await self._db_storage.storage_load(
-            kin_id=kin_id, table="workflows"
-        )
+        workflows = await self.database.load_workflow(kin_id)
         if workflows is None:
             logger.error("Error loading workflow from the database.")
             return None
-        return workflows[0]
+        return workflows
 
     async def get_kin_setup(self, kin_id: str, setup_id: str) -> Dict[str, Any]:
         """
@@ -200,20 +198,25 @@ class KinWorkflow(BaseKin):
             logger.info("🚀 Starting workflow...")
             # Load workflow from db
             workflow = await self._load_workflow(kin_id=self.identity.id)
-
+            print("debug 1")
             # Add triggers and tools
             await self.register_modules(workflow["nodes"])
+            print("debug 2")
 
             # Load setups from db
             setups = await self.get_kin_setup(
                 kin_id=self.identity.id, setup_id=setup_id
             )
+            print("debug 3")
 
             # Create a graph executor
             self._graphs_executor = GraphExecutor(
                 graph=workflow,
                 setups=setups,
             )
+            print("debug 4")
+
+            print("Graphs Executor: ", self._graphs_executor)
 
             logger.info("🚀 Workflow has been started...")
         except Exception as e:  # pylint: disable=broad-except

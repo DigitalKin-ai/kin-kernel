@@ -11,12 +11,13 @@ import grpc
 from pydantic import BaseModel
 from google.protobuf import json_format, struct_pb2
 
-from proto.digitalkin.module.v1.module_service_pb2_grpc import (
-    ModuleServiceStub,
-)
-from proto.digitalkin.module.v1.lifecycle_pb2 import StartModuleRequest
+# from proto.digitalkin.module.v1.module_service_pb2_grpc import (
+#     ModuleServiceStub,
+# )
+# from proto.digitalkin.module.v1.lifecycle_pb2 import StartModuleRequest
 from kin_sdk.models.module import ModuleModel
 from kin_sdk.agent_management.base import AgentManagement
+from kin_sdk.agent_management._database import ModuleDatabase
 from kin_sdk.agent_management._identity import ModuleIdentity
 from kin_sdk.agent_management._registry import ModuleRegistry
 from kin_sdk.common.types import ModuleType
@@ -67,6 +68,15 @@ class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ABC):
         :return: The module identity.
         """
         return self._agent_management.registry
+
+    @property
+    def database(self) -> ModuleDatabase:
+        """
+        Gets the module database.
+
+        :return: The module database.
+        """
+        return self._agent_management.database
 
     @classmethod
     def validate_format(
@@ -267,8 +277,10 @@ class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ABC):
             ).model_dump()
 
             # Convert in gRPC Struct proto format the output data in order to send it as input of a block
-            struct_input = json_format.ParseDict(
-                output_data, struct_pb2.Struct()  # pylint: disable=no-member
+            struct_input = (  # pylint: disable=unused-variable # noqa
+                json_format.ParseDict(
+                    output_data, struct_pb2.Struct()  # pylint: disable=no-member
+                )
             )
 
             # use module_ids to send the output to the right module
@@ -284,17 +296,20 @@ class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ABC):
                 # Send the result to the list of gRPC modules
                 async with grpc.aio.insecure_channel(  # ! TODO replace with secure_channel
                     f"{module.address}:{module.port}"
-                ) as channel:
-                    stub = ModuleServiceStub(channel)
-                    request = StartModuleRequest(
-                        input=struct_input,
-                        setup_id="I don't know what to put here",  # ! TODO: What to put here?
-                        module_ids=[],  # ! TODO: What to put here?
+                ) as channel:  # pylint: disable=unused-variable # noqa
+                    raise Exception(  # pylint: disable=broad-exception-raised # noqa
+                        "Not implemented"
                     )
-                    await stub.StartModule(request)  # ! TODO not streaming response
-                    logger.info(
-                        "📞 Output sent to Tool module %s \n\t%s", module_id, module
-                    )
+                    # stub = ModuleServiceStub(channel)
+                    # request = StartModuleRequest(
+                    #     input=struct_input,
+                    #     setup_id="I don't know what to put here",  # ! TODO: What to put here?
+                    #     module_ids=[],  # ! TODO: What to put here?
+                    # )
+                    # await stub.StartModule(request)  # ! TODO not streaming response
+                    # logger.info(
+                    #     "📞 Output sent to Tool module %s \n\t%s", module_id, module
+                    # )
         except grpc.aio.AioRpcError as e:
             if not isinstance(module, ModuleModel):
                 message = "😵 Error sending output to none existing module:\n\t"

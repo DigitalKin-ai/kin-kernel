@@ -95,6 +95,7 @@ async def main():
         module_address="localhost",
         module_port=50052,
         registry_address="localhost:50051",
+        database_address="localhost:50040",
     )
     # Start the SequenceTool module
     manager.add_server(
@@ -104,6 +105,7 @@ async def main():
         module_address="localhost",
         module_port=50053,
         registry_address="localhost:50051",
+        database_address="localhost:50040",
     )
     # Start the DisplayTool module
     manager.add_server(
@@ -113,6 +115,7 @@ async def main():
         module_address="localhost",
         module_port=50054,
         registry_address="localhost:50051",
+        database_address="localhost:50040",
     )
     # Start the CronTrigger module
     manager.add_server(
@@ -122,6 +125,7 @@ async def main():
         module_address="localhost",
         module_port=50055,
         registry_address="localhost:50051",
+        database_address="localhost:50040",
     )
 
     loop = asyncio.get_running_loop()

@@ -1,0 +1,78 @@
+"""
+TODO: Implement database for agent management
+"""
+
+from dataclasses import dataclass
+import grpc
+from google.protobuf import json_format
+
+from proto.digitalkin.project.v1.project_service_pb2_grpc import ProjectServiceStub
+from proto.digitalkin.project.v1.workflow_pb2 import ReadWorkflowRequest
+from kin_sdk.certificates._certificates import init_channel_credentials
+from kin_sdk.common.logger import logger
+
+
+@dataclass
+class ParamsModuleDatabase:
+    """
+    The ParamsModuleRegistry class represents the parameters required to create a ModuleDatabase object.
+    """
+
+    database_address: str
+
+
+class ModuleDatabase:
+    """
+    The ModuleDatabase class represents the database for the agent management system.
+    """
+
+    def __init__(
+        self,
+        database_address: str,
+    ):
+        self._credentials = init_channel_credentials()
+        self._database_address = database_address
+
+    @classmethod
+    def from_params(cls, params: ParamsModuleDatabase) -> "ParamsModuleDatabase":
+        """
+        Creates a ModuleDatabase object from the given parameters.
+        """
+        return cls(**params.__dict__)
+
+    def _secure_channel(self, target: str) -> grpc.aio.Channel:
+        """
+        Creates a secure gRPC channel to the Module Registry.
+        """
+        return grpc.aio.insecure_channel(
+            target=target
+        )  # , credentials=self._credentials)
+
+    async def load_workflow(self, kin_id: str) -> dict:
+        """ "
+        Load a workflow from the database.
+
+        Args:
+            kin_id (str): The kin_id of the workflow to load.
+
+        Returns:
+            dict: The workflow data.
+        """
+        try:
+            channel = self._secure_channel(self._database_address)
+            stub = ProjectServiceStub(channel)
+            request = ReadWorkflowRequest(kin_id=f"kins:{kin_id}")
+            response_iterator = stub.ReadWorkflow(request)
+
+            json_responses = None
+            async for response in response_iterator:
+                print("response: ", response)
+                json_response = json_format.MessageToDict(
+                    response,
+                    preserving_proto_field_name=True,
+                )
+                json_responses = json_response
+            return json_responses
+        except Exception as e:  # pylint: disable=broad-except
+            logger.error("Error loading workflow: %s", str(e))
+            return None
