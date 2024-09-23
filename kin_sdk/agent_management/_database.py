@@ -6,6 +6,8 @@ from dataclasses import dataclass
 import grpc
 from google.protobuf import json_format
 
+from proto.digitalkin.setup.v2.setup_pb2 import ReadSetupRequest
+from proto.digitalkin.setup.v2.setup_service_pb2_grpc import SetupServiceStub
 from proto.digitalkin.project.v1.project_service_pb2_grpc import ProjectServiceStub
 from proto.digitalkin.project.v1.workflow_pb2 import ReadWorkflowRequest
 from kin_sdk.certificates._certificates import init_channel_credentials
@@ -75,4 +77,29 @@ class ModuleDatabase:
             return json_responses
         except Exception as e:  # pylint: disable=broad-except
             logger.error("Error loading workflow: %s", str(e))
+            return None
+
+    async def load_setup(self, setup_id: str) -> dict:
+        """
+        Load a setup from the database.
+
+        Args:
+            setup_id (str): The setup_id of the setup to load.
+
+        Returns:
+            dict: The setup data.
+        """
+        try:
+            print("Loading setup...", setup_id)
+            channel = self._secure_channel(self._database_address)
+            stub = SetupServiceStub(channel)
+            request = ReadSetupRequest(setup_id=setup_id)
+            response = await stub.ReadSetup(request)
+            print("Response: ", response)
+            return json_format.MessageToDict(
+                response,
+                preserving_proto_field_name=True,
+            )
+        except Exception as e:  # pylint: disable=broad-except
+            logger.error("Error loading setup: %s", str(e))
             return None

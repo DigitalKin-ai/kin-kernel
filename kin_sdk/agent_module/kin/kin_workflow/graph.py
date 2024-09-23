@@ -86,11 +86,6 @@ class GraphExecutor:
                 if data.get("module_id") is not None
             }
 
-            for node in nodes:
-                print("==" * 50)
-                print(f"Node: {node}\n\n")
-                print(f"Node data: {node.get('data', {})}\n\n")
-                print(f"Node data type: {node.get('data', {}).get('targets', [])}\n\n")
             return {
                 node["id"]: Node(
                     node_id=node["id"],

@@ -12,9 +12,8 @@ from pydantic import BaseModel, Field
 
 from kin_sdk.models.module import ModuleModel
 from kin_sdk.agent_module.kin.base import BaseKin
-from kin_sdk.common.logger import logger
-from kin_sdk.agent_management import DBStorage
 from kin_sdk.agent_module.kin.kin_workflow.graph import GraphExecutor
+from kin_sdk.common.logger import logger
 
 
 class WorkflowInput(BaseModel):
@@ -77,13 +76,7 @@ class KinWorkflow(BaseKin):
             **kwargs,
         )
 
-        self._db_storage = DBStorage()
         self._graphs_executor = None
-
-    @property
-    def db_storage(self) -> DBStorage:
-        """Get the database storage."""
-        return self._db_storage
 
     @property
     def graphs_executor(self) -> Union[GraphExecutor, None]:
@@ -170,7 +163,7 @@ class KinWorkflow(BaseKin):
             return None
         return workflows
 
-    async def get_kin_setup(self, kin_id: str, setup_id: str) -> Dict[str, Any]:
+    async def get_kin_setup(self, setup_id: str) -> Dict[str, Any]:
         """
         Gets the setup data for the workflow.
 
@@ -181,9 +174,8 @@ class KinWorkflow(BaseKin):
         Returns:
             Dict[str, Any]: The setup data.
         """
-        setups = await self._db_storage.storage_load_setup(
-            kin_id=f"kins:{kin_id}", setup_id=setup_id
-        )
+        setups = await self.database.load_setup(setup_id=setup_id)
+        print("Setups: ", setups)
         return setups
 
     async def start(self, setup_id: str = "fibonacci_setup") -> None:
@@ -204,9 +196,7 @@ class KinWorkflow(BaseKin):
             print("debug 2")
 
             # Load setups from db
-            setups = await self.get_kin_setup(
-                kin_id=self.identity.id, setup_id=setup_id
-            )
+            setups = await self.get_kin_setup(setup_id=setup_id)
             print("debug 3")
 
             # Create a graph executor
