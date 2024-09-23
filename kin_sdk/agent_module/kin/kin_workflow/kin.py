@@ -221,6 +221,7 @@ class KinWorkflow(BaseKin):
             logger.info("🚀 Workflow has been started...")
         except Exception as e:  # pylint: disable=broad-except
             logger.error("Error loading workflow: %s", e)
+            raise e
 
         return None
 
@@ -239,6 +240,7 @@ class KinWorkflow(BaseKin):
             callback (Callable[[WorkflowOutput], None]): The callback function to handle the output.
         """
         logger.info("🚀 Executing Kin Workflow...")
+        print("self._graphs_executor: ", self._graphs_executor)
         initial_node = self._graphs_executor.get_node_id_by_module_id(
             input_data.trigger_id
         )

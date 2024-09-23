@@ -86,20 +86,27 @@ class GraphExecutor:
                 if data.get("module_id") is not None
             }
 
+            for node in nodes:
+                print("==" * 50)
+                print(f"Node: {node}\n\n")
+                print(f"Node data: {node.get('data', {})}\n\n")
+                print(f"Node data type: {node.get('data', {}).get('targets', [])}\n\n")
             return {
                 node["id"]: Node(
                     node_id=node["id"],
                     node_type=node["type"],
-                    module_type=ModuleType.get(node["data"]["type"]),
-                    module_id=node["data"]["id"],
-                    inputs=node["data"]["targets"],
-                    outputs=node["data"]["sources"],
-                    setup=formatted_setups.get(f"modules:{node['data']['id']}", {}),
+                    module_type=ModuleType.get(node.get("data", {})["type"]),
+                    module_id=node.get("data", {})["id"],
+                    inputs=node.get("data", {}).get("targets", []),
+                    outputs=node.get("data", {}).get("sources", []),
+                    setup=formatted_setups.get(
+                        f"modules:{node.get('data', {})['id']}", {}
+                    ),
                 )
                 for node in nodes
             }
         except Exception as e:  # pylint: disable=broad-except
-            raise ValueError(f"Error initializing nodes: {e}") from e
+            raise ValueError(f"Error initializing nodes: {str(e)}") from e
 
     def _init_edges(self, edges: List[Dict[str, Any]]) -> None:
         """
