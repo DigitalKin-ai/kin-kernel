@@ -18,7 +18,7 @@ from pydantic import ValidationError
 from google.protobuf import json_format, struct_pb2
 from protovalidate import validate, ValidationError as ValidationFailed
 
-from proto.digitalkin.module.v1.lifecycle_pb2 import (
+from digitalkin.module.v1.lifecycle_pb2 import (
     RequestType as RequestTypePB,
     StartModuleRequest,
     StartModuleResponse,
@@ -154,15 +154,6 @@ async def handle_incoming_messages(
                     if metadata.module_role == ModuleRole.MODULE_ROLE_OWNER
                     else RequestType.REQUEST_TYPE_SEND
                 )
-                print("**" * 50)
-                print("request_type", request_type)
-                print(
-                    {
-                        **request_dict,
-                        "request_type": RequestTypePB.Value(request_type.value),
-                    }
-                )
-                print("**" * 50)
 
                 await self.rooms.publish_to_room(
                     metadata.room_id,
@@ -290,9 +281,6 @@ async def process_messages(
             request_type,
             request,
         )
-        print("request", request)
-        print("request_type", request_type)
-        print("RequestType.REQUEST_TYPE_EXIT", RequestType.REQUEST_TYPE_EXIT)
         # Note that only owner can publish other type than send in a room
         if request is None or request_type == RequestType.REQUEST_TYPE_EXIT:
             logger.info("Module %s disconnected", metadata.module_id)
@@ -317,7 +305,6 @@ async def process_messages(
             message=struct_pb2.Struct(),  # pylint: disable=no-member
             ignore_unknown_fields=True,
         )
-        print("input_data", input_data)
         # yield the message to the client
         yield StartModuleResponse(
             success=True,
@@ -522,7 +509,6 @@ def validate_stream_request(func: Callable):
             # Check required attributes
             check_required_attributes(self)
             metadata = await setup_room(self, request_iterator, context)
-            print("metadatas", metadata)
             # Create a queue to handle incoming messages from the room
             message_queue: asyncio.Queue = asyncio.Queue()
 
@@ -549,7 +535,6 @@ def validate_stream_request(func: Callable):
                 async for response in validate_and_process_request(
                     self, metadata, func, context
                 ):
-                    print("response", response)
                     yield response
 
             logger.info("Stopping module for %s", metadata.module_id)

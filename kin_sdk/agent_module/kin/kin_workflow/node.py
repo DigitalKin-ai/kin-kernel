@@ -11,6 +11,7 @@ from typing import Any, Awaitable, Dict, List, Callable, Optional
 
 from pydantic import BaseModel, Field
 
+from kin_sdk.common.logger import logger
 from kin_sdk.common.types import ModuleType
 
 
@@ -184,8 +185,11 @@ class Node:
             self._status = "completed"
             return output_data
         except Exception as e:  # pylint: disable=broad-except
-            print(
-                f"Unexpected error executing node {self._module_type}:{self._node_id}: {e}"
+            logger.error(
+                "Unexpected error executing node %s:%s: %s",
+                self._module_type,
+                self._node_id,
+                e,
             )
             self._status = "failed"
             return {}

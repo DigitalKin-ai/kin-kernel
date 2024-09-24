@@ -9,12 +9,12 @@ from kin_sdk.validation.grpc_decorators import validate_grpc_request
 from kin_sdk.grpc_system.grpc_server_base import GRPCServerBase
 
 # Protos gRPC
-import proto.digitalkin.module_registry.v1.module_registry_service_pb2_grpc as module_registry_pb2_grpc
-import proto.digitalkin.module_registry.v1.registration_pb2 as registration_pb2
-import proto.digitalkin.module_registry.v1.action_pb2 as action_pb2
+import digitalkin.module_registry.v1.module_registry_service_pb2_grpc as module_registry_pb2_grpc
+import digitalkin.module_registry.v1.registration_pb2 as registration_pb2
+import digitalkin.module_registry.v1.action_pb2 as action_pb2
 
 
-from proto.digitalkin.module_registry.v1.monitoring_pb2 import (
+from digitalkin.module_registry.v1.monitoring_pb2 import (
     ModuleInfo,
     GetAllModulesRequest,
     GetAllModulesResponse,

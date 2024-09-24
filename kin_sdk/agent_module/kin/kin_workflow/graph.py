@@ -13,6 +13,7 @@ from queue import Queue
 
 import networkx as nx
 
+from kin_sdk.common.logger import logger
 from kin_sdk.common.types import ModuleType
 from kin_sdk.agent_module.kin.kin_workflow.edge import Edge
 from kin_sdk.agent_module.kin.kin_workflow.node import InputData, Node, OutputData
@@ -184,7 +185,7 @@ class GraphExecutor:
             edge_data_pred_succ (Optional[Edge]): The edge data connecting the predecessor node with successor.
         """
         if edge_data_pred_succ is None:
-            print("No edge data")
+            logger.debug("No edge data")
             return
 
         successor: Union[Node, None] = self._nodes.get(successor_id, None)
@@ -301,7 +302,9 @@ class GraphExecutor:
                     self._execution_queue.put(successor)
 
         except Exception as e:  # pylint: disable=broad-except
-            print(f"{datetime.datetime.now()} - Error executing node {node_id}: {e}")
+            logger.debug(
+                f"{datetime.datetime.now()} - Error executing node {node_id}: {e}"
+            )
             self._error_occurred.set()
 
     async def execute(
@@ -332,7 +335,7 @@ class GraphExecutor:
                 len(tasks) < max_concurrent_tasks and not self._execution_queue.empty()
             ):
                 node_id: Union[str, None] = self._execution_queue.get()
-                # print(f"{datetime.datetime.now()} - node_id: {node_id}")
+
                 if node_id is not None:
                     task = asyncio.create_task(
                         self.async_execute_node(node_id, module_callback)
@@ -349,7 +352,7 @@ class GraphExecutor:
                     try:
                         await task
                     except Exception as e:  # pylint: disable=broad-except
-                        print(f"{datetime.datetime.now()} - Error executing node: {e}")
+                        logger.debug("Error executing node: %s", str(e), exc_info=True)
                         self._error_occurred.set()
                         break
 
@@ -364,12 +367,10 @@ class GraphExecutor:
             task.cancel()
 
         if self._error_occurred.is_set():
-            print(f"{datetime.datetime.now()} - Execution stopped due to an error.")
+            logger.debug("Execution stopped due to an error.")
         else:
-            print(f"{datetime.datetime.now()} - Graph execution completed.")
-            print(
-                f"{datetime.datetime.now()} - Queue empty: {self._execution_queue.empty()}"
-            )
+            logger.debug("Graph execution completed.")
+            logger.debug("Queue empty: %s", self._execution_queue.empty())
             print(
                 [f"{node_id}: {self._nodes[node_id].status}" for node_id in self._nodes]
             )

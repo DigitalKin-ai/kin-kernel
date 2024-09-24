@@ -11,24 +11,24 @@ import grpc
 from opentelemetry import trace
 from google.protobuf import json_format, struct_pb2
 from pydantic import BaseModel
-from proto.digitalkin.module.v1.module_service_pb2_grpc import (
+from digitalkin.module.v1.module_service_pb2_grpc import (
     ModuleServiceServicer,
 )
-from proto.digitalkin.module.v1.lifecycle_pb2 import (
+from digitalkin.module.v1.lifecycle_pb2 import (
     StartModuleRequest,
     StartModuleResponse,
     OutputDataResponse,
     StopModuleRequest,
     StopModuleResponse,
 )
-from proto.digitalkin.module.v1.monitoring_pb2 import (
+from digitalkin.module.v1.monitoring_pb2 import (
     GetModuleStatusRequest,
     GetModuleStatusResponse,
     GetModuleJobsRequest,
     GetModuleJobsResponse,
     JobInfo,
 )
-from proto.digitalkin.module.v1.information_pb2 import (
+from digitalkin.module.v1.information_pb2 import (
     GetModuleInputRequest,
     GetModuleInputResponse,
     GetModuleOutputRequest,

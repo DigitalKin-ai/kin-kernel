@@ -3,8 +3,8 @@ import time
 import threading
 import random
 from google.protobuf import json_format, struct_pb2
-from proto.digitalkin.module.v1.lifecycle_pb2 import StartModuleRequest
-from proto.digitalkin.module.v1.module_service_pb2_grpc import ModuleServiceStub
+from digitalkin.module.v1.lifecycle_pb2 import StartModuleRequest
+from digitalkin.module.v1.module_service_pb2_grpc import ModuleServiceStub
 import signal
 import contextlib
 

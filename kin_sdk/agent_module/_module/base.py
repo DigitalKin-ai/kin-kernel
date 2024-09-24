@@ -11,10 +11,10 @@ import grpc
 from pydantic import BaseModel
 from google.protobuf import json_format, struct_pb2
 
-# from proto.digitalkin.module.v1.module_service_pb2_grpc import (
+# from digitalkin.module.v1.module_service_pb2_grpc import (
 #     ModuleServiceStub,
 # )
-# from proto.digitalkin.module.v1.lifecycle_pb2 import StartModuleRequest
+# from digitalkin.module.v1.lifecycle_pb2 import StartModuleRequest
 from kin_sdk.models.module import ModuleModel
 from kin_sdk.agent_management.base import AgentManagement
 from kin_sdk.agent_management._database import ModuleDatabase
@@ -286,7 +286,6 @@ class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ABC):
             # use module_ids to send the output to the right module
             for module_id in module_ids:
                 module = await self.registry.find_module_by_id(module_id)
-                print("module_id", module_id)
                 module = None
                 if module is None:
                     return None

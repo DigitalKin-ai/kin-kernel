@@ -4,8 +4,8 @@ from concurrent import futures
 from queue import Queue
 from threading import Thread
 
-import proto.digitalkin.service.v1.chat_pb2_grpc as chat_pb2_grpc
-import proto.digitalkin.service.v1.chat_pb2 as chat_pb2
+import digitalkin.service.v1.chat_pb2_grpc as chat_pb2_grpc
+import digitalkin.service.v1.chat_pb2 as chat_pb2
 
 # TODO: pubsub data base structure
 

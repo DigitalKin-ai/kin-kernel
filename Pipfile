@@ -12,7 +12,6 @@ opentelemetry-sdk = "==1.21.0"
 protovalidate = "==0.4.0"
 grpcio = "==1.66.1"
 googleapis-common-protos = "==1.65.0"
-surrealdb = "==0.3.2"
 networkx = "==3.3"
 
 [dev-packages]

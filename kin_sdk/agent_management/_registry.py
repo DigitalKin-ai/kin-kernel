@@ -15,19 +15,19 @@ from typing import Any, AsyncGenerator, Dict, List, Optional, Union
 import grpc
 from google.protobuf import json_format, struct_pb2
 
-from proto.digitalkin.module.v1.module_service_pb2_grpc import (
+from digitalkin.module.v1.module_service_pb2_grpc import (
     ModuleServiceStub,
 )
-from proto.digitalkin.module_registry.v1.action_pb2 import DiscoverRequest
-from proto.digitalkin.module_registry.v1.module_registry_service_pb2_grpc import (
+from digitalkin.module_registry.v1.action_pb2 import DiscoverRequest
+from digitalkin.module_registry.v1.module_registry_service_pb2_grpc import (
     ModuleRegistryServiceStub,
 )
-from proto.digitalkin.module.v1.lifecycle_pb2 import (
+from digitalkin.module.v1.lifecycle_pb2 import (
     ConnectionRequest,
     StartModuleRequest,
     InputDataRequest,
 )
-from proto.digitalkin.module.v1.information_pb2 import (
+from digitalkin.module.v1.information_pb2 import (
     GetModuleInputRequest,
     GetModuleInputResponse,
     GetModuleOutputRequest,
@@ -268,7 +268,7 @@ class ModuleRegistry:
             requests = []
             for message in messages:
                 message_type, message_value = list(message.items())[0]
-                print("message_type", message_type, "message_value", message_value)
+
                 if message_type == "connection_request":
                     request = StartModuleRequest(
                         request_type=message_value.get(
@@ -302,7 +302,6 @@ class ModuleRegistry:
 
             response_iterator = stub.StartModule(iter(requests))  # , metadata=metadata)
             async for response in response_iterator:
-                print("response", response)
                 json_response = json_format.MessageToDict(
                     response,
                     preserving_proto_field_name=True,

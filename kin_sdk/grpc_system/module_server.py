@@ -4,13 +4,13 @@ from typing import Type
 
 import grpc
 
-from proto.digitalkin.module.v1.module_service_pb2_grpc import (
+from digitalkin.module.v1.module_service_pb2_grpc import (
     add_ModuleServiceServicer_to_server,
 )
-from proto.digitalkin.module_registry.v1.module_registry_service_pb2_grpc import (
+from digitalkin.module_registry.v1.module_registry_service_pb2_grpc import (
     ModuleRegistryServiceStub,
 )
-from proto.digitalkin.module_registry.v1.registration_pb2 import (
+from digitalkin.module_registry.v1.registration_pb2 import (
     RegisterRequest,
     RegisterResponse,
     DeregisterRequest,

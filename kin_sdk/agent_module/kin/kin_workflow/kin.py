@@ -36,6 +36,7 @@ class WorkflowOutput(BaseModel):
     """
 
     done: bool = False
+    module_output: Dict[str, Any] = {}
 
 
 class WorkflowSetup(BaseModel):
@@ -175,7 +176,10 @@ class KinWorkflow(BaseKin):
             Dict[str, Any]: The setup data.
         """
         setups = await self.database.load_setup(setup_id=setup_id)
-        print("Setups: ", setups)
+
+        if setups is None:
+            logger.error("Error loading setup from the database.")
+            raise ValueError("Error loading setup from the database.")
         return setups
 
     async def start(self, setup_id: str = "fibonacci_setup") -> None:
@@ -190,23 +194,21 @@ class KinWorkflow(BaseKin):
             logger.info("🚀 Starting workflow...")
             # Load workflow from db
             workflow = await self._load_workflow(kin_id=self.identity.id)
-            print("debug 1")
+
+            if workflow is None:
+                raise ValueError("Error during loading workflow")
+
             # Add triggers and tools
             await self.register_modules(workflow["nodes"])
-            print("debug 2")
 
             # Load setups from db
             setups = await self.get_kin_setup(setup_id=setup_id)
-            print("debug 3")
 
             # Create a graph executor
             self._graphs_executor = GraphExecutor(
                 graph=workflow,
                 setups=setups,
             )
-            print("debug 4")
-
-            print("Graphs Executor: ", self._graphs_executor)
 
             logger.info("🚀 Workflow has been started...")
         except Exception as e:  # pylint: disable=broad-except
@@ -230,7 +232,7 @@ class KinWorkflow(BaseKin):
             callback (Callable[[WorkflowOutput], None]): The callback function to handle the output.
         """
         logger.info("🚀 Executing Kin Workflow...")
-        print("self._graphs_executor: ", self._graphs_executor)
+
         initial_node = self._graphs_executor.get_node_id_by_module_id(
             input_data.trigger_id
         )
@@ -238,7 +240,6 @@ class KinWorkflow(BaseKin):
         async def module_callback(
             module_id: str, input_data: Dict[str, Any], node_id: str
         ) -> Dict[str, Any]:
-            print("--" * 10)
             response_iterator = self.registry.start_module(
                 module_id=module_id,
                 messages=[
@@ -258,10 +259,9 @@ class KinWorkflow(BaseKin):
                 ],
             )
             result = {}
-            print("--" * 10)
             async for response in response_iterator:
                 response_type = response.get("response_type", None)
-                print(f"response_type: {response_type}")
+
                 if (
                     response_type is not None
                     and response_type == "START_RESPONSE_TYPE_OUTPUT"
@@ -269,19 +269,17 @@ class KinWorkflow(BaseKin):
                     output_response = response.get("output_response", {})
                     result = output_response.get("output", {})
                     break
-            print(WorkflowOutput(done=False))
+
+            await callback(WorkflowOutput(done=False, module_output=result))
             await asyncio.sleep(1)
-            await callback(WorkflowOutput(done=False))
-            await asyncio.sleep(1)
-            print("--" * 10)
             return result
 
         await self._graphs_executor.execute(initial_node, module_callback)
-        print("Executing Kin Workflow...")
+        logger.info("Executing Kin Workflow...")
         await callback(WorkflowOutput(done=True))
 
     async def stop(self) -> None:
         """
         Stops the trigger.
         """
-        print("Stopping Kin Workflow...")
+        logger.info("Stopping Kin Workflow...")

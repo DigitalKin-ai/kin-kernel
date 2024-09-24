@@ -75,7 +75,6 @@ class OpenAiFunctionCell:
         try:
             input_json = json.dumps(input)
         except TypeError as e:
-            print("herhreherhreherherhrh")
             raise TypeError(f"Input could not be serialized to JSON: {e}") from e
 
         cell_output = await self.cell.run(input_json)

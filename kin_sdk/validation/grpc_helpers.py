@@ -10,7 +10,7 @@ import grpc
 from pydantic import BaseModel
 from protovalidate import Violations
 
-from proto.digitalkin.module.v1.lifecycle_pb2 import (
+from digitalkin.module.v1.lifecycle_pb2 import (
     MODULE_ROLE_MEMBRE,
     MODULE_ROLE_UNKNOWN,
     REQUEST_TYPE_CONNECTION,

@@ -6,10 +6,10 @@ from dataclasses import dataclass
 import grpc
 from google.protobuf import json_format
 
-from proto.digitalkin.setup.v2.setup_pb2 import ReadSetupRequest
-from proto.digitalkin.setup.v2.setup_service_pb2_grpc import SetupServiceStub
-from proto.digitalkin.project.v1.project_service_pb2_grpc import ProjectServiceStub
-from proto.digitalkin.project.v1.workflow_pb2 import ReadWorkflowRequest
+from digitalkin.setup.v2.setup_pb2 import ReadSetupRequest, GetNodeSetupRequest
+from digitalkin.setup.v2.setup_service_pb2_grpc import SetupServiceStub
+from digitalkin.project.v1.project_service_pb2_grpc import ProjectServiceStub
+from digitalkin.project.v1.workflow_pb2 import ReadWorkflowRequest
 from kin_sdk.certificates._certificates import init_channel_credentials
 from kin_sdk.common.logger import logger
 
@@ -68,7 +68,6 @@ class ModuleDatabase:
 
             json_responses = None
             async for response in response_iterator:
-                print("response: ", response)
                 json_response = json_format.MessageToDict(
                     response,
                     preserving_proto_field_name=True,
@@ -90,16 +89,40 @@ class ModuleDatabase:
             dict: The setup data.
         """
         try:
-            print("Loading setup...", setup_id)
             channel = self._secure_channel(self._database_address)
             stub = SetupServiceStub(channel)
             request = ReadSetupRequest(setup_id=setup_id)
             response = await stub.ReadSetup(request)
-            print("Response: ", response)
             return json_format.MessageToDict(
                 response,
                 preserving_proto_field_name=True,
             )
         except Exception as e:  # pylint: disable=broad-except
             logger.error("Error loading setup: %s", str(e))
+            return None
+
+    async def load_node_setup(self, node_id: str, setup_id: str) -> dict:
+        """
+        Load a specific node setup from the database.
+
+        Args:
+            node_id (str): The node_id of the node to load.
+            setup_id (str): The setup_id of the setup to load.
+
+        Returns:
+            dict: The setup data.
+        """
+        try:
+            print("Loading setup...", setup_id, node_id)
+            channel = self._secure_channel(self._database_address)
+            stub = SetupServiceStub(channel)
+            request = GetNodeSetupRequest(setup_id=setup_id, node_id=node_id)
+            response = await stub.GetNodeSetup(request)
+            print("Response: ", response)
+            return json_format.MessageToDict(
+                response,
+                preserving_proto_field_name=True,
+            )
+        except Exception as e:  # pylint: disable=broad-except
+            logger.error("Error loading node setup: %s", str(e))
             return None

@@ -1,8 +1,8 @@
 import grpc
 from typing import Iterator
 from threading import Thread
-import proto.digitalkin.service.v1.chat_pb2 as chat_pb2
-import proto.digitalkin.service.v1.chat_pb2_grpc as chat_pb2_grpc
+import digitalkin.service.v1.chat_pb2 as chat_pb2
+import digitalkin.service.v1.chat_pb2_grpc as chat_pb2_grpc
 
 
 def run() -> None:
