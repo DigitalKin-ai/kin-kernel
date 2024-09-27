@@ -7,6 +7,13 @@ from kin_sdk.certificates._certificates import (
     Certificates,
     CertValues,
     init_channel_credentials,
+    grpc_channel,
 )
 
-__all__ = ["get_certificates", "Certificates", "CertValues", "init_channel_credentials"]
+__all__ = [
+    "get_certificates",
+    "Certificates",
+    "CertValues",
+    "init_channel_credentials",
+    "grpc_channel",
+]

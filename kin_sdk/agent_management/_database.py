@@ -3,14 +3,13 @@ TODO: Implement database for agent management
 """
 
 from dataclasses import dataclass
-import grpc
 from google.protobuf import json_format
 
 from digitalkin.setup.v2.setup_pb2 import ReadSetupRequest, GetNodeSetupRequest
 from digitalkin.setup.v2.setup_service_pb2_grpc import SetupServiceStub
 from digitalkin.project.v1.project_service_pb2_grpc import ProjectServiceStub
 from digitalkin.project.v1.workflow_pb2 import ReadWorkflowRequest
-from kin_sdk.certificates._certificates import init_channel_credentials
+from kin_sdk.certificates._certificates import grpc_channel
 from kin_sdk.common.logger import logger
 
 
@@ -32,7 +31,6 @@ class ModuleDatabase:
         self,
         database_address: str,
     ):
-        self._credentials = init_channel_credentials()
         self._database_address = database_address
 
     @classmethod
@@ -41,14 +39,6 @@ class ModuleDatabase:
         Creates a ModuleDatabase object from the given parameters.
         """
         return cls(**params.__dict__)
-
-    def _secure_channel(self, target: str) -> grpc.aio.Channel:
-        """
-        Creates a secure gRPC channel to the Module Registry.
-        """
-        return grpc.aio.insecure_channel(
-            target=target
-        )  # , credentials=self._credentials)
 
     async def load_workflow(self, kin_id: str) -> dict:
         """ "
@@ -61,7 +51,7 @@ class ModuleDatabase:
             dict: The workflow data.
         """
         try:
-            channel = self._secure_channel(self._database_address)
+            channel = grpc_channel(self._database_address)
             stub = ProjectServiceStub(channel)
             request = ReadWorkflowRequest(kin_id=f"kins:{kin_id}")
             response_iterator = stub.ReadWorkflow(request)
@@ -89,7 +79,7 @@ class ModuleDatabase:
             dict: The setup data.
         """
         try:
-            channel = self._secure_channel(self._database_address)
+            channel = grpc_channel(self._database_address)
             stub = SetupServiceStub(channel)
             request = ReadSetupRequest(setup_id=setup_id)
             response = await stub.ReadSetup(request)
@@ -114,7 +104,7 @@ class ModuleDatabase:
         """
         try:
             print("Loading setup...", setup_id, node_id)
-            channel = self._secure_channel(self._database_address)
+            channel = grpc_channel(self._database_address)
             stub = SetupServiceStub(channel)
             request = GetNodeSetupRequest(setup_id=setup_id, node_id=node_id)
             response = await stub.GetNodeSetup(request)

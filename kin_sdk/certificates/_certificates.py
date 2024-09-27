@@ -3,7 +3,7 @@ Gestion des certificats pour le SDK
 """
 
 import os
-from typing import Annotated, Optional
+from typing import Annotated, Optional, Tuple, Union
 
 import grpc
 from pydantic import BaseModel, Field
@@ -36,7 +36,7 @@ class Certificates(BaseModel):
     server_cert: Annotated[CertValues, Field(..., description="Server certificate")]
 
 
-def get_certificates() -> Certificates:
+def get_certificates() -> Tuple[Certificates, bool]:
     """
     Get certificates for the SDK
     """
@@ -45,6 +45,10 @@ def get_certificates() -> Certificates:
     server_key_pem = os.getenv("SERVER_KEY_PEM", None)
     client_cert_pem = os.getenv("CLIENT_CERT_PEM", None)
     client_key_pem = os.getenv("CLIENT_KEY_PEM", None)
+
+    all_certs_present = all(
+        [ca_pem, server_cert_pem, server_key_pem, client_cert_pem, client_key_pem]
+    )
 
     # Check if the certificates are set
     if (
@@ -103,29 +107,52 @@ def get_certificates() -> Certificates:
         client_private_key = None
         logger.error("Private key file not found")
 
-    return Certificates(
-        client_cert=CertValues(
-            root_certificates=root_certificates,
-            certificate_chain=server_certificate_chain,
-            private_key=server_private_key,
+    return (
+        Certificates(
+            client_cert=CertValues(
+                root_certificates=root_certificates,
+                certificate_chain=server_certificate_chain,
+                private_key=server_private_key,
+            ),
+            server_cert=CertValues(
+                root_certificates=root_certificates,
+                certificate_chain=client_certificate_chain,
+                private_key=client_private_key,
+            ),
         ),
-        server_cert=CertValues(
-            root_certificates=root_certificates,
-            certificate_chain=client_certificate_chain,
-            private_key=client_private_key,
-        ),
+        all_certs_present,
     )
 
 
-def init_channel_credentials() -> grpc.ChannelCredentials:
+def init_channel_credentials() -> Union[grpc.ChannelCredentials, None]:
     """
     Initializes the gRPC channel credentials.
+
+    Returns:
+        grpc.ChannelCredentials: The gRPC channel credentials or None if SSL is not used.
     """
-    certificates: Certificates = get_certificates()
+    certificates, use_ssl = get_certificates()
     server_cert: CertValues = certificates.client_cert
 
-    return grpc.ssl_channel_credentials(
-        root_certificates=server_cert.root_certificates,
-        private_key=server_cert.private_key,
-        certificate_chain=server_cert.certificate_chain,
+    return (
+        grpc.ssl_channel_credentials(
+            root_certificates=server_cert.root_certificates,
+            private_key=server_cert.private_key,
+            certificate_chain=server_cert.certificate_chain,
+        )
+        if use_ssl
+        else None
+    )
+
+
+def grpc_channel(target: str) -> grpc.aio.Channel:
+    """
+    Creates a secure gRPC channel to the Module Registry.
+    """
+    credentials = init_channel_credentials()
+
+    return (
+        grpc.aio.insecure_channel(target=target)
+        if credentials is None
+        else grpc.aio.secure_channel(target=target, credentials=credentials)
     )

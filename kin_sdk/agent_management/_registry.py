@@ -38,7 +38,7 @@ from digitalkin.module.v1.information_pb2 import (
 from kin_sdk.models.module import ModuleModel
 from kin_sdk.common.logger import logger
 from kin_sdk.common.types import ModuleType
-from kin_sdk.certificates._certificates import init_channel_credentials
+from kin_sdk.certificates._certificates import grpc_channel
 
 
 @dataclass
@@ -66,7 +66,6 @@ class ModuleRegistry:
         """
         self._module_id = module_id
         self._registry_address = registry_address
-        self._credentials = init_channel_credentials()
 
     @classmethod
     def from_params(cls, params: ParamsModuleRegistry) -> "ModuleRegistry":
@@ -74,14 +73,6 @@ class ModuleRegistry:
         Creates a ModuleRegistry object from the given parameters.
         """
         return cls(**params.__dict__)
-
-    def _secure_channel(self, target: str) -> grpc.aio.Channel:
-        """
-        Creates a secure gRPC channel to the Module Registry.
-        """
-        return grpc.aio.insecure_channel(
-            target=target
-        )  # , credentials=self._credentials)
 
     async def find_module_by_id(self, module_id: str) -> Optional[ModuleModel]:
         """
@@ -94,7 +85,7 @@ class ModuleRegistry:
             ModuleModel: ModuleModel if the module is found, None otherwise.
         """
         try:
-            channel = self._secure_channel(self._registry_address)
+            channel = grpc_channel(self._registry_address)
             stub = ModuleRegistryServiceStub(channel)
             request = DiscoverRequest(module_id=module_id)
             response = await stub.DiscoverModule(request)
@@ -137,9 +128,7 @@ class ModuleRegistry:
                     f"The module: {module_id} is not found in the module registry"
                 )
 
-            channel = self._secure_channel(
-                f"{module_model.address}:{module_model.port}"
-            )
+            channel = grpc_channel(f"{module_model.address}:{module_model.port}")
             stub = ModuleServiceStub(channel)
             request = GetModuleInputRequest(
                 module_id=module_model.module_id,
@@ -177,9 +166,7 @@ class ModuleRegistry:
                     f"The module: {module_id} is not found in the module registry"
                 )
 
-            channel = self._secure_channel(
-                f"{module_model.address}:{module_model.port}"
-            )
+            channel = grpc_channel(f"{module_model.address}:{module_model.port}")
             stub = ModuleServiceStub(channel)
             request = GetModuleOutputRequest(
                 module_id=module_model.module_id,
@@ -219,9 +206,7 @@ class ModuleRegistry:
                     f"The module: {module_id} is not found in the module registry"
                 )
 
-            channel = self._secure_channel(
-                f"{module_model.address}:{module_model.port}"
-            )
+            channel = grpc_channel(f"{module_model.address}:{module_model.port}")
             stub = ModuleServiceStub(channel)
             request = GetModuleSetupRequest(
                 module_id=module_model.module_id,
@@ -261,9 +246,7 @@ class ModuleRegistry:
                 raise ValueError(
                     f"The module: {module_id} is not found in the module registry"
                 )
-            channel = self._secure_channel(
-                f"{module_model.address}:{module_model.port}"
-            )
+            channel = grpc_channel(f"{module_model.address}:{module_model.port}")
             stub = ModuleServiceStub(channel)
             requests = []
             for message in messages:

@@ -8,7 +8,7 @@ import grpc
 from grpc.aio._server import Server
 
 from kin_sdk.common.logger import logger
-from kin_sdk.certificates import get_certificates, Certificates, CertValues
+from kin_sdk.certificates import get_certificates, CertValues
 
 
 class GRPCServerBase:
@@ -43,19 +43,14 @@ class GRPCServerBase:
         self.port = port
         self.max_workers = max_workers
         self._server: Server = None
-        self._credentials = self._init_credentials()
+
+        self._certificates, self._use_ssl = get_certificates()
 
     def _init_credentials(self) -> grpc.ServerCredentials:
         """
         Initializes the gRPC server credentials.
         """
-        certificates: Certificates = get_certificates()
-        server_cert: CertValues = certificates.server_cert
-        has_cert = (
-            server_cert.private_key is not None
-            and server_cert.certificate_chain is not None
-            and server_cert.certificate_chain is not None
-        )
+        server_cert: CertValues = self._certificates.server_cert
 
         return grpc.ssl_server_credentials(
             private_key_certificate_chain_pairs=[
@@ -65,8 +60,27 @@ class GRPCServerBase:
                 )
             ],
             root_certificates=server_cert.root_certificates,
-            require_client_auth=has_cert,
+            require_client_auth=True,
         )
+
+    def _init_server(self) -> grpc.aio.Server:
+        """
+        Initializes the gRPC server instance, configures it with the specified port and credentials, and returns it.
+
+        Returns:
+            grpc.aio.Server: The gRPC server instance.
+        """
+        server = grpc.aio.server(
+            futures.ThreadPoolExecutor(max_workers=self.max_workers)
+        )
+        if self._use_ssl:
+            server_credentials = self._init_credentials()
+            server.add_secure_port(f"[::]:{self.port}", server_credentials)
+            logger.info("🔒 Starting secure gRPC server on port %s", self.port)
+        else:
+            server.add_insecure_port(f"[::]:{self.port}")
+            logger.info("🔓 Starting insecure gRPC server on port %s", self.port)
+        return server
 
     async def serve(self) -> None:
         """
@@ -74,13 +88,8 @@ class GRPCServerBase:
 
         The server runs indefinitely until an external interruption or termination.
         """
-        self._server = grpc.aio.server(
-            futures.ThreadPoolExecutor(max_workers=self.max_workers)
-        )
+        self._server = self._init_server()
         self.add_to_server(self._server)
-        self._server.add_insecure_port(
-            address=f"[::]:{self.port}"  # , server_credentials=self._credentials
-        )
         logger.info("🤖 Module starting on port %s", self.port)
         await self._server.start()
         await self._server.wait_for_termination()

@@ -26,7 +26,7 @@ from kin_sdk.grpc_system.module_servicer import ModuleServicer
 from kin_sdk.exception import ModuleRegistrationException
 from kin_sdk.grpc_system.grpc_server_base import GRPCServerBase
 from kin_sdk.common.logger import logger
-from kin_sdk.certificates._certificates import init_channel_credentials
+from kin_sdk.certificates._certificates import grpc_channel
 
 
 class ModuleServer(GRPCServerBase):
@@ -56,7 +56,6 @@ class ModuleServer(GRPCServerBase):
         self.module_type = module_class.get_type()
         self.registry_address = registry_address
         self.database_address = database_address
-        self._credentials = init_channel_credentials()
         self._is_registered = False
         self.agent_management = AgentManagement(
             params_identity=ParamsModuleIdentity(
@@ -74,14 +73,6 @@ class ModuleServer(GRPCServerBase):
             ),
         )
 
-    def _secure_channel(self, target: str) -> grpc.aio.Channel:
-        """
-        Creates a secure gRPC channel to the Module Registry.
-        """
-        return grpc.aio.insecure_channel(
-            target=target
-        )  # , credentials=self._credentials)
-
     async def _register_module(self) -> bool:
         """
         Registers the module with the Module Registry.
@@ -94,7 +85,7 @@ class ModuleServer(GRPCServerBase):
             bool: True if registration is successful, False otherwise.
         """
         try:
-            channel = self._secure_channel(self.registry_address)
+            channel = grpc_channel(self.registry_address)
             stub = ModuleRegistryServiceStub(channel)
             request = RegisterRequest(
                 module_id=self.module_id,
@@ -119,7 +110,7 @@ class ModuleServer(GRPCServerBase):
             bool: True if deregistration is successful, False otherwise.
         """
         try:
-            channel = self._secure_channel(self.registry_address)
+            channel = grpc_channel(self.registry_address)
             stub = ModuleRegistryServiceStub(channel)
             request = DeregisterRequest(module_id=self.module_id)
             response: DeregisterResponse = await stub.DeregisterModule(request)
