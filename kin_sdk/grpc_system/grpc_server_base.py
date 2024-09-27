@@ -60,7 +60,7 @@ class GRPCServerBase:
                 )
             ],
             root_certificates=server_cert.root_certificates,
-            require_client_auth=True,
+            require_client_auth=self._use_ssl,
         )
 
     def _init_server(self) -> grpc.aio.Server:

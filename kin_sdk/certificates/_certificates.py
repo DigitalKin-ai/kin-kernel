@@ -46,10 +46,6 @@ def get_certificates() -> Tuple[Certificates, bool]:
     client_cert_pem = os.getenv("CLIENT_CERT_PEM", None)
     client_key_pem = os.getenv("CLIENT_KEY_PEM", None)
 
-    all_certs_present = all(
-        [ca_pem, server_cert_pem, server_key_pem, client_cert_pem, client_key_pem]
-    )
-
     # Check if the certificates are set
     if (
         ca_pem is None
@@ -107,20 +103,50 @@ def get_certificates() -> Tuple[Certificates, bool]:
         client_private_key = None
         logger.error("Private key file not found")
 
+    all_certs_present = all(
+        [
+            root_certificates,
+            server_certificate_chain,
+            server_private_key,
+            client_certificate_chain,
+            client_private_key,
+        ]
+    )
     return (
         Certificates(
-            client_cert=CertValues(
+            server_cert=CertValues(
                 root_certificates=root_certificates,
                 certificate_chain=server_certificate_chain,
                 private_key=server_private_key,
             ),
-            server_cert=CertValues(
+            client_cert=CertValues(
                 root_certificates=root_certificates,
                 certificate_chain=client_certificate_chain,
                 private_key=client_private_key,
             ),
         ),
         all_certs_present,
+    )
+
+
+def init_server_credentials() -> Union[grpc.ChannelCredentials, None]:
+    """
+    Initializes the gRPC server credentials.
+
+    Returns:
+        grpc.ChannelCredentials: The gRPC channel credentials or None if SSL is not used.
+    """
+    certificates, use_ssl = get_certificates()
+    server_cert: CertValues = certificates.server_cert
+
+    return (
+        grpc.ssl_channel_credentials(
+            root_certificates=server_cert.root_certificates,
+            private_key=server_cert.private_key,
+            certificate_chain=server_cert.certificate_chain,
+        )
+        if use_ssl
+        else None
     )
 
 
@@ -132,13 +158,13 @@ def init_channel_credentials() -> Union[grpc.ChannelCredentials, None]:
         grpc.ChannelCredentials: The gRPC channel credentials or None if SSL is not used.
     """
     certificates, use_ssl = get_certificates()
-    server_cert: CertValues = certificates.client_cert
+    client_cert: CertValues = certificates.client_cert
 
     return (
         grpc.ssl_channel_credentials(
-            root_certificates=server_cert.root_certificates,
-            private_key=server_cert.private_key,
-            certificate_chain=server_cert.certificate_chain,
+            root_certificates=client_cert.root_certificates,
+            private_key=client_cert.private_key,
+            certificate_chain=client_cert.certificate_chain,
         )
         if use_ssl
         else None
