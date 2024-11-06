@@ -141,3 +141,6 @@ backup.dump.gz
 .vscode
 surreal_schema.txt
 
+.aider*
+.aider.chat.history.md
+.aider.*

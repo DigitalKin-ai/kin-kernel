@@ -54,17 +54,20 @@ def get_certificates() -> Tuple[Certificates, bool]:
         or client_key_pem is None
         or client_key_pem is None
     ):
-        return Certificates(
-            client_cert=CertValues(
-                root_certificates=None,
-                certificate_chain=None,
-                private_key=None,
+        return (
+            Certificates(
+                client_cert=CertValues(
+                    root_certificates=None,
+                    certificate_chain=None,
+                    private_key=None,
+                ),
+                server_cert=CertValues(
+                    root_certificates=None,
+                    certificate_chain=None,
+                    private_key=None,
+                ),
             ),
-            server_cert=CertValues(
-                root_certificates=None,
-                certificate_chain=None,
-                private_key=None,
-            ),
+            False,
         )
 
     # Read the certificates

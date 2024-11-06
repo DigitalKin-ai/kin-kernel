@@ -99,7 +99,6 @@ class ModuleServer(GRPCServerBase):
             return response.success
         except Exception as e:  # pylint: disable=broad-except
             logger.error("Error registering module: %s", e)
-            assert "a" == "b", "Error registering module: %s" % e
             self._is_registered = False
             return False
 

@@ -60,6 +60,7 @@ def main():
     proto_dir = "service-apis/proto"
     buf_file = "buf.gen.py.yaml"
     output_dir = "proto/"
+    buf_config = f"{proto_dir}/buf.py.yaml"
 
     proto_paths: List[str] = [
         f"{proto_dir}/digitalkin/module",
@@ -68,14 +69,30 @@ def main():
         f"{proto_dir}/digitalkin/setup",
     ]
     paths_option = " ".join(f"--path {path}" for path in proto_paths)
+    command_rename_buf = f"mv {proto_dir}/buf.yaml {proto_dir}/buf.tmp.yaml"
+    command_cp_bufpy = f"cp {buf_config} {proto_dir}/buf.yaml"
+    command_rename_deps = f"mv {proto_dir}/google {proto_dir}/../google&&mv {proto_dir}/buf {proto_dir}/../buf"
+    command_update_deps = f"buf dep update {proto_dir}"
     command = f"buf generate {proto_dir} --template {proto_dir}/{buf_file} --include-imports -o {output_dir} {paths_option}"
-
-    print(f"\nCommand: [\n\t- {command}\n]\n")
+    command_reinit_buf = f"mv {proto_dir}/buf.tmp.yaml {proto_dir}/buf.yaml"
+    command_reinit_deps = f"mv {proto_dir}/../google {proto_dir}/google&&mv {proto_dir}/../buf {proto_dir}/buf"
+    commands = [
+        command_rename_buf,
+        command_cp_bufpy,
+        command_rename_deps,
+        command_update_deps,
+        command,
+        command_reinit_buf,
+        command_reinit_deps,
+    ]
+    full_command = "&&".join(commands)
+    list_of_commands = "\n\t- ".join(commands)
+    print(f"\nCommand: [\n\t- {list_of_commands}\n]\n")
 
     try:
         # Use subprocess.run to execute the command
         result = subprocess.run(
-            command, shell=True, text=True, capture_output=True, check=True
+            full_command, shell=True, text=True, capture_output=True, check=True
         )
 
         print(result)
