@@ -225,7 +225,7 @@ class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ABC):
         )
 
     @abstractmethod
-    async def start(self, setup_id: str) -> None:
+    async def start(self, setup_data: SetupModelT) -> None:
         """
         Starts the module.
         """
@@ -235,7 +235,7 @@ class BaseModule(Generic[InputModelT, OutputModelT, SetupModelT], ABC):
     async def execute(
         self,
         input_data: InputModelT,
-        setup_id: str,
+        setup_data: SetupModelT,
         callback: Callable[[OutputModelT], Awaitable[None]],
     ) -> None:
         """

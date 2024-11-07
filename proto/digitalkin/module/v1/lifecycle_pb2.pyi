@@ -57,14 +57,16 @@ class ConnectionRequest(_message.Message):
     def __init__(self, room_id: _Optional[str] = ..., module_id: _Optional[str] = ..., module_role: _Optional[_Union[ModuleRole, str]] = ...) -> None: ...
 
 class InputDataRequest(_message.Message):
-    __slots__ = ("input", "setup_id", "module_ids")
+    __slots__ = ("input", "setup_id", "instance_id", "module_ids")
     INPUT_FIELD_NUMBER: _ClassVar[int]
     SETUP_ID_FIELD_NUMBER: _ClassVar[int]
+    INSTANCE_ID_FIELD_NUMBER: _ClassVar[int]
     MODULE_IDS_FIELD_NUMBER: _ClassVar[int]
     input: _struct_pb2.Struct
     setup_id: str
+    instance_id: str
     module_ids: _containers.RepeatedScalarFieldContainer[str]
-    def __init__(self, input: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., setup_id: _Optional[str] = ..., module_ids: _Optional[_Iterable[str]] = ...) -> None: ...
+    def __init__(self, input: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., setup_id: _Optional[str] = ..., instance_id: _Optional[str] = ..., module_ids: _Optional[_Iterable[str]] = ...) -> None: ...
 
 class StartModuleRequest(_message.Message):
     __slots__ = ("request_type", "connection_request", "input_request")

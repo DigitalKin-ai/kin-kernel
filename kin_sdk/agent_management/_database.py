@@ -5,7 +5,7 @@ TODO: Implement database for agent management
 from dataclasses import dataclass
 from google.protobuf import json_format
 
-from digitalkin.setup.v2.setup_pb2 import ReadSetupRequest, GetNodeSetupRequest
+from digitalkin.setup.v2.setup_pb2 import ReadSetupRequest, GetInstanceSetupRequest
 from digitalkin.setup.v2.setup_service_pb2_grpc import SetupServiceStub
 from digitalkin.project.v1.project_service_pb2_grpc import ProjectServiceStub
 from digitalkin.project.v1.workflow_pb2 import ReadWorkflowRequest
@@ -91,28 +91,29 @@ class ModuleDatabase:
             logger.error("Error loading setup: %s", str(e))
             return None
 
-    async def load_node_setup(self, node_id: str, setup_id: str) -> dict:
+    async def load_instance_setup(self, setup_id: str, instance_id: str) -> dict:
         """
-        Load a specific node setup from the database.
+        Load a specific instance setup from the database.
 
         Args:
-            node_id (str): The node_id of the node to load.
+            instance_id (str): The instance_id of the instance to load.
             setup_id (str): The setup_id of the setup to load.
 
         Returns:
             dict: The setup data.
         """
         try:
-            print("Loading setup...", setup_id, node_id)
+            print("Loading setup...", setup_id, instance_id)
             channel = grpc_channel(self._database_address)
             stub = SetupServiceStub(channel)
-            request = GetNodeSetupRequest(setup_id=setup_id, node_id=node_id)
-            response = await stub.GetNodeSetup(request)
-            print("Response: ", response)
+            request = GetInstanceSetupRequest(
+                setup_id=setup_id, instance_id=instance_id
+            )
+            response = await stub.GetInstanceSetup(request)
             return json_format.MessageToDict(
                 response,
                 preserving_proto_field_name=True,
             )
         except Exception as e:  # pylint: disable=broad-except
-            logger.error("Error loading node setup: %s", str(e))
+            logger.error("Error loading instance setup: %s", str(e))
             return None

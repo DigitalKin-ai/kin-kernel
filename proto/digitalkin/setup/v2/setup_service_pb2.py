@@ -27,7 +27,7 @@ from google.api import annotations_pb2 as google_dot_api_dot_annotations__pb2
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\'digitalkin/setup/v2/setup_service.proto\x12\x13\x64igitalkin.setup.v2\x1a\x1f\x64igitalkin/setup/v2/setup.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1bgoogle/protobuf/empty.proto2\xa3\x02\n\x0cSetupService\x12\x92\x01\n\x0cGetNodeSetup\x12(.digitalkin.setup.v2.GetNodeSetupRequest\x1a).digitalkin.setup.v2.GetNodeSetupResponse\"-\x82\xd3\xe4\x93\x02\'\x12%/v2/setups/{setup_id}/nodes/{node_id}\x12~\n\tReadSetup\x12%.digitalkin.setup.v2.ReadSetupRequest\x1a&.digitalkin.setup.v2.ReadSetupResponse\"\"\x82\xd3\xe4\x93\x02\x1c\x12\x1a/v2/setups/{setup_id}/readB\x9c\x01\n\x17\x63om.digitalkin.setup.v2B\x11SetupServiceProtoH\x02P\x01\xa2\x02\x03\x44SX\xaa\x02\x13\x44igitalkin.Setup.V2\xca\x02\x13\x44igitalkin\\Setup\\V2\xe2\x02\x1f\x44igitalkin\\Setup\\V2\\GPBMetadata\xea\x02\x15\x44igitalkin::Setup::V2b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\'digitalkin/setup/v2/setup_service.proto\x12\x13\x64igitalkin.setup.v2\x1a\x1f\x64igitalkin/setup/v2/setup.proto\x1a\x1cgoogle/api/annotations.proto\x1a\x1bgoogle/protobuf/empty.proto2\xb7\x02\n\x0cSetupService\x12\xa6\x01\n\x10GetInstanceSetup\x12,.digitalkin.setup.v2.GetInstanceSetupRequest\x1a-.digitalkin.setup.v2.GetInstanceSetupResponse\"5\x82\xd3\xe4\x93\x02/\x12-/v2/setups/{setup_id}/instances/{instance_id}\x12~\n\tReadSetup\x12%.digitalkin.setup.v2.ReadSetupRequest\x1a&.digitalkin.setup.v2.ReadSetupResponse\"\"\x82\xd3\xe4\x93\x02\x1c\x12\x1a/v2/setups/{setup_id}/readB\x9c\x01\n\x17\x63om.digitalkin.setup.v2B\x11SetupServiceProtoH\x02P\x01\xa2\x02\x03\x44SX\xaa\x02\x13\x44igitalkin.Setup.V2\xca\x02\x13\x44igitalkin\\Setup\\V2\xe2\x02\x1f\x44igitalkin\\Setup\\V2\\GPBMetadata\xea\x02\x15\x44igitalkin::Setup::V2b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -35,10 +35,10 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'digitalkin.setup.v2.setup_s
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'\n\027com.digitalkin.setup.v2B\021SetupServiceProtoH\002P\001\242\002\003DSX\252\002\023Digitalkin.Setup.V2\312\002\023Digitalkin\\Setup\\V2\342\002\037Digitalkin\\Setup\\V2\\GPBMetadata\352\002\025Digitalkin::Setup::V2'
-  _globals['_SETUPSERVICE'].methods_by_name['GetNodeSetup']._loaded_options = None
-  _globals['_SETUPSERVICE'].methods_by_name['GetNodeSetup']._serialized_options = b'\202\323\344\223\002\'\022%/v2/setups/{setup_id}/nodes/{node_id}'
+  _globals['_SETUPSERVICE'].methods_by_name['GetInstanceSetup']._loaded_options = None
+  _globals['_SETUPSERVICE'].methods_by_name['GetInstanceSetup']._serialized_options = b'\202\323\344\223\002/\022-/v2/setups/{setup_id}/instances/{instance_id}'
   _globals['_SETUPSERVICE'].methods_by_name['ReadSetup']._loaded_options = None
   _globals['_SETUPSERVICE'].methods_by_name['ReadSetup']._serialized_options = b'\202\323\344\223\002\034\022\032/v2/setups/{setup_id}/read'
   _globals['_SETUPSERVICE']._serialized_start=157
-  _globals['_SETUPSERVICE']._serialized_end=448
+  _globals['_SETUPSERVICE']._serialized_end=468
 # @@protoc_insertion_point(module_scope)

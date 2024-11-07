@@ -27,7 +27,7 @@ from google.protobuf import any_pb2 as google_dot_protobuf_dot_any__pb2
 from google.protobuf import struct_pb2 as google_dot_protobuf_dot_struct__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1f\x64igitalkin/setup/v2/setup.proto\x12\x13\x64igitalkin.setup.v2\x1a\x1fgoogle/api/field_behavior.proto\x1a\x19google/protobuf/any.proto\x1a\x1cgoogle/protobuf/struct.proto\"~\n\x04\x44\x61ta\x12 \n\tmodule_id\x18\x01 \x01(\tB\x03\xe0\x41\x03R\x08moduleId\x12\x1c\n\x07node_id\x18\x02 \x01(\tB\x03\xe0\x41\x03R\x06nodeId\x12\x36\n\x07\x63ontent\x18\x03 \x01(\x0b\x32\x17.google.protobuf.StructB\x03\xe0\x41\x03R\x07\x63ontent\"\xad\x01\n\x05Setup\x12\x13\n\x02id\x18\x01 \x01(\tB\x03\xe0\x41\x03R\x02id\x12\x17\n\x04name\x18\x02 \x01(\tB\x03\xe0\x41\x03R\x04name\x12\x1a\n\x06kin_id\x18\x03 \x01(\tB\x03\xe0\x41\x03R\x05kinId\x12-\n\x04\x64\x61ta\x18\x04 \x03(\x0b\x32\x19.digitalkin.setup.v2.DataR\x04\x64\x61ta\x12+\n\rcreation_date\x18\x05 \x01(\x05\x42\x06\xe0\x41\x05\xe0\x41\x03R\x0c\x63reationDate\"2\n\x10ReadSetupRequest\x12\x1e\n\x08setup_id\x18\x01 \x01(\tB\x03\xe0\x41\x02R\x07setupId\"J\n\x11ReadSetupResponse\x12\x35\n\x05setup\x18\x01 \x01(\x0b\x32\x1a.digitalkin.setup.v2.SetupB\x03\xe0\x41\x03R\x05setup\"S\n\x13GetNodeSetupRequest\x12\x1e\n\x08setup_id\x18\x01 \x01(\tB\x03\xe0\x41\x02R\x07setupId\x12\x1c\n\x07node_id\x18\x02 \x01(\tB\x03\xe0\x41\x02R\x06nodeId\"J\n\x14GetNodeSetupResponse\x12\x32\n\x04\x64\x61ta\x18\x01 \x01(\x0b\x32\x19.digitalkin.setup.v2.DataB\x03\xe0\x41\x03R\x04\x64\x61taB\x95\x01\n\x17\x63om.digitalkin.setup.v2B\nSetupProtoH\x02P\x01\xa2\x02\x03\x44SX\xaa\x02\x13\x44igitalkin.Setup.V2\xca\x02\x13\x44igitalkin\\Setup\\V2\xe2\x02\x1f\x44igitalkin\\Setup\\V2\\GPBMetadata\xea\x02\x15\x44igitalkin::Setup::V2b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1f\x64igitalkin/setup/v2/setup.proto\x12\x13\x64igitalkin.setup.v2\x1a\x1fgoogle/api/field_behavior.proto\x1a\x19google/protobuf/any.proto\x1a\x1cgoogle/protobuf/struct.proto\"\x86\x01\n\x04\x44\x61ta\x12 \n\tmodule_id\x18\x01 \x01(\tB\x03\xe0\x41\x03R\x08moduleId\x12$\n\x0binstance_id\x18\x02 \x01(\tB\x03\xe0\x41\x03R\ninstanceId\x12\x36\n\x07\x63ontent\x18\x03 \x01(\x0b\x32\x17.google.protobuf.StructB\x03\xe0\x41\x03R\x07\x63ontent\"\xad\x01\n\x05Setup\x12\x13\n\x02id\x18\x01 \x01(\tB\x03\xe0\x41\x03R\x02id\x12\x17\n\x04name\x18\x02 \x01(\tB\x03\xe0\x41\x03R\x04name\x12\x1a\n\x06kin_id\x18\x03 \x01(\tB\x03\xe0\x41\x03R\x05kinId\x12-\n\x04\x64\x61ta\x18\x04 \x03(\x0b\x32\x19.digitalkin.setup.v2.DataR\x04\x64\x61ta\x12+\n\rcreation_date\x18\x05 \x01(\x05\x42\x06\xe0\x41\x05\xe0\x41\x03R\x0c\x63reationDate\"2\n\x10ReadSetupRequest\x12\x1e\n\x08setup_id\x18\x01 \x01(\tB\x03\xe0\x41\x02R\x07setupId\"J\n\x11ReadSetupResponse\x12\x35\n\x05setup\x18\x01 \x01(\x0b\x32\x1a.digitalkin.setup.v2.SetupB\x03\xe0\x41\x03R\x05setup\"_\n\x17GetInstanceSetupRequest\x12\x1e\n\x08setup_id\x18\x01 \x01(\tB\x03\xe0\x41\x02R\x07setupId\x12$\n\x0binstance_id\x18\x02 \x01(\tB\x03\xe0\x41\x02R\ninstanceId\"N\n\x18GetInstanceSetupResponse\x12\x32\n\x04\x64\x61ta\x18\x01 \x01(\x0b\x32\x19.digitalkin.setup.v2.DataB\x03\xe0\x41\x03R\x04\x64\x61taB\x95\x01\n\x17\x63om.digitalkin.setup.v2B\nSetupProtoH\x02P\x01\xa2\x02\x03\x44SX\xaa\x02\x13\x44igitalkin.Setup.V2\xca\x02\x13\x44igitalkin\\Setup\\V2\xe2\x02\x1f\x44igitalkin\\Setup\\V2\\GPBMetadata\xea\x02\x15\x44igitalkin::Setup::V2b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -37,8 +37,8 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._serialized_options = b'\n\027com.digitalkin.setup.v2B\nSetupProtoH\002P\001\242\002\003DSX\252\002\023Digitalkin.Setup.V2\312\002\023Digitalkin\\Setup\\V2\342\002\037Digitalkin\\Setup\\V2\\GPBMetadata\352\002\025Digitalkin::Setup::V2'
   _globals['_DATA'].fields_by_name['module_id']._loaded_options = None
   _globals['_DATA'].fields_by_name['module_id']._serialized_options = b'\340A\003'
-  _globals['_DATA'].fields_by_name['node_id']._loaded_options = None
-  _globals['_DATA'].fields_by_name['node_id']._serialized_options = b'\340A\003'
+  _globals['_DATA'].fields_by_name['instance_id']._loaded_options = None
+  _globals['_DATA'].fields_by_name['instance_id']._serialized_options = b'\340A\003'
   _globals['_DATA'].fields_by_name['content']._loaded_options = None
   _globals['_DATA'].fields_by_name['content']._serialized_options = b'\340A\003'
   _globals['_SETUP'].fields_by_name['id']._loaded_options = None
@@ -53,22 +53,22 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_READSETUPREQUEST'].fields_by_name['setup_id']._serialized_options = b'\340A\002'
   _globals['_READSETUPRESPONSE'].fields_by_name['setup']._loaded_options = None
   _globals['_READSETUPRESPONSE'].fields_by_name['setup']._serialized_options = b'\340A\003'
-  _globals['_GETNODESETUPREQUEST'].fields_by_name['setup_id']._loaded_options = None
-  _globals['_GETNODESETUPREQUEST'].fields_by_name['setup_id']._serialized_options = b'\340A\002'
-  _globals['_GETNODESETUPREQUEST'].fields_by_name['node_id']._loaded_options = None
-  _globals['_GETNODESETUPREQUEST'].fields_by_name['node_id']._serialized_options = b'\340A\002'
-  _globals['_GETNODESETUPRESPONSE'].fields_by_name['data']._loaded_options = None
-  _globals['_GETNODESETUPRESPONSE'].fields_by_name['data']._serialized_options = b'\340A\003'
-  _globals['_DATA']._serialized_start=146
-  _globals['_DATA']._serialized_end=272
-  _globals['_SETUP']._serialized_start=275
-  _globals['_SETUP']._serialized_end=448
-  _globals['_READSETUPREQUEST']._serialized_start=450
-  _globals['_READSETUPREQUEST']._serialized_end=500
-  _globals['_READSETUPRESPONSE']._serialized_start=502
-  _globals['_READSETUPRESPONSE']._serialized_end=576
-  _globals['_GETNODESETUPREQUEST']._serialized_start=578
-  _globals['_GETNODESETUPREQUEST']._serialized_end=661
-  _globals['_GETNODESETUPRESPONSE']._serialized_start=663
-  _globals['_GETNODESETUPRESPONSE']._serialized_end=737
+  _globals['_GETINSTANCESETUPREQUEST'].fields_by_name['setup_id']._loaded_options = None
+  _globals['_GETINSTANCESETUPREQUEST'].fields_by_name['setup_id']._serialized_options = b'\340A\002'
+  _globals['_GETINSTANCESETUPREQUEST'].fields_by_name['instance_id']._loaded_options = None
+  _globals['_GETINSTANCESETUPREQUEST'].fields_by_name['instance_id']._serialized_options = b'\340A\002'
+  _globals['_GETINSTANCESETUPRESPONSE'].fields_by_name['data']._loaded_options = None
+  _globals['_GETINSTANCESETUPRESPONSE'].fields_by_name['data']._serialized_options = b'\340A\003'
+  _globals['_DATA']._serialized_start=147
+  _globals['_DATA']._serialized_end=281
+  _globals['_SETUP']._serialized_start=284
+  _globals['_SETUP']._serialized_end=457
+  _globals['_READSETUPREQUEST']._serialized_start=459
+  _globals['_READSETUPREQUEST']._serialized_end=509
+  _globals['_READSETUPRESPONSE']._serialized_start=511
+  _globals['_READSETUPRESPONSE']._serialized_end=585
+  _globals['_GETINSTANCESETUPREQUEST']._serialized_start=587
+  _globals['_GETINSTANCESETUPREQUEST']._serialized_end=682
+  _globals['_GETINSTANCESETUPRESPONSE']._serialized_start=684
+  _globals['_GETINSTANCESETUPRESPONSE']._serialized_end=762
 # @@protoc_insertion_point(module_scope)

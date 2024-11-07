@@ -27,7 +27,7 @@ from google.api import field_behavior_pb2 as google_dot_api_dot_field__behavior_
 from google.protobuf import struct_pb2 as google_dot_protobuf_dot_struct__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n$digitalkin/module/v1/lifecycle.proto\x12\x14\x64igitalkin.module.v1\x1a\x1b\x62uf/validate/validate.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1cgoogle/protobuf/struct.proto\"\xba\x01\n\x11\x43onnectionRequest\x12\"\n\x07room_id\x18\x01 \x01(\tB\t\xe0\x41\x01\xbaH\x03\xc8\x01\x00R\x06roomId\x12\x31\n\tmodule_id\x18\x02 \x01(\tB\x14\xbaH\x11r\x0c\x10\x01:\x08modules:\xc8\x01\x01R\x08moduleId\x12N\n\x0bmodule_role\x18\x03 \x01(\x0e\x32 .digitalkin.module.v1.ModuleRoleB\x0b\xbaH\x08\x82\x01\x02\x10\x01\xc8\x01\x01R\nmoduleRole\"\xb5\x01\n\x10InputDataRequest\x12\x35\n\x05input\x18\x01 \x01(\x0b\x32\x17.google.protobuf.StructB\x06\xbaH\x03\xc8\x01\x01R\x05input\x12.\n\x08setup_id\x18\x02 \x01(\tB\x13\xbaH\x10r\x0b\x10\x01:\x07setups:\xc8\x01\x01R\x07setupId\x12:\n\nmodule_ids\x18\x03 \x03(\tB\x1b\xe0\x41\x01\xbaH\x15\x92\x01\x12\x08\x00\"\x0er\x0c\x10\x01:\x08modules:R\tmoduleIds\"\x9b\x02\n\x12StartModuleRequest\x12Q\n\x0crequest_type\x18\x01 \x01(\x0e\x32!.digitalkin.module.v1.RequestTypeB\x0b\xbaH\x08\x82\x01\x02\x10\x01\xc8\x01\x01R\x0brequestType\x12X\n\x12\x63onnection_request\x18\x02 \x01(\x0b\x32\'.digitalkin.module.v1.ConnectionRequestH\x00R\x11\x63onnectionRequest\x12M\n\rinput_request\x18\x03 \x01(\x0b\x32&.digitalkin.module.v1.InputDataRequestH\x00R\x0cinputRequestB\t\n\x07\x63ontent\"=\n\x11StopModuleRequest\x12(\n\x06job_id\x18\x01 \x01(\tB\x11\xbaH\x0er\t\x10\x01:\x05jobs:\xc8\x01\x01R\x05jobId\"p\n\x12\x43onnectionResponse\x12$\n\x07message\x18\x02 \x01(\tB\n\xbaH\x07r\x02\x10\x01\xc8\x01\x01R\x07message\x12(\n\x07room_id\x18\x03 \x01(\tB\n\xbaH\x07r\x02\x10\x01\xc8\x01\x01H\x00R\x06roomId\x88\x01\x01\x42\n\n\x08_room_id\"p\n\x11InputDataResponse\x12$\n\x07message\x18\x02 \x01(\tB\n\xbaH\x07r\x02\x10\x01\xc8\x01\x01R\x07message\x12\x35\n\x05input\x18\x01 \x01(\x0b\x32\x17.google.protobuf.StructB\x06\xbaH\x03\xc8\x01\x01R\x05input\"\x9d\x01\n\x12OutputDataResponse\x12$\n\x07message\x18\x02 \x01(\tB\n\xbaH\x07r\x02\x10\x01\xc8\x01\x01R\x07message\x12\x37\n\x06output\x18\x01 \x01(\x0b\x32\x17.google.protobuf.StructB\x06\xbaH\x03\xc8\x01\x01R\x06output\x12(\n\x06job_id\x18\x03 \x01(\tB\x11\xbaH\x0er\t\x10\x01:\x05jobs:\xc8\x01\x01R\x05jobId\"Y\n\rErrorResponse\x12$\n\x07message\x18\x02 \x01(\tB\n\xbaH\x07r\x02\x10\x01\xc8\x01\x01R\x07message\x12\"\n\x07\x64\x65tails\x18\x03 \x01(\tB\x08\xbaH\x05r\x03\x18\x80\x10R\x07\x64\x65tails\"\x86\x04\n\x13StartModuleResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\x12V\n\rresponse_type\x18\x02 \x01(\x0e\x32\'.digitalkin.module.v1.StartResponseTypeB\x08\xbaH\x05\x82\x01\x02\x10\x01R\x0cresponseType\x12J\n\nconnection\x18\x03 \x01(\x0b\x32(.digitalkin.module.v1.ConnectionResponseH\x00R\nconnection\x12P\n\x0einput_response\x18\x04 \x01(\x0b\x32\'.digitalkin.module.v1.InputDataResponseH\x00R\rinputResponse\x12S\n\x0foutput_response\x18\x05 \x01(\x0b\x32(.digitalkin.module.v1.OutputDataResponseH\x00R\x0eoutputResponse\x12;\n\x05\x65rror\x18\x06 \x01(\x0b\x32#.digitalkin.module.v1.ErrorResponseH\x00R\x05\x65rror\x12\x34\n\tmodule_id\x18\x07 \x01(\tB\x12\xe0\x41\x01\xbaH\x0cr\n:\x08modules:H\x01R\x08moduleId\x88\x01\x01\x42\t\n\x07\x63ontentB\x0c\n\n_module_id\"\x8c\x01\n\x12StopModuleResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\x12$\n\x07message\x18\x02 \x01(\tB\n\xbaH\x07r\x02\x10\x01\xc8\x01\x01R\x07message\x12+\n\x06job_id\x18\x03 \x01(\tB\x0f\xe0\x41\x01\xbaH\tr\x07:\x05jobs:H\x00R\x05jobId\x88\x01\x01\x42\t\n\x07_job_id*\xa7\x01\n\x0bRequestType\x12\x18\n\x14REQUEST_TYPE_UNKNOWN\x10\x00\x12\x1b\n\x17REQUEST_TYPE_CONNECTION\x10\x01\x12\x15\n\x11REQUEST_TYPE_SEND\x10\x02\x12\x15\n\x11REQUEST_TYPE_EXIT\x10\x03\x12\x19\n\x15REQUEST_TYPE_VALIDATE\x10\x04\x12\x18\n\x14REQUEST_TYPE_DESTROY\x10\x05*\xb6\x01\n\x11StartResponseType\x12\x1f\n\x1bSTART_RESPONSE_TYPE_UNKNOWN\x10\x00\x12\"\n\x1eSTART_RESPONSE_TYPE_CONNECTION\x10\x01\x12\x1d\n\x19START_RESPONSE_TYPE_INPUT\x10\x02\x12\x1e\n\x1aSTART_RESPONSE_TYPE_OUTPUT\x10\x03\x12\x1d\n\x19START_RESPONSE_TYPE_ERROR\x10\x04*T\n\nModuleRole\x12\x17\n\x13MODULE_ROLE_UNKNOWN\x10\x00\x12\x15\n\x11MODULE_ROLE_OWNER\x10\x01\x12\x16\n\x12MODULE_ROLE_MEMBRE\x10\x02\x42\x9e\x01\n\x18\x63om.digitalkin.module.v1B\x0eLifecycleProtoH\x02P\x01\xa2\x02\x03\x44MX\xaa\x02\x14\x44igitalkin.Module.V1\xca\x02\x14\x44igitalkin\\Module\\V1\xe2\x02 Digitalkin\\Module\\V1\\GPBMetadata\xea\x02\x16\x44igitalkin::Module::V1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n$digitalkin/module/v1/lifecycle.proto\x12\x14\x64igitalkin.module.v1\x1a\x1b\x62uf/validate/validate.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1cgoogle/protobuf/struct.proto\"\xb7\x01\n\x11\x43onnectionRequest\x12\x1f\n\x07room_id\x18\x01 \x01(\tB\x06\xe0\x41\x01\xbaH\x00R\x06roomId\x12\x31\n\tmodule_id\x18\x02 \x01(\tB\x14\xbaH\x11r\x0c\x10\x01:\x08modules:\xc8\x01\x01R\x08moduleId\x12N\n\x0bmodule_role\x18\x03 \x01(\x0e\x32 .digitalkin.module.v1.ModuleRoleB\x0b\xbaH\x08\x82\x01\x02\x10\x01\xc8\x01\x01R\nmoduleRole\"\xe2\x01\n\x10InputDataRequest\x12\x35\n\x05input\x18\x01 \x01(\x0b\x32\x17.google.protobuf.StructB\x06\xbaH\x03\xc8\x01\x01R\x05input\x12.\n\x08setup_id\x18\x02 \x01(\tB\x13\xbaH\x10r\x0b\x10\x01:\x07setups:\xc8\x01\x01R\x07setupId\x12+\n\x0binstance_id\x18\x03 \x01(\tB\n\xbaH\x07r\x02\x10\x01\xc8\x01\x01R\ninstanceId\x12:\n\nmodule_ids\x18\x04 \x03(\tB\x1b\xe0\x41\x01\xbaH\x15\x92\x01\x12\x08\x00\"\x0er\x0c\x10\x01:\x08modules:R\tmoduleIds\"\x9b\x02\n\x12StartModuleRequest\x12Q\n\x0crequest_type\x18\x01 \x01(\x0e\x32!.digitalkin.module.v1.RequestTypeB\x0b\xbaH\x08\x82\x01\x02\x10\x01\xc8\x01\x01R\x0brequestType\x12X\n\x12\x63onnection_request\x18\x02 \x01(\x0b\x32\'.digitalkin.module.v1.ConnectionRequestH\x00R\x11\x63onnectionRequest\x12M\n\rinput_request\x18\x03 \x01(\x0b\x32&.digitalkin.module.v1.InputDataRequestH\x00R\x0cinputRequestB\t\n\x07\x63ontent\"=\n\x11StopModuleRequest\x12(\n\x06job_id\x18\x01 \x01(\tB\x11\xbaH\x0er\t\x10\x01:\x05jobs:\xc8\x01\x01R\x05jobId\"p\n\x12\x43onnectionResponse\x12$\n\x07message\x18\x02 \x01(\tB\n\xbaH\x07r\x02\x10\x01\xc8\x01\x01R\x07message\x12(\n\x07room_id\x18\x03 \x01(\tB\n\xbaH\x07r\x02\x10\x01\xc8\x01\x01H\x00R\x06roomId\x88\x01\x01\x42\n\n\x08_room_id\"p\n\x11InputDataResponse\x12$\n\x07message\x18\x02 \x01(\tB\n\xbaH\x07r\x02\x10\x01\xc8\x01\x01R\x07message\x12\x35\n\x05input\x18\x01 \x01(\x0b\x32\x17.google.protobuf.StructB\x06\xbaH\x03\xc8\x01\x01R\x05input\"\x9d\x01\n\x12OutputDataResponse\x12$\n\x07message\x18\x02 \x01(\tB\n\xbaH\x07r\x02\x10\x01\xc8\x01\x01R\x07message\x12\x37\n\x06output\x18\x01 \x01(\x0b\x32\x17.google.protobuf.StructB\x06\xbaH\x03\xc8\x01\x01R\x06output\x12(\n\x06job_id\x18\x03 \x01(\tB\x11\xbaH\x0er\t\x10\x01:\x05jobs:\xc8\x01\x01R\x05jobId\"Y\n\rErrorResponse\x12$\n\x07message\x18\x02 \x01(\tB\n\xbaH\x07r\x02\x10\x01\xc8\x01\x01R\x07message\x12\"\n\x07\x64\x65tails\x18\x03 \x01(\tB\x08\xbaH\x05r\x03\x18\x80\x10R\x07\x64\x65tails\"\x86\x04\n\x13StartModuleResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\x12V\n\rresponse_type\x18\x02 \x01(\x0e\x32\'.digitalkin.module.v1.StartResponseTypeB\x08\xbaH\x05\x82\x01\x02\x10\x01R\x0cresponseType\x12J\n\nconnection\x18\x03 \x01(\x0b\x32(.digitalkin.module.v1.ConnectionResponseH\x00R\nconnection\x12P\n\x0einput_response\x18\x04 \x01(\x0b\x32\'.digitalkin.module.v1.InputDataResponseH\x00R\rinputResponse\x12S\n\x0foutput_response\x18\x05 \x01(\x0b\x32(.digitalkin.module.v1.OutputDataResponseH\x00R\x0eoutputResponse\x12;\n\x05\x65rror\x18\x06 \x01(\x0b\x32#.digitalkin.module.v1.ErrorResponseH\x00R\x05\x65rror\x12\x34\n\tmodule_id\x18\x07 \x01(\tB\x12\xe0\x41\x01\xbaH\x0cr\n:\x08modules:H\x01R\x08moduleId\x88\x01\x01\x42\t\n\x07\x63ontentB\x0c\n\n_module_id\"\x8c\x01\n\x12StopModuleResponse\x12\x18\n\x07success\x18\x01 \x01(\x08R\x07success\x12$\n\x07message\x18\x02 \x01(\tB\n\xbaH\x07r\x02\x10\x01\xc8\x01\x01R\x07message\x12+\n\x06job_id\x18\x03 \x01(\tB\x0f\xe0\x41\x01\xbaH\tr\x07:\x05jobs:H\x00R\x05jobId\x88\x01\x01\x42\t\n\x07_job_id*\xa7\x01\n\x0bRequestType\x12\x18\n\x14REQUEST_TYPE_UNKNOWN\x10\x00\x12\x1b\n\x17REQUEST_TYPE_CONNECTION\x10\x01\x12\x15\n\x11REQUEST_TYPE_SEND\x10\x02\x12\x15\n\x11REQUEST_TYPE_EXIT\x10\x03\x12\x19\n\x15REQUEST_TYPE_VALIDATE\x10\x04\x12\x18\n\x14REQUEST_TYPE_DESTROY\x10\x05*\xb6\x01\n\x11StartResponseType\x12\x1f\n\x1bSTART_RESPONSE_TYPE_UNKNOWN\x10\x00\x12\"\n\x1eSTART_RESPONSE_TYPE_CONNECTION\x10\x01\x12\x1d\n\x19START_RESPONSE_TYPE_INPUT\x10\x02\x12\x1e\n\x1aSTART_RESPONSE_TYPE_OUTPUT\x10\x03\x12\x1d\n\x19START_RESPONSE_TYPE_ERROR\x10\x04*T\n\nModuleRole\x12\x17\n\x13MODULE_ROLE_UNKNOWN\x10\x00\x12\x15\n\x11MODULE_ROLE_OWNER\x10\x01\x12\x16\n\x12MODULE_ROLE_MEMBRE\x10\x02\x42\x9e\x01\n\x18\x63om.digitalkin.module.v1B\x0eLifecycleProtoH\x02P\x01\xa2\x02\x03\x44MX\xaa\x02\x14\x44igitalkin.Module.V1\xca\x02\x14\x44igitalkin\\Module\\V1\xe2\x02 Digitalkin\\Module\\V1\\GPBMetadata\xea\x02\x16\x44igitalkin::Module::V1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -36,7 +36,7 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'\n\030com.digitalkin.module.v1B\016LifecycleProtoH\002P\001\242\002\003DMX\252\002\024Digitalkin.Module.V1\312\002\024Digitalkin\\Module\\V1\342\002 Digitalkin\\Module\\V1\\GPBMetadata\352\002\026Digitalkin::Module::V1'
   _globals['_CONNECTIONREQUEST'].fields_by_name['room_id']._loaded_options = None
-  _globals['_CONNECTIONREQUEST'].fields_by_name['room_id']._serialized_options = b'\340A\001\272H\003\310\001\000'
+  _globals['_CONNECTIONREQUEST'].fields_by_name['room_id']._serialized_options = b'\340A\001\272H\000'
   _globals['_CONNECTIONREQUEST'].fields_by_name['module_id']._loaded_options = None
   _globals['_CONNECTIONREQUEST'].fields_by_name['module_id']._serialized_options = b'\272H\021r\014\020\001:\010modules:\310\001\001'
   _globals['_CONNECTIONREQUEST'].fields_by_name['module_role']._loaded_options = None
@@ -45,6 +45,8 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_INPUTDATAREQUEST'].fields_by_name['input']._serialized_options = b'\272H\003\310\001\001'
   _globals['_INPUTDATAREQUEST'].fields_by_name['setup_id']._loaded_options = None
   _globals['_INPUTDATAREQUEST'].fields_by_name['setup_id']._serialized_options = b'\272H\020r\013\020\001:\007setups:\310\001\001'
+  _globals['_INPUTDATAREQUEST'].fields_by_name['instance_id']._loaded_options = None
+  _globals['_INPUTDATAREQUEST'].fields_by_name['instance_id']._serialized_options = b'\272H\007r\002\020\001\310\001\001'
   _globals['_INPUTDATAREQUEST'].fields_by_name['module_ids']._loaded_options = None
   _globals['_INPUTDATAREQUEST'].fields_by_name['module_ids']._serialized_options = b'\340A\001\272H\025\222\001\022\010\000\"\016r\014\020\001:\010modules:'
   _globals['_STARTMODULEREQUEST'].fields_by_name['request_type']._loaded_options = None
@@ -77,30 +79,30 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_STOPMODULERESPONSE'].fields_by_name['message']._serialized_options = b'\272H\007r\002\020\001\310\001\001'
   _globals['_STOPMODULERESPONSE'].fields_by_name['job_id']._loaded_options = None
   _globals['_STOPMODULERESPONSE'].fields_by_name['job_id']._serialized_options = b'\340A\001\272H\tr\007:\005jobs:'
-  _globals['_REQUESTTYPE']._serialized_start=2020
-  _globals['_REQUESTTYPE']._serialized_end=2187
-  _globals['_STARTRESPONSETYPE']._serialized_start=2190
-  _globals['_STARTRESPONSETYPE']._serialized_end=2372
-  _globals['_MODULEROLE']._serialized_start=2374
-  _globals['_MODULEROLE']._serialized_end=2458
+  _globals['_REQUESTTYPE']._serialized_start=2062
+  _globals['_REQUESTTYPE']._serialized_end=2229
+  _globals['_STARTRESPONSETYPE']._serialized_start=2232
+  _globals['_STARTRESPONSETYPE']._serialized_end=2414
+  _globals['_MODULEROLE']._serialized_start=2416
+  _globals['_MODULEROLE']._serialized_end=2500
   _globals['_CONNECTIONREQUEST']._serialized_start=155
-  _globals['_CONNECTIONREQUEST']._serialized_end=341
-  _globals['_INPUTDATAREQUEST']._serialized_start=344
-  _globals['_INPUTDATAREQUEST']._serialized_end=525
-  _globals['_STARTMODULEREQUEST']._serialized_start=528
-  _globals['_STARTMODULEREQUEST']._serialized_end=811
-  _globals['_STOPMODULEREQUEST']._serialized_start=813
-  _globals['_STOPMODULEREQUEST']._serialized_end=874
-  _globals['_CONNECTIONRESPONSE']._serialized_start=876
-  _globals['_CONNECTIONRESPONSE']._serialized_end=988
-  _globals['_INPUTDATARESPONSE']._serialized_start=990
-  _globals['_INPUTDATARESPONSE']._serialized_end=1102
-  _globals['_OUTPUTDATARESPONSE']._serialized_start=1105
-  _globals['_OUTPUTDATARESPONSE']._serialized_end=1262
-  _globals['_ERRORRESPONSE']._serialized_start=1264
-  _globals['_ERRORRESPONSE']._serialized_end=1353
-  _globals['_STARTMODULERESPONSE']._serialized_start=1356
-  _globals['_STARTMODULERESPONSE']._serialized_end=1874
-  _globals['_STOPMODULERESPONSE']._serialized_start=1877
-  _globals['_STOPMODULERESPONSE']._serialized_end=2017
+  _globals['_CONNECTIONREQUEST']._serialized_end=338
+  _globals['_INPUTDATAREQUEST']._serialized_start=341
+  _globals['_INPUTDATAREQUEST']._serialized_end=567
+  _globals['_STARTMODULEREQUEST']._serialized_start=570
+  _globals['_STARTMODULEREQUEST']._serialized_end=853
+  _globals['_STOPMODULEREQUEST']._serialized_start=855
+  _globals['_STOPMODULEREQUEST']._serialized_end=916
+  _globals['_CONNECTIONRESPONSE']._serialized_start=918
+  _globals['_CONNECTIONRESPONSE']._serialized_end=1030
+  _globals['_INPUTDATARESPONSE']._serialized_start=1032
+  _globals['_INPUTDATARESPONSE']._serialized_end=1144
+  _globals['_OUTPUTDATARESPONSE']._serialized_start=1147
+  _globals['_OUTPUTDATARESPONSE']._serialized_end=1304
+  _globals['_ERRORRESPONSE']._serialized_start=1306
+  _globals['_ERRORRESPONSE']._serialized_end=1395
+  _globals['_STARTMODULERESPONSE']._serialized_start=1398
+  _globals['_STARTMODULERESPONSE']._serialized_end=1916
+  _globals['_STOPMODULERESPONSE']._serialized_start=1919
+  _globals['_STOPMODULERESPONSE']._serialized_end=2059
 # @@protoc_insertion_point(module_scope)

@@ -1,5 +1,5 @@
 """
-This module contains the AsyncTransformer class which is used to transform
+This module contains the AsyncTransformer class which is used to transform methods to async methods.
 """
 
 import ast

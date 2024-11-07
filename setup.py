@@ -54,16 +54,16 @@ proto_packages = remove_proto_prefix(find_packages(where="proto"))
 proto_packages_dir = [item for item in proto_packages if "." not in item]
 kin_sdk_packages = remove_items_with_proto(find_packages())
 
-print(f"proto_packages: {proto_packages}")
-print(f"proto_packages_dir: {proto_packages_dir}")
-print(f"kin_sdk_packages: {kin_sdk_packages}")
+# print(f"proto_packages: {proto_packages}")
+# print(f"proto_packages_dir: {proto_packages_dir}")
+# print(f"kin_sdk_packages: {kin_sdk_packages}")
 
-print(
-    {
-        pkg: os.path.join("proto", pkg.replace(".", os.path.sep))
-        for pkg in proto_packages_dir
-    }
-)
+# print(
+#     {
+#         pkg: os.path.join("proto", pkg.replace(".", os.path.sep))
+#         for pkg in proto_packages_dir
+#     }
+# )
 
 setup(
     name="kin_sdk",

@@ -13,12 +13,13 @@ class SetupServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.GetNodeSetup = channel.unary_unary(
-            '/digitalkin.setup.v2.SetupService/GetNodeSetup',
+        self.GetInstanceSetup = channel.unary_unary(
+            '/digitalkin.setup.v2.SetupService/GetInstanceSetup',
             request_serializer=digitalkin_dot_setup_dot_v2_dot_setup__pb2.
-            GetNodeSetupRequest.SerializeToString, response_deserializer=
-            digitalkin_dot_setup_dot_v2_dot_setup__pb2.GetNodeSetupResponse
-            .FromString, _registered_method=True)
+            GetInstanceSetupRequest.SerializeToString,
+            response_deserializer=
+            digitalkin_dot_setup_dot_v2_dot_setup__pb2.
+            GetInstanceSetupResponse.FromString, _registered_method=True)
         self.ReadSetup = channel.unary_unary(
             '/digitalkin.setup.v2.SetupService/ReadSetup',
             request_serializer=digitalkin_dot_setup_dot_v2_dot_setup__pb2.
@@ -31,8 +32,8 @@ class SetupServiceServicer(object):
     """SetupService
     """
 
-    async def GetNodeSetup(self, request, context):
-        """GetNodeSetup
+    def GetInstanceSetup(self, request, context):
+        """GetInstanceSetup
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -48,12 +49,12 @@ class SetupServiceServicer(object):
 
 
 def add_SetupServiceServicer_to_server(servicer, server):
-    rpc_method_handlers = {'GetNodeSetup': grpc.
-        unary_unary_rpc_method_handler(servicer.GetNodeSetup,
+    rpc_method_handlers = {'GetInstanceSetup': grpc.
+        unary_unary_rpc_method_handler(servicer.GetInstanceSetup,
         request_deserializer=digitalkin_dot_setup_dot_v2_dot_setup__pb2.
-        GetNodeSetupRequest.FromString, response_serializer=
-        digitalkin_dot_setup_dot_v2_dot_setup__pb2.GetNodeSetupResponse.
-        SerializeToString), 'ReadSetup': grpc.
+        GetInstanceSetupRequest.FromString, response_serializer=
+        digitalkin_dot_setup_dot_v2_dot_setup__pb2.GetInstanceSetupResponse
+        .SerializeToString), 'ReadSetup': grpc.
         unary_unary_rpc_method_handler(servicer.ReadSetup,
         request_deserializer=digitalkin_dot_setup_dot_v2_dot_setup__pb2.
         ReadSetupRequest.FromString, response_serializer=
@@ -71,16 +72,17 @@ class SetupService(object):
     """
 
     @staticmethod
-    async def GetNodeSetup(request, target, options=(), channel_credentials
-        =None, call_credentials=None, insecure=False, compression=None,
+    def GetInstanceSetup(request, target, options=(), channel_credentials=
+        None, call_credentials=None, insecure=False, compression=None,
         wait_for_ready=None, timeout=None, metadata=None):
         return grpc.experimental.unary_unary(request, target,
-            '/digitalkin.setup.v2.SetupService/GetNodeSetup',
-            digitalkin_dot_setup_dot_v2_dot_setup__pb2.GetNodeSetupRequest.
-            SerializeToString, digitalkin_dot_setup_dot_v2_dot_setup__pb2.
-            GetNodeSetupResponse.FromString, options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready,
-            timeout, metadata, _registered_method=True)
+            '/digitalkin.setup.v2.SetupService/GetInstanceSetup',
+            digitalkin_dot_setup_dot_v2_dot_setup__pb2.
+            GetInstanceSetupRequest.SerializeToString,
+            digitalkin_dot_setup_dot_v2_dot_setup__pb2.
+            GetInstanceSetupResponse.FromString, options,
+            channel_credentials, insecure, call_credentials, compression,
+            wait_for_ready, timeout, metadata, _registered_method=True)
 
     @staticmethod
     async def ReadSetup(request, target, options=(), channel_credentials=

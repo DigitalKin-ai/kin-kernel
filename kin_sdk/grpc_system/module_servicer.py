@@ -79,25 +79,35 @@ class ModuleServicer(ModuleServiceServicer):
             module = job.module
             input_data = job.input_data
             setup_id = job.setup_id
+            instance_id = job.instance_id
             module_ids = job.module_ids
 
+            setup_json = await self.agent_management.database.load_instance_setup(
+                setup_id, instance_id
+            )
+            setup_format: BaseModel = self.module_class.setup_format
+            setup_data = setup_format.model_validate(setup_json)
+            del setup_json
+            del setup_format
             # Start the module
-            await module.start(setup_id=setup_id)
+            await module.start(setup_data=setup_data)
 
             # await job.output_queue.put(InitModel(start=True))
 
             # Create a callback that captures the module_ids
-            async def callback(output: BaseModel) -> None:
+            async def callback(output_data: BaseModel) -> None:
                 if not self.job_manager.update_status(job.id, JobStatus.PROCESSING):
                     raise ValueError(f"😵 Trigger {job.id} not found.")
-                await module.send_output(output, module_ids)
+                await module.send_output(output_data, module_ids)
                 # await current_job.add_to_outputs(output)
                 await job.output_queue.put(
-                    output
+                    output_data
                 )  # Ajoute l'élément dans la file d'attente
 
             # Execute the module
-            await module.execute(input_data, setup_id, callback)
+            await module.execute(
+                input_data=input_data, setup_data=setup_data, callback=callback
+            )
             await self._stop_job(job)
 
         except ValueError as e:
@@ -140,6 +150,7 @@ class ModuleServicer(ModuleServiceServicer):
             input_param = json_request.get("input", None)
             module_ids = json_request.get("module_ids", [])
             setup_id = json_request.get("setup_id", None)
+            instance_id = json_request.get("instance_id", None)
 
             # Validate the input_param data
             input_data = self.module_class.validate_format(input_param, "input")
@@ -149,6 +160,7 @@ class ModuleServicer(ModuleServiceServicer):
                 module=self.module_class(agent_management=self.agent_management),
                 input_data=input_data,
                 setup_id=setup_id,
+                instance_id=instance_id,
                 module_ids=module_ids,
                 function=self._start_job,
             )

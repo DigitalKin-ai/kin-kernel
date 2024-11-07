@@ -57,6 +57,7 @@ class Job(BaseModel):
 
     :param input_data: The input data for the job.
     :param setup_id: The setup ID associated with the job.
+    :param instance_id: The setup instance ID associated with the job.
     :param module_ids: List of module IDs associated with the job.
     :param status: The current status of the job.
     :param function: The function to be executed as the job.
@@ -68,6 +69,7 @@ class Job(BaseModel):
     module: BaseModule = Field(..., description="The module associated with the job")
     input_data: BaseModel = Field(..., description="The input data for the job")
     setup_id: str = Field(..., description="The setup ID for the job")
+    instance_id: str = Field(..., description="The setup instance ID for the job")
     module_ids: List[str] = Field(
         [], description="List of module IDs associated with the job"
     )
@@ -102,6 +104,7 @@ class JobManager:
         module: BaseModule,
         input_data: BaseModel,
         setup_id: str,
+        instance_id: str,
         module_ids: List[str],
         function: Callable[..., Coroutine[Any, Any, Any]],
         *args: Any,
@@ -112,6 +115,7 @@ class JobManager:
 
         :param input_data: The input data for the job.
         :param setup_id: The setup ID for the job.
+        :param instance_id: The instance ID associated with the job.
         :param module_ids: List of module IDs associated with the job.
         :param function: The function to be executed as the job.
         :param args: Positional arguments for the job function.
@@ -126,6 +130,7 @@ class JobManager:
             module=module,
             input_data=input_data,
             setup_id=setup_id,
+            instance_id=instance_id,
             module_ids=module_ids,
             status=JobStatus.STARTING,
             function=function,

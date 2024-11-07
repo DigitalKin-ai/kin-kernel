@@ -9,14 +9,14 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class Data(_message.Message):
-    __slots__ = ("module_id", "node_id", "content")
+    __slots__ = ("module_id", "instance_id", "content")
     MODULE_ID_FIELD_NUMBER: _ClassVar[int]
-    NODE_ID_FIELD_NUMBER: _ClassVar[int]
+    INSTANCE_ID_FIELD_NUMBER: _ClassVar[int]
     CONTENT_FIELD_NUMBER: _ClassVar[int]
     module_id: str
-    node_id: str
+    instance_id: str
     content: _struct_pb2.Struct
-    def __init__(self, module_id: _Optional[str] = ..., node_id: _Optional[str] = ..., content: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ...) -> None: ...
+    def __init__(self, module_id: _Optional[str] = ..., instance_id: _Optional[str] = ..., content: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ...) -> None: ...
 
 class Setup(_message.Message):
     __slots__ = ("id", "name", "kin_id", "data", "creation_date")
@@ -44,15 +44,15 @@ class ReadSetupResponse(_message.Message):
     setup: Setup
     def __init__(self, setup: _Optional[_Union[Setup, _Mapping]] = ...) -> None: ...
 
-class GetNodeSetupRequest(_message.Message):
-    __slots__ = ("setup_id", "node_id")
+class GetInstanceSetupRequest(_message.Message):
+    __slots__ = ("setup_id", "instance_id")
     SETUP_ID_FIELD_NUMBER: _ClassVar[int]
-    NODE_ID_FIELD_NUMBER: _ClassVar[int]
+    INSTANCE_ID_FIELD_NUMBER: _ClassVar[int]
     setup_id: str
-    node_id: str
-    def __init__(self, setup_id: _Optional[str] = ..., node_id: _Optional[str] = ...) -> None: ...
+    instance_id: str
+    def __init__(self, setup_id: _Optional[str] = ..., instance_id: _Optional[str] = ...) -> None: ...
 
-class GetNodeSetupResponse(_message.Message):
+class GetInstanceSetupResponse(_message.Message):
     __slots__ = ("data",)
     DATA_FIELD_NUMBER: _ClassVar[int]
     data: Data

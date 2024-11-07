@@ -71,11 +71,11 @@ def main():
     paths_option = " ".join(f"--path {path}" for path in proto_paths)
     command_rename_buf = f"mv {proto_dir}/buf.yaml {proto_dir}/buf.tmp.yaml"
     command_cp_bufpy = f"cp {buf_config} {proto_dir}/buf.yaml"
-    command_rename_deps = f"mv {proto_dir}/google {proto_dir}/../google&&mv {proto_dir}/buf {proto_dir}/../buf"
+    command_rename_deps = f"mv {proto_dir}/google {proto_dir}/../google"
     command_update_deps = f"buf dep update {proto_dir}"
     command = f"buf generate {proto_dir} --template {proto_dir}/{buf_file} --include-imports -o {output_dir} {paths_option}"
     command_reinit_buf = f"mv {proto_dir}/buf.tmp.yaml {proto_dir}/buf.yaml"
-    command_reinit_deps = f"mv {proto_dir}/../google {proto_dir}/google&&mv {proto_dir}/../buf {proto_dir}/buf"
+    command_reinit_deps = f"mv {proto_dir}/../google {proto_dir}/google"
     commands = [
         command_rename_buf,
         command_cp_bufpy,
